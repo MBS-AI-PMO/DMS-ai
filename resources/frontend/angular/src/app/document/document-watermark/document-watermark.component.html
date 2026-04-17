@@ -1,0 +1,34 @@
+<div class="d-flex">
+    <span mat-dialog-title class="dialog-title">{{ "WATERMARK_DOCUMENT" | translate }}
+        <app-page-help-text [code]="'WATERMARK_DOCUMENT'"></app-page-help-text>
+    </span>
+    <button mat-icon-button class="close-button ms-auto" (click)="closeDialog()">
+        <mat-icon class="close-icon" color="warn">close</mat-icon>
+    </button>
+</div>
+
+<div mat-dialog-content class="pt-0">
+    <form [formGroup]="documentWatermarkForm">
+        <div class="row">
+            <div class="col-md-12 mt-2">
+                <label class="form-label">{{'WATERMARK_TEXT' | translate}}</label>
+                <input formControlName="watermarkText" type="text" id="link" class="form-control">
+                <div
+                    *ngIf="documentWatermarkForm.get('watermarkText').touched && documentWatermarkForm.get('watermarkText')?.errors">
+                    <div class="text-danger"
+                        *ngIf="documentWatermarkForm.get('watermarkText').touched  && documentWatermarkForm.get('watermarkText').errors?.['required']">
+                        {{'WATERMARK_TEXT_IS_REQUIRED' | translate}}
+                    </div>
+                </div>
+            </div>
+            <div class="m-t-10 col-md-12">
+                <button type="submit" (click)="createWatermark()" class="btn btn-success">
+                    {{'ADD_WATERMARK' | translate}}
+                </button>
+                <button type="submit" (click)="closeDialog()" class="btn btn-danger ms-2">
+                    {{'CANCEL' | translate}}
+                </button>
+            </div>
+        </div>
+    </form>
+</div>

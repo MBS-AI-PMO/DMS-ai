@@ -1,0 +1,145 @@
+<section class="content">
+  <div class="container-fluid">
+    <div class="row align-items-center mb-3">
+      <div class="col-md-6">
+        <span class="mb-0 page-title">{{ "PROPOSAL_MANAGEMENT" | translate }}</span>
+      </div>
+      <div class="col-md-6 text-end" *ngIf="isRootView">
+        <button class="btn btn-success btn-sm" type="button" (click)="showAction('subfolder')">
+          + {{ "ADD_NEW_PROPOSAL" | translate }}
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="body">
+        <div *ngIf="isRootView">
+          <div class="row mb-3" *ngIf="activeAction === 'subfolder'">
+            <div class="col-md-4">
+              <label class="form-label">{{ "PROPOSAL_NAME" | translate }}</label>
+              <input class="form-control" [(ngModel)]="newProposalName" />
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+              <button class="btn btn-primary btn-sm me-2" type="button" (click)="createProposal()">
+                {{ "SAVE" | translate }}
+              </button>
+              <button class="btn btn-outline-secondary btn-sm" type="button" (click)="activeAction = null">
+                {{ "CANCEL" | translate }}
+              </button>
+            </div>
+          </div>
+          <div class="folder-grid">
+            <div class="folder-card" *ngFor="let folder of proposalFolders" (click)="openFolder(folder.id)">
+              <div class="folder-icon"><i-feather name="folder"></i-feather></div>
+              <div class="folder-name">{{ folder.name }}</div>
+            </div>
+          </div>
+          <div class="text-muted" *ngIf="proposalFolders.length === 0">{{ "NO_DATA_FOUND" | translate }}</div>
+        </div>
+
+        <div *ngIf="!isRootView">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <button class="btn btn-outline-secondary btn-sm me-2" type="button" (click)="openParentFolder()">
+                {{ "PREVIOUS" | translate }}
+              </button>
+              <span class="text-muted">
+                <ng-container *ngFor="let folder of breadcrumbFolders; let last = last">
+                  {{ folder.name }}<span *ngIf="!last"> / </span>
+                </ng-container>
+              </span>
+            </div>
+            <button class="btn btn-outline-primary btn-sm" type="button" (click)="openFolder(rootFolderId)">
+              Root
+            </button>
+          </div>
+
+          <div class="d-flex gap-2 mb-3">
+            <button class="btn btn-primary btn-sm" type="button" (click)="showAction('subfolder')">
+              {{ "CREATE_SUB_FOLDER" | translate }}
+            </button>
+            <button class="btn btn-success btn-sm" type="button" (click)="showAction('upload')">
+              {{ "UPLOAD_FILE" | translate }}
+            </button>
+            <button class="btn btn-warning btn-sm" type="button" (click)="showAction('request')">
+              {{ "REQUEST_FILE" | translate }}
+            </button>
+          </div>
+
+          <div class="row mb-3" *ngIf="activeAction === 'subfolder'">
+            <div class="col-md-4">
+              <label class="form-label">{{ "CREATE_SUB_FOLDER" | translate }}</label>
+              <input class="form-control" [(ngModel)]="newSubfolderName" />
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+              <button class="btn btn-primary btn-sm me-2" type="button" (click)="createSubfolder()">
+                {{ "SAVE" | translate }}
+              </button>
+              <button class="btn btn-outline-secondary btn-sm" type="button" (click)="activeAction = null">
+                {{ "CANCEL" | translate }}
+              </button>
+            </div>
+          </div>
+
+          <div class="row mb-3" *ngIf="activeAction === 'upload'">
+            <div class="col-md-4">
+              <label class="form-label">{{ "UPLOAD_FILE" | translate }}</label>
+              <input class="form-control" type="file" (change)="onFileSelected($event)" />
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+              <button class="btn btn-success btn-sm me-2" type="button" (click)="uploadFile()">
+                {{ "UPLOAD" | translate }}
+              </button>
+              <button class="btn btn-outline-secondary btn-sm" type="button" (click)="activeAction = null">
+                {{ "CANCEL" | translate }}
+              </button>
+            </div>
+          </div>
+
+          <div class="row mb-3" *ngIf="activeAction === 'request'">
+            <div class="col-md-4">
+              <label class="form-label">{{ "REQUEST_FILE" | translate }}</label>
+              <input class="form-control mb-2" [(ngModel)]="newRequestTitle" placeholder="{{ 'TITLE' | translate }}" />
+              <textarea class="form-control" rows="2" [(ngModel)]="newRequestDescription" placeholder="{{ 'DESCRIPTION' | translate }}"></textarea>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+              <button class="btn btn-warning btn-sm me-2" type="button" (click)="createFileRequest()">
+                {{ "CREATE_FILE_REQUEST" | translate }}
+              </button>
+              <button class="btn btn-outline-secondary btn-sm" type="button" (click)="activeAction = null">
+                {{ "CANCEL" | translate }}
+              </button>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <h6>{{ "FOLDER" | translate }}</h6>
+              <div class="folder-grid">
+                <div class="folder-card small" *ngFor="let folder of childFolders" (click)="openFolder(folder.id)">
+                  <div class="folder-icon"><i-feather name="folder"></i-feather></div>
+                  <div class="folder-name">{{ folder.name }}</div>
+                </div>
+              </div>
+              <div class="text-muted" *ngIf="childFolders.length === 0">{{ "NO_DATA_FOUND" | translate }}</div>
+            </div>
+            <div class="col-md-6">
+              <h6>{{ "UPLOADED_FILES" | translate }}</h6>
+              <ul class="list-group mb-3">
+                <li class="list-group-item" *ngFor="let file of currentFolderFiles">{{ file.title }}</li>
+                <li class="list-group-item text-muted" *ngIf="currentFolderFiles.length === 0">{{ "NO_DATA_FOUND" | translate }}</li>
+              </ul>
+              <h6>{{ "FILE_REQUEST" | translate }}</h6>
+              <ul class="list-group">
+                <li class="list-group-item" *ngFor="let request of currentFolderFileRequests">
+                  {{ request.title }} <span class="text-muted">({{ request.status }})</span>
+                </li>
+                <li class="list-group-item text-muted" *ngIf="currentFolderFileRequests.length === 0">{{ "NO_DATA_FOUND" | translate }}</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

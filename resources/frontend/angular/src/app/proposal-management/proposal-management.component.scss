@@ -1,0 +1,50 @@
+.list-group {
+  max-height: 320px;
+  overflow: auto;
+}
+
+.folder-item {
+  cursor: pointer;
+}
+
+.active-folder {
+  background-color: #e9f3ff;
+  border-color: #b8d9ff;
+}
+
+.folder-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 18px;
+}
+
+.folder-card {
+  cursor: pointer;
+  text-align: center;
+}
+
+.folder-card.small {
+  max-width: 120px;
+}
+
+.folder-icon {
+  display: flex;
+  justify-content: center;
+  color: #2e5bff;
+  line-height: 1;
+}
+
+.folder-icon svg {
+  width: 34px;
+  height: 34px;
+  stroke-width: 1.75;
+}
+
+.folder-name {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
