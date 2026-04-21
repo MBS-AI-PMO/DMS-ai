@@ -192,7 +192,7 @@
                     <mat-icon class="align-middle me-1 fs-5">insert_drive_file</mat-icon> {{ "UPLOADED_FILES" | translate }}
                   </h6>
                   <mat-list class="custom-list mb-4">
-                    <mat-list-item *ngFor="let file of visibleFiles" class="list-item-hover">
+                    <mat-list-item *ngFor="let file of visibleFiles" class="list-item-hover" (click)="openFile(file)">
                       <mat-icon matListItemIcon class="text-muted">description</mat-icon>
                       <div matListItemTitle>{{ file.displayLabel }}</div>
                     </mat-list-item>
