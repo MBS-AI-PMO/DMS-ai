@@ -28,6 +28,8 @@ interface ProposalFile {
   folderId: string;
   title: string;
   displayTitle: string;
+  originalName?: string;
+  url?: string;
   createdDate: string;
 }
 
@@ -172,6 +174,16 @@ export class ProposalManagementComponent extends BaseComponent implements OnInit
     });
   }
 
+  openFile(file: ProposalFileViewModel): void {
+    this.sub$.sink = this.httpClient
+      .get(`proposal-management/files/${file.id}/open`, { responseType: 'blob' })
+      .subscribe((blob) => {
+        const fileUrl = window.URL.createObjectURL(blob);
+        window.open(fileUrl, '_blank');
+        setTimeout(() => window.URL.revokeObjectURL(fileUrl), 60_000);
+      });
+  }
+
   createFileRequest(): void {
     if (!this.newRequestTitle.trim()) {
       return;
@@ -292,6 +304,6 @@ export class ProposalManagementComponent extends BaseComponent implements OnInit
       return file.displayTitle || file.title;
     }
 
-    return `${parentFolder.name}_${file.displayTitle || file.title}`;
+    return `${parentFolder.name}/${file.displayTitle || file.title}`;
   }
 }

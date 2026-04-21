@@ -392,6 +392,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/proposal-management', [ProposalManagementController::class, 'index']);
         Route::post('/proposal-management/folders', [ProposalManagementController::class, 'createFolder']);
         Route::post('/proposal-management/files', [ProposalManagementController::class, 'uploadFile']);
+        Route::get('/proposal-management/files/{id}/open', [ProposalManagementController::class, 'openFile']);
         Route::post('/proposal-management/file-requests', [ProposalManagementController::class, 'createFileRequest']);
     });
 

@@ -8,6 +8,7 @@ use App\Models\ProposalFolder;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Ramsey\Uuid\Uuid;
 
 class ProposalManagementController extends Controller
@@ -138,6 +139,27 @@ class ProposalManagementController extends Controller
         ]);
 
         return response()->json($fileRequest, 201);
+    }
+
+    public function openFile(string $id)
+    {
+        $userId = $this->getUserId();
+        $file = ProposalFile::where('id', $id)
+            ->where('createdBy', $userId)
+            ->firstOrFail();
+
+        if (!Storage::disk('local')->exists($file->url)) {
+            abort(404, 'File not found.');
+        }
+
+        $path = Storage::disk('local')->path($file->url);
+        $mimeType = Storage::disk('local')->mimeType($file->url) ?: 'application/octet-stream';
+        $fileName = $file->originalName ?: ($file->title . '.bin');
+
+        return response()->file($path, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="' . $fileName . '"',
+        ]);
     }
 
     private function ensureRootFolder(string $userId): ProposalFolder
