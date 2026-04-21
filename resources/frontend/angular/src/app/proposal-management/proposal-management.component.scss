@@ -1,30 +1,27 @@
-.list-group {
-  max-height: 320px;
-  overflow: auto;
-}
-
-.folder-item {
-  cursor: pointer;
-}
-
-.active-folder {
-  background-color: #e9f3ff;
-  border-color: #b8d9ff;
-}
-
 .folder-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 20px;
 }
 
 .folder-card {
   cursor: pointer;
   text-align: center;
-}
+  padding: 16px;
+  border-radius: 12px;
+  transition: all 0.2s ease-in-out;
+  background-color: #fff;
+  border: 1px solid transparent;
 
-.folder-card.small {
-  max-width: 120px;
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
+    border-color: #e2e8f0;
+  }
+
+  &.small {
+    max-width: 140px;
+  }
 }
 
 .folder-icon {
@@ -32,19 +29,85 @@
   justify-content: center;
   color: #2e5bff;
   line-height: 1;
-}
+  margin-bottom: 8px;
 
-.folder-icon svg {
-  width: 34px;
-  height: 34px;
-  stroke-width: 1.75;
+  mat-icon {
+    font-size: 40px;
+    width: 40px;
+    height: 40px;
+    color: #42a5f5;
+  }
 }
 
 .folder-name {
-  margin-top: 6px;
-  font-size: 12px;
-  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+  color: #475569;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.action-card {
+  border-radius: 12px;
+  padding: 8px;
+  background-color: #f8fafc;
+  
+  mat-card-content {
+    margin: 0;
+  }
+}
+
+.action-buttons {
+  button {
+    border-radius: 8px;
+    padding: 0 16px;
+  }
+}
+
+.breadcrumb-path {
+  font-size: 15px;
+  .cursor-pointer {
+    cursor: pointer;
+  }
+  .hover-primary:hover {
+    color: #2e5bff;
+    text-decoration: underline;
+  }
+}
+
+.custom-list {
+  max-height: 400px;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+
+  .list-item-hover {
+    transition: background-color 0.2s;
+    border-bottom: 1px solid #f1f5f9;
+    
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:hover {
+      background-color: #f8fafc;
+      cursor: pointer;
+    }
+  }
+}
+
+.section-title {
+  color: #334155;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.file-input-custom {
+  padding: 8px 12px;
+  height: 42px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background-color: #fff;
 }
