@@ -8,6 +8,15 @@ import { BaseComponent } from '../base.component';
 import { TranslationService } from '@core/services/translation.service';
 import { FeatherModule } from 'angular-feather';
 
+// Angular Material Imports
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatListModule } from '@angular/material/list';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatCardModule } from '@angular/material/card';
+
 interface ProposalFolder {
   id: string;
   name: string;
@@ -31,6 +40,10 @@ interface ProposalFileRequest {
   createdDate: string;
 }
 
+interface ProposalFileViewModel extends ProposalFile {
+  displayLabel: string;
+}
+
 interface ProposalDashboardData {
   rootFolderId: string;
   folders: ProposalFolder[];
@@ -41,7 +54,19 @@ interface ProposalDashboardData {
 @Component({
   selector: 'app-proposal-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, FeatherModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TranslateModule,
+    FeatherModule,
+    MatButtonModule,
+    MatIconModule,
+    MatListModule,
+    MatMenuModule,
+    MatInputModule,
+    MatFormFieldModule,
+    MatCardModule
+  ],
   templateUrl: './proposal-management.component.html',
   styleUrl: './proposal-management.component.scss',
 })
@@ -191,6 +216,20 @@ export class ProposalManagementComponent extends BaseComponent implements OnInit
     return this.files.filter((file) => file.folderId === this.currentFolderId);
   }
 
+  get visibleFiles(): ProposalFileViewModel[] {
+    if (!this.currentFolderId || this.isRootView) {
+      return [];
+    }
+
+    const folderTrail = this.getFolderTrailIds(this.currentFolderId);
+    return this.files
+      .filter((file) => folderTrail.includes(file.folderId))
+      .map((file) => ({
+        ...file,
+        displayLabel: this.buildFileLabel(file),
+      }));
+  }
+
   get currentFolderFileRequests(): ProposalFileRequest[] {
     return this.fileRequests.filter((fileRequest) => fileRequest.folderId === this.currentFolderId);
   }
@@ -225,5 +264,34 @@ export class ProposalManagementComponent extends BaseComponent implements OnInit
 
   showAction(action: 'subfolder' | 'upload' | 'request'): void {
     this.activeAction = action;
+  }
+
+  private getFolderTrailIds(folderId: string): string[] {
+    const result = [folderId];
+    const queue = [folderId];
+
+    while (queue.length) {
+      const currentId = queue.shift() as string;
+      const children = this.folders.filter((folder) => folder.parentFolderId === currentId);
+      children.forEach((child) => {
+        result.push(child.id);
+        queue.push(child.id);
+      });
+    }
+
+    return result;
+  }
+
+  private buildFileLabel(file: ProposalFile): string {
+    if (file.folderId === this.currentFolderId) {
+      return file.displayTitle || file.title;
+    }
+
+    const parentFolder = this.folders.find((folder) => folder.id === file.folderId);
+    if (!parentFolder) {
+      return file.displayTitle || file.title;
+    }
+
+    return `${parentFolder.name}_${file.displayTitle || file.title}`;
   }
 }
