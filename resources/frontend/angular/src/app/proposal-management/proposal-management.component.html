@@ -89,12 +89,6 @@
                 <button mat-stroked-button color="primary" class="me-2" (click)="showAction('subfolder')">
                   <mat-icon>create_new_folder</mat-icon> {{ "CREATE_SUB_FOLDER" | translate }}
                 </button>
-                <button mat-stroked-button class="text-success border-success me-2" (click)="showAction('upload')">
-                  <mat-icon>cloud_upload</mat-icon> {{ "UPLOAD_FILE" | translate }}
-                </button>
-                <button mat-stroked-button class="text-warning border-warning" (click)="showAction('request')">
-                  <mat-icon>assignment_return</mat-icon> {{ "REQUEST_FILE" | translate }}
-                </button>
               </div>
 
               <!-- Create Subfolder Action Panel -->
@@ -119,48 +113,114 @@
                 </mat-card-content>
               </mat-card>
 
-              <!-- Upload File Action Panel -->
-              <mat-card class="mb-4 action-card mat-elevation-z1" *ngIf="activeAction === 'upload'">
+              <mat-card class="mb-4 action-card mat-elevation-z1">
                 <mat-card-content>
-                  <div class="row align-items-center">
-                    <div class="col-md-5">
-                      <input type="file" class="form-control file-input-custom" (change)="onFileSelected($event)" />
-                    </div>
-                    <div class="col-md-7">
-                      <button mat-raised-button class="bg-success text-white me-2" (click)="uploadFile()">
-                        {{ "UPLOAD" | translate }}
-                      </button>
-                      <button mat-button (click)="activeAction = null">
-                        {{ "CANCEL" | translate }}
-                      </button>
-                    </div>
-                  </div>
-                </mat-card-content>
-              </mat-card>
-
-              <!-- Request File Action Panel -->
-              <mat-card class="mb-4 action-card mat-elevation-z1" *ngIf="activeAction === 'request'">
-                <mat-card-content>
-                  <div class="row">
-                    <div class="col-md-6">
-                      <mat-form-field appearance="outline" class="w-100 mb-2">
-                        <mat-label>{{ 'TITLE' | translate }}</mat-label>
-                        <input matInput [(ngModel)]="newRequestTitle">
-                      </mat-form-field>
-                      <mat-form-field appearance="outline" class="w-100 mb-0">
-                        <mat-label>{{ 'DESCRIPTION' | translate }}</mat-label>
-                        <textarea matInput rows="2" [(ngModel)]="newRequestDescription"></textarea>
-                      </mat-form-field>
-                    </div>
-                    <div class="col-md-6 d-flex align-items-end pb-3">
-                      <button mat-raised-button class="bg-warning text-dark me-2" (click)="createFileRequest()">
-                        {{ "CREATE_FILE_REQUEST" | translate }}
-                      </button>
-                      <button mat-button (click)="activeAction = null">
-                        {{ "CANCEL" | translate }}
-                      </button>
-                    </div>
-                  </div>
+                  <mat-tab-group [(selectedIndex)]="selectedTabIndex" animationDuration="0ms">
+                    <mat-tab [label]="'UPLOAD_FILE' | translate">
+                      <div class="tab-content-wrap">
+                        <div class="upload-row d-flex align-items-center mb-2" *ngFor="let uploadRow of uploadRows; let rowIndex = index">
+                          <input
+                            type="file"
+                            class="form-control file-input-custom me-2"
+                            (change)="onFileSelectedForRow(($any($event.target).files && $any($event.target).files.length) ? $any($event.target).files[0] : null, rowIndex)" />
+                          <button
+                            mat-icon-button
+                            color="warn"
+                            type="button"
+                            (click)="removeUploadRow(rowIndex)"
+                            [disabled]="uploadRows.length === 1 && !uploadRows[0]">
+                            <mat-icon>remove_circle</mat-icon>
+                          </button>
+                        </div>
+                        <div class="d-flex align-items-center">
+                          <button mat-stroked-button color="primary" class="me-2" type="button" (click)="addUploadRow()">
+                            <mat-icon>add</mat-icon> {{ "ADD" | translate }}
+                          </button>
+                          <button mat-raised-button class="bg-success text-white" type="button" (click)="uploadFile()">
+                            {{ "UPLOAD" | translate }}
+                          </button>
+                        </div>
+                      </div>
+                    </mat-tab>
+                    <mat-tab [label]="'FILE_REQUEST' | translate">
+                      <div class="tab-content-wrap">
+                        <div class="row">
+                          <div class="col-md-6">
+                            <mat-form-field appearance="outline" class="w-100 mb-2">
+                              <mat-label>{{ 'SUBJECT' | translate }}</mat-label>
+                              <input matInput [(ngModel)]="newRequestTitle">
+                            </mat-form-field>
+                            <mat-form-field appearance="outline" class="w-100 mb-0">
+                              <mat-label>{{ 'DESCRIPTION' | translate }}</mat-label>
+                              <textarea matInput rows="2" [(ngModel)]="newRequestDescription"></textarea>
+                            </mat-form-field>
+                          </div>
+                          <div class="col-md-6">
+                            <mat-form-field appearance="outline" class="w-100 mb-2">
+                              <mat-label>{{ 'EMAIL' | translate }}</mat-label>
+                              <input matInput type="email" [(ngModel)]="newRequestEmail">
+                            </mat-form-field>
+                            <div class="row">
+                              <div class="col-md-6">
+                                <mat-form-field appearance="outline" class="w-100 mb-2">
+                                  <mat-label>{{ 'MAXIMUM_DOCUMENT_UPLOAD' | translate }}</mat-label>
+                                  <input matInput type="number" min="1" [(ngModel)]="newRequestMaxDocument">
+                                </mat-form-field>
+                              </div>
+                              <div class="col-md-6">
+                                <mat-form-field appearance="outline" class="w-100 mb-2">
+                                  <mat-label>{{ 'MAXIMUM_FILE_SIZE_UPLOAD' | translate }}</mat-label>
+                                  <mat-select [(ngModel)]="newRequestSizeInMb">
+                                    <mat-option *ngFor="let size of fileSizeOptions" [value]="size">
+                                      {{ getFileSizeLabel(size) }}
+                                    </mat-option>
+                                  </mat-select>
+                                </mat-form-field>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="row mt-1">
+                          <div class="col-md-4">
+                            <mat-form-field appearance="outline" class="w-100 mb-2">
+                              <mat-label>{{ 'ALLOW_FILE_EXTENSION' | translate }}</mat-label>
+                              <mat-select [(ngModel)]="newRequestFileTypes" multiple>
+                                <mat-option *ngFor="let fileType of fileTypes" [value]="fileType.value">
+                                  {{ fileType.key | translate }}
+                                </mat-option>
+                              </mat-select>
+                            </mat-form-field>
+                          </div>
+                          <div class="col-md-4">
+                            <mat-checkbox color="primary" [(ngModel)]="newRequestHasPassword">
+                              {{ "IS_PASSWORD_REQUIRED" | translate }}
+                            </mat-checkbox>
+                            <mat-form-field appearance="outline" class="w-100 mt-2" *ngIf="newRequestHasPassword">
+                              <mat-label>{{ "PASSWORD" | translate }}</mat-label>
+                              <input matInput type="text" [(ngModel)]="newRequestPassword">
+                            </mat-form-field>
+                          </div>
+                          <div class="col-md-4">
+                            <mat-checkbox color="primary" [(ngModel)]="newRequestIsLinkExpiryTime">
+                              {{ "IS_LINK_VALID_UNTIL" | translate }}
+                            </mat-checkbox>
+                            <mat-form-field appearance="outline" class="w-100 mt-2" *ngIf="newRequestIsLinkExpiryTime">
+                              <mat-label>{{ "LINK_EXPIRATION" | translate }}</mat-label>
+                              <input matInput type="datetime-local" [(ngModel)]="newRequestLinkExpiryTime">
+                            </mat-form-field>
+                          </div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                          <button mat-raised-button class="bg-warning text-dark me-2" type="button" (click)="createFileRequest()">
+                            {{ "CREATE_FILE_REQUEST" | translate }}
+                          </button>
+                          <button mat-button type="button" (click)="newRequestTitle=''; newRequestDescription=''; newRequestEmail=''; newRequestMaxDocument=1; newRequestSizeInMb=5; newRequestFileTypes=[]; newRequestHasPassword=false; newRequestPassword=''; newRequestIsLinkExpiryTime=false; newRequestLinkExpiryTime=''">
+                            {{ "CANCEL" | translate }}
+                          </button>
+                        </div>
+                      </div>
+                    </mat-tab>
+                  </mat-tab-group>
                 </mat-card-content>
               </mat-card>
 
@@ -192,9 +252,17 @@
                     <mat-icon class="align-middle me-1 fs-5">insert_drive_file</mat-icon> {{ "UPLOADED_FILES" | translate }}
                   </h6>
                   <mat-list class="custom-list mb-4">
-                    <mat-list-item *ngFor="let file of visibleFiles" class="list-item-hover" (click)="openFile(file)">
+                    <mat-list-item *ngFor="let file of visibleFiles" class="list-item-hover">
                       <mat-icon matListItemIcon class="text-muted">description</mat-icon>
                       <div matListItemTitle>{{ file.displayLabel }}</div>
+                      <button
+                        mat-icon-button
+                        type="button"
+                        matListItemMeta
+                        matTooltip="View"
+                        (click)="openFile(file)">
+                        <mat-icon>visibility</mat-icon>
+                      </button>
                     </mat-list-item>
                     <div class="text-muted p-2" *ngIf="visibleFiles.length === 0">
                        <i>{{ "NO_DATA_FOUND" | translate }}</i>
@@ -210,10 +278,19 @@
                       <mat-icon matListItemIcon class="text-warning">assignment</mat-icon>
                       <div matListItemTitle>{{ request.title }}</div>
                       <div matListItemLine class="text-muted d-flex align-items-center">
-                        <span class="badge rounded-pill" [ngClass]="request.status === 'Completed' ? 'bg-success' : 'bg-warning text-dark'">
+                        <span class="badge rounded-pill" [ngClass]="request.status === 'Uploaded' ? 'bg-success' : 'bg-warning text-dark'">
                           {{ request.status }}
                         </span>
                       </div>
+                      <button
+                        mat-icon-button
+                        type="button"
+                        matListItemMeta
+                        matTooltip="View"
+                        [disabled]="!request.fileRequestId"
+                        (click)="openFileRequest(request)">
+                        <mat-icon>visibility</mat-icon>
+                      </button>
                     </mat-list-item>
                     <div class="text-muted p-2" *ngIf="currentFolderFileRequests.length === 0">
                       <i>{{ "NO_DATA_FOUND" | translate }}</i>
