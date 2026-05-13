@@ -8,38 +8,16 @@
     <div class="card">
       <div class="header">
         <div class="row">
-          <div class="body" [formGroup]="activatedForm">
+          <div class="body">
             <div class="row">
               <div class="col-md-12">
                 <ul class="list-group">
                   <li class="list-group-item">
-                    <span class="text-danger text-bold">
-                      Important: Once you deactivate the license for this domain, the project will no longer work on the
-                      current domain.
+                    <span class="text-dark text-bold">
+                      This action will remove the current activation token from this installation.
                     </span>
                   </li>
                 </ul>
-              </div>
-            </div>
-            <div class="row">
-              <div class="col-md-12">
-                <div class="form-group">
-                  <label>CodeCanyon Purchase Code</label>
-                  <input class="form-control" type="input" formControlName="purchaseCode" />
-                  @if((activatedForm.get('purchaseCode').touched || activatedForm.get('purchaseCode').dirty) &&
-                  activatedForm.get('purchaseCode').errors) {
-                  @if(activatedForm.get('purchaseCode').errors?.['required']) {
-                  <div class="text-danger">
-                    Purchase Code is required.
-                  </div>
-                  }
-                  @if(activatedForm.get('purchaseCode').errors?.['minlength']) {
-                  <div class="text-danger">
-                    Please enter a valid CodeCanyon Purchase Code.
-                  </div>
-                  }
-                  }
-                </div>
               </div>
             </div>
             <div class="row mt-3">

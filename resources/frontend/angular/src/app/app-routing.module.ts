@@ -27,11 +27,6 @@ const routes: Routes = [
         loadComponent: () => import('./error-msg/error-msg.component').then((m) => m.ErrorMsgComponent),
       },
       {
-        path: 'activate-license',
-        loadComponent: () =>
-          import('./activate-license/activate-license.component').then((m) => m.ActivateLicenseComponent),
-      },
-      {
         path: 'file-requests/preview/:code',
         resolve: { fileRequest: FileRequestLinkPreviewResolver },
         component: FileRequestLinkPreviewComponent,
@@ -54,13 +49,6 @@ const routes: Routes = [
           import('./recover-password/recover-password.module').then(
             (m) => m.RecoverPasswordModule
           ),
-      },
-      {
-        path: 'remove-license-key',
-        loadComponent: () =>
-          import('./remove-license-key/remove-license-key.component').then(
-            (m) => m.RemoveLicenseKeyComponent
-          )
       },
       {
         path: '',

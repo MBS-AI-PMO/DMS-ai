@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\ProposalFile;
 use App\Models\ProposalFileRequest;
 use App\Models\ProposalFolder;
+use App\Models\FileRequests;
+use App\Models\FileRequestStatusEnum;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Ramsey\Uuid\Uuid;
 
@@ -46,8 +49,28 @@ class ProposalManagementController extends Controller
             ->values();
 
         $fileRequests = ProposalFileRequest::where('createdBy', $userId)
+            ->with('linkedFileRequest')
             ->orderByDesc('createdDate')
-            ->get();
+            ->get()
+            ->map(function (ProposalFileRequest $request) {
+                $status = $request->status;
+                if ($request->linkedFileRequest) {
+                    $status = $request->linkedFileRequest->fileRequestStatus === FileRequestStatusEnum::UPLOADED->value
+                        ? 'Uploaded'
+                        : 'Pending';
+                }
+
+                return [
+                    'id' => $request->id,
+                    'folderId' => $request->folderId,
+                    'fileRequestId' => $request->fileRequestId,
+                    'title' => $request->title,
+                    'description' => $request->description,
+                    'status' => $status,
+                    'createdDate' => $request->createdDate,
+                ];
+            })
+            ->values();
 
         return response()->json([
             'rootFolderId' => $rootFolder->id,
@@ -119,26 +142,121 @@ class ProposalManagementController extends Controller
 
     public function createFileRequest(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'title' => 'required|string|max:255',
+            'email' => 'nullable|email|max:255',
             'description' => 'nullable|string',
+            'maxDocument' => 'required|integer|min:1',
+            'sizeInMb' => 'required|integer|min:1',
+            'fileExtension' => 'nullable|array',
+            'fileExtension.*' => 'integer|min:0',
+            'hasPassword' => 'nullable|boolean',
+            'password' => 'nullable|string|max:255|required_if:hasPassword,true',
+            'linkExpiryTime' => 'nullable|date',
             'folderId' => 'nullable|exists:proposalFolders,id',
+            'baseUrl' => 'nullable|string|max:500',
         ]);
 
         $userId = $this->getUserId();
         $rootFolder = $this->ensureRootFolder($userId);
+        $requestColumns = Schema::getColumnListing('proposalFileRequests');
+        $linkedFileRequestId = null;
 
-        $fileRequest = ProposalFileRequest::create([
+        if (!empty($validated['email'])) {
+            $linkedFileRequestId = $this->createAndSendPlatformFileRequest($validated);
+        }
+
+        $fileRequestPayload = [
             'id' => Uuid::uuid4()->toString(),
             'folderId' => $request->folderId ?: $rootFolder->id,
+            'fileRequestId' => $linkedFileRequestId,
             'title' => $request->title,
             'description' => $request->description,
             'status' => 'pending',
             'createdBy' => $userId,
             'createdDate' => Carbon::now(),
-        ]);
+        ];
+
+        if (in_array('email', $requestColumns, true)) {
+            $fileRequestPayload['email'] = $request->email;
+        }
+        if (in_array('maxDocument', $requestColumns, true)) {
+            $fileRequestPayload['maxDocument'] = $request->maxDocument;
+        }
+        if (in_array('sizeInMb', $requestColumns, true)) {
+            $fileRequestPayload['sizeInMb'] = $request->sizeInMb;
+        }
+        if (in_array('allowExtension', $requestColumns, true)) {
+            $fileRequestPayload['allowExtension'] = is_array($request->fileExtension) ? implode(',', $request->fileExtension) : null;
+        }
+        if (in_array('hasPassword', $requestColumns, true)) {
+            $fileRequestPayload['hasPassword'] = (bool) $request->hasPassword;
+        }
+        if (in_array('password', $requestColumns, true)) {
+            $fileRequestPayload['password'] = $request->hasPassword ? $request->password : null;
+        }
+        if (in_array('linkExpiryTime', $requestColumns, true)) {
+            $fileRequestPayload['linkExpiryTime'] = $request->linkExpiryTime ? Carbon::parse($request->linkExpiryTime) : null;
+        }
+
+        $fileRequest = ProposalFileRequest::create($fileRequestPayload);
 
         return response()->json($fileRequest, 201);
+    }
+
+    private function createAndSendPlatformFileRequest(array $validated): string
+    {
+        $allowExtension = '';
+        foreach (($validated['fileExtension'] ?? []) as $item) {
+            $allowExtension .= \App\Models\AllowFileTypeEnum::getName((int) $item) . ',';
+        }
+        $allowExtension = rtrim($allowExtension, ',');
+
+        $password = null;
+        if (!empty($validated['hasPassword']) && !empty($validated['password'])) {
+            $password = base64_encode($validated['password']);
+        }
+
+        $platformRequest = FileRequests::create([
+            'subject' => $validated['title'],
+            'email' => $validated['email'],
+            'password' => $password,
+            'maxDocument' => $validated['maxDocument'],
+            'sizeInMb' => $validated['sizeInMb'],
+            'allowExtension' => $allowExtension,
+            'fileRequestStatus' => FileRequestStatusEnum::CREATED->value,
+            'linkExpiryTime' => !empty($validated['linkExpiryTime']) ? Carbon::parse($validated['linkExpiryTime']) : null,
+            'isLinkExpired' => false,
+            'isDeleted' => false,
+            'deletedBy' => '',
+        ]);
+
+        $this->sendFileRequestEmail($validated, (string) $platformRequest->id);
+
+        return (string) $platformRequest->id;
+    }
+
+    private function sendFileRequestEmail(array $request, string $id): void
+    {
+        try {
+            $body = Storage::disk('public')->get('file-request-template.html');
+            $userId = $this->getUserId();
+            $user = \App\Models\Users::find($userId);
+            $fromName = $user ? ($user->firstName . ' ' . $user->lastName) : 'System';
+
+            $baseUrl = !empty($request['baseUrl']) ? $request['baseUrl'] : (config('app.url') . '/file-requests/preview/');
+            $url = $baseUrl . $id;
+            $body = str_replace('##FROM_NAME##', $fromName, $body);
+            $body = str_replace('##UPLOAD_LINK##', $url, $body);
+
+            app(\App\Repositories\Contracts\EmailRepositoryInterface::class)->sendEmail([
+                'to_address' => $request['email'],
+                'subject' => $fromName . ' has requested you to upload a file.',
+                'message' => $body,
+                'path' => null,
+            ]);
+        } catch (\Throwable $th) {
+        }
     }
 
     public function openFile(string $id)

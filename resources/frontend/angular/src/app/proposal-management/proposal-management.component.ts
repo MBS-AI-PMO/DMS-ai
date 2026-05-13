@@ -16,6 +16,13 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCardModule } from '@angular/material/card';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatSelectModule } from '@angular/material/select';
+import { MatOptionModule } from '@angular/material/core';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { forkJoin } from 'rxjs';
+import { FileType } from '@core/domain-classes/file-type.enum';
+import { FileSizes } from '@core/domain-classes/file-sizes.enum';
 
 interface ProposalFolder {
   id: string;
@@ -36,8 +43,16 @@ interface ProposalFile {
 interface ProposalFileRequest {
   id: string;
   folderId: string;
+  fileRequestId?: string;
   title: string;
+  email?: string;
   description: string;
+  maxDocument?: number;
+  sizeInMb?: number;
+  allowExtension?: string;
+  hasPassword?: boolean;
+  password?: string;
+  linkExpiryTime?: string;
   status: string;
   createdDate: string;
 }
@@ -67,7 +82,11 @@ interface ProposalDashboardData {
     MatMenuModule,
     MatInputModule,
     MatFormFieldModule,
-    MatCardModule
+    MatCardModule,
+    MatTabsModule,
+    MatSelectModule,
+    MatOptionModule,
+    MatCheckboxModule
   ],
   templateUrl: './proposal-management.component.html',
   styleUrl: './proposal-management.component.scss',
@@ -76,6 +95,7 @@ export class ProposalManagementComponent extends BaseComponent implements OnInit
   private readonly httpClient = inject(HttpClient);
   private readonly toastrService = inject(ToastrService);
   private readonly translationService = inject(TranslationService);
+  private readonly fileRequestBaseUrl = `${window.location.protocol}//${window.location.host}/file-requests/preview/`;
 
   rootFolderId = '';
   folders: ProposalFolder[] = [];
@@ -88,10 +108,24 @@ export class ProposalManagementComponent extends BaseComponent implements OnInit
   newSubfolderName = '';
   newRequestTitle = '';
   newRequestDescription = '';
-  selectedFile: File | null = null;
-  activeAction: 'subfolder' | 'upload' | 'request' | null = null;
+  newRequestEmail = '';
+  newRequestMaxDocument = 1;
+  newRequestSizeInMb = FileSizes.LessThan5MB;
+  newRequestFileTypes: number[] = [];
+  newRequestHasPassword = false;
+  newRequestPassword = '';
+  newRequestIsLinkExpiryTime = false;
+  newRequestLinkExpiryTime = '';
+  uploadRows: Array<File | null> = [null];
+  activeAction: 'subfolder' | null = null;
+  selectedTabIndex = 0;
+  fileTypes: { key: string; value: number }[] = [];
+  fileSizeOptions = Object.keys(FileSizes)
+    .filter((key) => isNaN(Number(key)))
+    .map((key) => FileSizes[key as keyof typeof FileSizes]);
 
   ngOnInit(): void {
+    this.fileTypes = this.getEnumValues(FileType);
     this.loadData();
   }
 
@@ -152,24 +186,39 @@ export class ProposalManagementComponent extends BaseComponent implements OnInit
       });
   }
 
-  onFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.selectedFile = input.files && input.files.length ? input.files[0] : null;
+  onFileSelectedForRow(file: File | null, rowIndex: number): void {
+    this.uploadRows[rowIndex] = file;
   }
 
-  uploadFile(): void {
-    if (!this.selectedFile) {
+  addUploadRow(): void {
+    this.uploadRows.push(null);
+  }
+
+  removeUploadRow(rowIndex: number): void {
+    if (this.uploadRows.length === 1) {
+      this.uploadRows[0] = null;
       return;
     }
 
-    const formData = new FormData();
-    formData.append('file', this.selectedFile);
-    formData.append('folderId', this.currentFolderId || this.rootFolderId);
+    this.uploadRows.splice(rowIndex, 1);
+  }
 
-    this.sub$.sink = this.httpClient.post('proposal-management/files', formData).subscribe(() => {
+  uploadFile(): void {
+    const filesToUpload = this.uploadRows.filter((file): file is File => !!file);
+    if (!filesToUpload.length) {
+      return;
+    }
+
+    const uploadRequests = filesToUpload.map((selectedFile) => {
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('folderId', this.currentFolderId || this.rootFolderId);
+      return this.httpClient.post('proposal-management/files', formData);
+    });
+
+    this.sub$.sink = forkJoin(uploadRequests).subscribe(() => {
       this.toastrService.success(this.translationService.getValue('FILE_UPLOADED_SUCCESSFULLY'));
-      this.selectedFile = null;
-      this.activeAction = null;
+      this.uploadRows = [null];
       this.loadData();
     });
   }
@@ -184,6 +233,14 @@ export class ProposalManagementComponent extends BaseComponent implements OnInit
       });
   }
 
+  openFileRequest(request: ProposalFileRequest): void {
+    if (!request.fileRequestId) {
+      return;
+    }
+
+    window.open(`${this.fileRequestBaseUrl}${request.fileRequestId}`, '_blank');
+  }
+
   createFileRequest(): void {
     if (!this.newRequestTitle.trim()) {
       return;
@@ -193,13 +250,28 @@ export class ProposalManagementComponent extends BaseComponent implements OnInit
       .post('proposal-management/file-requests', {
         title: this.newRequestTitle.trim(),
         description: this.newRequestDescription.trim(),
+        email: this.newRequestEmail?.trim() || null,
+        maxDocument: this.newRequestMaxDocument,
+        sizeInMb: this.newRequestSizeInMb,
+        fileExtension: this.newRequestFileTypes,
+        hasPassword: this.newRequestHasPassword,
+        password: this.newRequestHasPassword ? this.newRequestPassword : null,
+        linkExpiryTime: this.newRequestIsLinkExpiryTime ? this.newRequestLinkExpiryTime : null,
+        baseUrl: this.fileRequestBaseUrl,
         folderId: this.currentFolderId || this.rootFolderId,
       })
       .subscribe(() => {
         this.toastrService.success(this.translationService.getValue('FILE_REQUEST_CREATED_SUCCESSFULLY'));
         this.newRequestTitle = '';
         this.newRequestDescription = '';
-        this.activeAction = null;
+        this.newRequestEmail = '';
+        this.newRequestMaxDocument = 1;
+        this.newRequestSizeInMb = FileSizes.LessThan5MB;
+        this.newRequestFileTypes = [];
+        this.newRequestHasPassword = false;
+        this.newRequestPassword = '';
+        this.newRequestIsLinkExpiryTime = false;
+        this.newRequestLinkExpiryTime = '';
         this.loadData();
       });
   }
@@ -274,8 +346,24 @@ export class ProposalManagementComponent extends BaseComponent implements OnInit
     this.activeAction = null;
   }
 
-  showAction(action: 'subfolder' | 'upload' | 'request'): void {
+  showAction(action: 'subfolder'): void {
     this.activeAction = action;
+  }
+
+  getEnumValues(enumObj: any): { key: string; value: number }[] {
+    return Object.keys(enumObj)
+      .filter((key) => isNaN(Number(key)))
+      .map((key) => ({
+        key,
+        value: enumObj[key],
+      }));
+  }
+
+  getFileSizeLabel(sizeInMb: number): string {
+    if (sizeInMb === FileSizes.GreaterThan100MB) {
+      return '> 100 MB';
+    }
+    return `< ${sizeInMb} MB`;
   }
 
   private getFolderTrailIds(folderId: string): string[] {
