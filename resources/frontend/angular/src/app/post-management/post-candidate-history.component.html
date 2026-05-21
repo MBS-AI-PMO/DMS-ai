@@ -1,0 +1,88 @@
+<section class="content">
+  <div class="content-block">
+    <div class="block-header">
+      <div class="breadcrumb-main">
+        <div class="row align-items-center">
+          <div class="col">
+            <span class="page-title">Candidate history</span>
+          </div>
+          <div class="col-auto">
+            <button mat-stroked-button color="primary" type="button" (click)="goBack()">
+              <mat-icon>arrow_back</mat-icon>
+              Back to candidates
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <mat-card class="history-page-card mat-elevation-z1" *ngIf="post && candidate; else notFound">
+      <mat-card-content>
+        <div class="mb-3">
+          <h5 class="mb-1">{{ candidate.candidateName }}</h5>
+          <div class="text-muted small">
+            Current post: <strong>{{ post.title }}</strong>
+          </div>
+          <div class="text-muted small">
+            CNIC: {{ candidate.candidateCode || '—' }} · Phone: {{ candidate.phone || '—' }}
+          </div>
+          <div class="text-muted small" *ngIf="candidate.email">{{ candidate.email }}</div>
+          <div class="text-muted small mt-1">
+            Applied on this post: {{ formatDisplayDate(candidate.createdDate) }}
+            · Status:
+            <span class="badge rounded-pill ms-1" [ngClass]="getStageBadgeClass(candidate.stage)">
+              {{ getStageLabel(candidate.stage) }}
+            </span>
+          </div>
+        </div>
+
+        <div class="fw-semibold mb-2">Applications on other posts</div>
+        <div class="table-responsive history-table-wrap" *ngIf="candidate.history?.length; else noHistory">
+          <table class="table table-sm table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Post</th>
+                <th>Applied on</th>
+                <th>Status</th>
+                <th>Interview</th>
+                <th>Interviewer</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of candidate.history">
+                <td>{{ row.postTitle || '—' }}</td>
+                <td>{{ formatDisplayDate(row.createdDate) }}</td>
+                <td>
+                  <span class="badge rounded-pill" [ngClass]="getStageBadgeClass(row.stage)">
+                    {{ getStageLabel(row.stage) }}
+                  </span>
+                </td>
+                <td>{{ formatDisplayDate(row.interviewDate) }}</td>
+                <td>{{ row.interviewer || '—' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ng-template #noHistory>
+          <div class="text-muted small border rounded p-3 bg-light">
+            No other applications found for this candidate (matched by CNIC or email only).
+          </div>
+        </ng-template>
+      </mat-card-content>
+    </mat-card>
+
+    <ng-template #notFound>
+      <mat-card class="history-page-card mat-elevation-z1">
+        <mat-card-content>
+          <div class="empty-state">
+            <p class="mb-2">Candidate or post could not be loaded.</p>
+            <button mat-stroked-button color="primary" type="button" (click)="goBack()">
+              <mat-icon>arrow_back</mat-icon>
+              Back to candidates
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </ng-template>
+  </div>
+</section>

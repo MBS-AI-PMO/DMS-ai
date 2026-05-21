@@ -1,5 +1,5 @@
 import { APP_INITIALIZER, NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterModule } from '@angular/router';
@@ -38,7 +38,7 @@ import { LicenseInitializerService } from '@mlglobtech/license-validator-docphp'
     {
       provide: APP_INITIALIZER,
       useFactory: initializeApp,
-      deps: [LicenseInitializerService, ToastrService, SecurityService, JwtHelperService],
+      deps: [DOCUMENT, LicenseInitializerService, ToastrService, SecurityService, JwtHelperService],
       multi: true,
     },
   ],

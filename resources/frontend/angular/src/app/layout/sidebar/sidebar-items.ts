@@ -110,6 +110,15 @@ export const ROUTES: RouteInfo[] = [
     submenu: [],
   },
   {
+    path: 'post-management',
+    title: 'POST_MANAGEMENT',
+    icon: 'briefcase',
+    class: '',
+    groupTitle: false,
+    claims: ['FILE_REQUEST_VIEW_FILE_REQUEST'],
+    submenu: [],
+  },
+  {
     path: 'current-workflow',
     title: 'MY_WORKFLOWS',
     icon: 'git-merge',

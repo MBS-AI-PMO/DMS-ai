@@ -32,6 +32,13 @@ const routes: Routes = [
         component: FileRequestLinkPreviewComponent,
       },
       {
+        path: 'post-apply/:id',
+        loadComponent: () =>
+          import('./post-management/post-apply/post-apply.component').then(
+            (m) => m.PostApplyComponent
+          ),
+      },
+      {
         path: 'login',
         loadChildren: () =>
           import('./login/login.module').then((m) => m.LoginModule),
@@ -215,6 +222,33 @@ const routes: Routes = [
             loadComponent: () =>
               import('./proposal-management/proposal-management.component').then(
                 (m) => m.ProposalManagementComponent
+              ),
+          },
+          {
+            path: 'post-management',
+            data: { claimType: 'FILE_REQUEST_VIEW_FILE_REQUEST' },
+            canActivate: [AuthGuard],
+            loadComponent: () =>
+              import('./post-management/post-management.component').then(
+                (m) => m.PostManagementComponent
+              ),
+          },
+          {
+            path: 'post-management/:id/candidates',
+            data: { claimType: 'FILE_REQUEST_VIEW_FILE_REQUEST' },
+            canActivate: [AuthGuard],
+            loadComponent: () =>
+              import('./post-management/post-candidates.component').then(
+                (m) => m.PostCandidatesComponent
+              ),
+          },
+          {
+            path: 'post-management/:id/candidates/:candidateId/history',
+            data: { claimType: 'FILE_REQUEST_VIEW_FILE_REQUEST' },
+            canActivate: [AuthGuard],
+            loadComponent: () =>
+              import('./post-management/post-candidate-history.component').then(
+                (m) => m.PostCandidateHistoryComponent
               ),
           },
           {

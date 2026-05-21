@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\ProposalFile;
 use App\Models\ProposalFileRequest;
 use App\Models\ProposalFolder;
+use App\Models\ProposalCandidate;
+use App\Models\ProposalPost;
 use App\Models\FileRequests;
 use App\Models\FileRequestStatusEnum;
+use App\Models\Users;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -72,6 +75,34 @@ class ProposalManagementController extends Controller
             })
             ->values();
 
+        $posts = ProposalPost::with(['candidates' => function ($query) {
+            $query->orderByDesc('createdDate');
+        }])
+            ->where('createdBy', $userId)
+            ->orderByDesc('createdDate')
+            ->get()
+            ->map(function (ProposalPost $post) {
+                return [
+                    'id' => $post->id,
+                    'title' => $post->title,
+                    'department' => $post->department,
+                    'category' => $post->category,
+                    'experienceYears' => $post->experienceYears,
+                    'interviewKit' => $post->interviewKit,
+                    'basicQuestions' => $post->basicQuestions,
+                    'intermediateQuestions' => $post->intermediateQuestions,
+                    'expertQuestions' => $post->expertQuestions,
+                    'workMode' => $post->workMode,
+                    'address' => $post->address,
+                    'description' => $post->description,
+                    'createdDate' => $this->formatApiDateTime($post->createdDate, $post->modifiedDate),
+                    'candidates' => $post->candidates->map(function (ProposalCandidate $candidate) {
+                        return $this->mapCandidate($candidate);
+                    })->values(),
+                ];
+            })
+            ->values();
+
         return response()->json([
             'rootFolderId' => $rootFolder->id,
             'folders' => $folders->map(function (ProposalFolder $folder) {
@@ -83,6 +114,397 @@ class ProposalManagementController extends Controller
             })->values(),
             'files' => $files,
             'fileRequests' => $fileRequests,
+            'posts' => $posts,
+        ]);
+    }
+
+    public function createPost(Request $request)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'department' => 'nullable|string|max:255',
+            'category' => 'nullable|string|max:255',
+            'experienceYears' => 'nullable|integer|min:0|max:60',
+            'interviewKit' => 'nullable|string|in:basic,expert,intermediate',
+            'basicQuestions' => 'nullable|string',
+            'intermediateQuestions' => 'nullable|string',
+            'expertQuestions' => 'nullable|string',
+            'workMode' => 'nullable|string|in:remote,physical',
+            'address' => 'nullable|string|max:500',
+            'description' => 'nullable|string',
+        ]);
+
+        $now = Carbon::now();
+        $workMode = $validated['workMode'] ?? 'physical';
+        $postColumns = Schema::getColumnListing('proposalPosts');
+        $postPayload = [
+            'id' => Uuid::uuid4()->toString(),
+            'title' => trim($validated['title']),
+            'department' => !empty($validated['department']) ? trim($validated['department']) : null,
+            'description' => !empty($validated['description']) ? trim($validated['description']) : null,
+            'createdBy' => $this->getUserId(),
+            'createdDate' => $now,
+            'modifiedDate' => $now,
+        ];
+
+        if (in_array('category', $postColumns, true)) {
+            $postPayload['category'] = !empty($validated['category']) ? trim($validated['category']) : null;
+        }
+        if (in_array('experienceYears', $postColumns, true)) {
+            $postPayload['experienceYears'] = $validated['experienceYears'] ?? null;
+        }
+        if (in_array('interviewKit', $postColumns, true)) {
+            $postPayload['interviewKit'] = $validated['interviewKit'] ?? 'basic';
+        }
+        if (in_array('basicQuestions', $postColumns, true)) {
+            $postPayload['basicQuestions'] = $validated['basicQuestions'] ?? null;
+        }
+        if (in_array('intermediateQuestions', $postColumns, true)) {
+            $postPayload['intermediateQuestions'] = $validated['intermediateQuestions'] ?? null;
+        }
+        if (in_array('expertQuestions', $postColumns, true)) {
+            $postPayload['expertQuestions'] = $validated['expertQuestions'] ?? null;
+        }
+        if (in_array('workMode', $postColumns, true)) {
+            $postPayload['workMode'] = $workMode;
+        }
+        if (in_array('address', $postColumns, true)) {
+            $postPayload['address'] = $workMode === 'physical' && !empty($validated['address']) ? trim($validated['address']) : null;
+        }
+
+        $post = ProposalPost::create($postPayload);
+
+        return response()->json($post, 201);
+    }
+
+    public function updatePost(Request $request, string $id)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'department' => 'nullable|string|max:255',
+            'category' => 'nullable|string|max:255',
+            'experienceYears' => 'nullable|integer|min:0|max:60',
+            'interviewKit' => 'nullable|string|in:basic,expert,intermediate',
+            'basicQuestions' => 'nullable|string',
+            'intermediateQuestions' => 'nullable|string',
+            'expertQuestions' => 'nullable|string',
+            'workMode' => 'nullable|string|in:remote,physical',
+            'address' => 'nullable|string|max:500',
+            'description' => 'nullable|string',
+        ]);
+
+        $post = ProposalPost::where('id', $id)
+            ->where('createdBy', $this->getUserId())
+            ->firstOrFail();
+
+        $workMode = $validated['workMode'] ?? 'physical';
+        $postColumns = Schema::getColumnListing('proposalPosts');
+        $post->title = trim($validated['title']);
+        $post->department = !empty($validated['department']) ? trim($validated['department']) : null;
+        $post->description = !empty($validated['description']) ? trim($validated['description']) : null;
+        if (in_array('category', $postColumns, true)) {
+            $post->category = !empty($validated['category']) ? trim($validated['category']) : null;
+        }
+        if (in_array('experienceYears', $postColumns, true)) {
+            $post->experienceYears = $validated['experienceYears'] ?? null;
+        }
+        if (in_array('interviewKit', $postColumns, true)) {
+            $post->interviewKit = $validated['interviewKit'] ?? 'basic';
+        }
+        if (in_array('basicQuestions', $postColumns, true)) {
+            $post->basicQuestions = $validated['basicQuestions'] ?? null;
+        }
+        if (in_array('intermediateQuestions', $postColumns, true)) {
+            $post->intermediateQuestions = $validated['intermediateQuestions'] ?? null;
+        }
+        if (in_array('expertQuestions', $postColumns, true)) {
+            $post->expertQuestions = $validated['expertQuestions'] ?? null;
+        }
+        if (in_array('workMode', $postColumns, true)) {
+            $post->workMode = $workMode;
+        }
+        if (in_array('address', $postColumns, true)) {
+            $post->address = $workMode === 'physical' && !empty($validated['address']) ? trim($validated['address']) : null;
+        }
+        $post->modifiedDate = Carbon::now();
+        $post->save();
+
+        return response()->json($post);
+    }
+
+    public function deletePost(string $id)
+    {
+        $post = ProposalPost::where('id', $id)
+            ->where('createdBy', $this->getUserId())
+            ->firstOrFail();
+
+        $post->delete();
+
+        return response()->json([], 200);
+    }
+
+    public function createCandidate(Request $request, string $postId)
+    {
+        $userId = $this->getUserId();
+        $post = ProposalPost::where('id', $postId)
+            ->where('createdBy', $userId)
+            ->firstOrFail();
+
+        return response()->json($this->storeCandidate($request, $post, $userId), 201);
+    }
+
+    public function getPublicPost(string $postId)
+    {
+        $post = ProposalPost::where('id', $postId)->firstOrFail();
+
+        return response()->json([
+            'id' => $post->id,
+            'title' => $post->title,
+            'department' => $post->department,
+            'category' => $post->category,
+            'experienceYears' => $post->experienceYears,
+            'workMode' => $post->workMode,
+            'address' => $post->address,
+            'description' => $post->description,
+        ]);
+    }
+
+    public function submitPublicCandidate(Request $request, string $postId)
+    {
+        $post = ProposalPost::where('id', $postId)->firstOrFail();
+
+        return response()->json($this->storeCandidate($request, $post, $post->createdBy), 201);
+    }
+
+    private function storeCandidate(Request $request, ProposalPost $post, string $createdBy): array
+    {
+        $validated = $request->validate([
+            'candidateName' => 'required|string|max:255',
+            'candidateCode' => ['required', 'string', 'max:20', function ($attribute, $value, $fail) {
+                if ($this->normalizeCnicDigits($value) === null) {
+                    $fail('CNIC must be 13 digits (e.g. 35201-1234567-1).');
+                }
+            }],
+            'phone' => 'required|string|max:50',
+            'email' => 'required|email|max:255',
+            'experienceYears' => 'required|integer|min:0|max:60',
+            'workMode' => 'required|string|in:remote,physical',
+            'address' => 'nullable|string|max:500|required_if:workMode,physical',
+            'cv' => 'required|file',
+        ]);
+
+        $cvPath = null;
+        $cvOriginalName = null;
+        if ($request->hasFile('cv')) {
+            $uploadedFile = $request->file('cv');
+            $cvOriginalName = $uploadedFile->getClientOriginalName();
+            $cvPath = $uploadedFile->storeAs(
+                'proposal-candidates',
+                Uuid::uuid4() . '.' . $uploadedFile->getClientOriginalExtension(),
+                'local'
+            );
+        }
+
+        $now = Carbon::now();
+        $candidateColumns = Schema::getColumnListing('proposalCandidates');
+        $candidatePayload = [
+            'id' => Uuid::uuid4()->toString(),
+            'postId' => $post->id,
+            'candidateName' => trim($validated['candidateName']),
+            'candidateCode' => $this->formatCnicFromInput($validated['candidateCode']),
+            'phone' => !empty($validated['phone']) ? trim($validated['phone']) : null,
+            'email' => !empty($validated['email']) ? strtolower(trim($validated['email'])) : null,
+            'cvOriginalName' => $cvOriginalName,
+            'cvPath' => $cvPath,
+            'stage' => 'cv_received',
+            'createdBy' => $createdBy,
+            'createdDate' => $now,
+            'modifiedDate' => $now,
+        ];
+
+        if (in_array('experienceYears', $candidateColumns, true)) {
+            $candidatePayload['experienceYears'] = $validated['experienceYears'] ?? null;
+        }
+        if (in_array('workMode', $candidateColumns, true)) {
+            $candidatePayload['workMode'] = $validated['workMode'] ?? null;
+        }
+        if (in_array('address', $candidateColumns, true)) {
+            $candidatePayload['address'] = !empty($validated['address']) ? trim($validated['address']) : null;
+        }
+
+        $candidate = ProposalCandidate::create($candidatePayload);
+
+        return $this->mapCandidate($candidate);
+    }
+
+    public function updateCandidate(Request $request, string $id)
+    {
+        $validated = $request->validate([
+            'stage' => 'required|string|in:cv_received,shortlisted,interview_scheduled,approved,rejected,selected',
+            'interviewLevel' => 'nullable|string|in:basic,intermediate,advanced',
+            'interviewDate' => 'nullable|date',
+            'interviewer' => 'nullable|string|max:255',
+            'interviewerUserId' => 'nullable|uuid|exists:users,id',
+            'analysisNotes' => 'nullable|string',
+            'rejectionReason' => 'required_if:stage,rejected|nullable|string|max:5000',
+            'isReschedule' => 'sometimes|boolean',
+            'sendCandidateEmail' => 'sometimes|boolean',
+            'candidateEmailMessage' => 'nullable|string|max:10000',
+        ]);
+
+        $candidate = ProposalCandidate::with('post')
+            ->where('id', $id)
+            ->where('createdBy', $this->getUserId())
+            ->firstOrFail();
+
+        $candidate->stage = $validated['stage'];
+        $candidate->interviewLevel = $validated['interviewLevel'] ?? $candidate->interviewLevel;
+        $candidate->interviewDate = !empty($validated['interviewDate'])
+            ? Carbon::parse($validated['interviewDate'])
+            : $candidate->interviewDate;
+        $candidate->analysisNotes = array_key_exists('analysisNotes', $validated)
+            ? $validated['analysisNotes']
+            : $candidate->analysisNotes;
+
+        if ($validated['stage'] === 'rejected') {
+            $candidate->rejectionReason = isset($validated['rejectionReason'])
+                ? trim((string) $validated['rejectionReason'])
+                : null;
+            $candidate->interviewer = null;
+            $candidate->interviewerUserId = null;
+        } elseif ($validated['stage'] === 'interview_scheduled') {
+            $candidate->rejectionReason = null;
+
+            if (empty($validated['interviewerUserId'])) {
+                return response()->json(['message' => 'Please select an interviewer from the user list.'], 422);
+            }
+
+            if (empty($validated['interviewDate'])) {
+                return response()->json(['message' => 'Interview date and time are required.'], 422);
+            }
+
+            $interviewerUser = Users::find($validated['interviewerUserId']);
+            if (!$interviewerUser) {
+                return response()->json(['message' => 'Selected interviewer was not found.'], 422);
+            }
+
+            $candidate->interviewerUserId = $interviewerUser->id;
+            $candidate->interviewer = trim(
+                ($interviewerUser->firstName ?? '') . ' ' . ($interviewerUser->lastName ?? '')
+            ) ?: $interviewerUser->userName;
+        } elseif (array_key_exists('rejectionReason', $validated) && $validated['rejectionReason'] !== null) {
+            $candidate->rejectionReason = trim((string) $validated['rejectionReason']);
+        }
+
+        if (array_key_exists('interviewer', $validated) && $validated['stage'] !== 'interview_scheduled') {
+            $candidate->interviewer = $validated['interviewer'] !== null && $validated['interviewer'] !== ''
+                ? trim($validated['interviewer'])
+                : null;
+        }
+
+        $candidate->modifiedDate = Carbon::now();
+        $candidate->save();
+
+        if (
+            $validated['stage'] === 'interview_scheduled'
+            && $candidate->interviewDate
+            && !empty($candidate->interviewerUserId)
+        ) {
+            $interviewerUser = Users::find($candidate->interviewerUserId);
+            if ($interviewerUser && $candidate->post) {
+                $this->sendInterviewScheduleEmails(
+                    $candidate,
+                    $candidate->post,
+                    $interviewerUser,
+                    $request->boolean('isReschedule'),
+                    $request->boolean('sendCandidateEmail'),
+                    isset($validated['candidateEmailMessage'])
+                        ? trim((string) $validated['candidateEmailMessage'])
+                        : null
+                );
+            }
+        }
+
+        return response()->json($this->mapCandidate($candidate->fresh()));
+    }
+
+    public function sendCandidateEmail(Request $request, string $id)
+    {
+        $validated = $request->validate([
+            'message' => 'required|string|max:10000',
+            'subject' => 'nullable|string|max:255',
+        ]);
+
+        $candidate = ProposalCandidate::with('post')
+            ->where('id', $id)
+            ->where('createdBy', $this->getUserId())
+            ->firstOrFail();
+
+        if (empty($candidate->email)) {
+            return response()->json(['message' => 'Candidate has no email on file.'], 422);
+        }
+
+        if ($candidate->stage !== 'interview_scheduled') {
+            return response()->json(['message' => 'Email can only be sent for scheduled interviews.'], 422);
+        }
+
+        $interviewerUser = !empty($candidate->interviewerUserId)
+            ? Users::find($candidate->interviewerUserId)
+            : null;
+
+        $postTitle = $candidate->post?->title ?? 'Job post';
+        $message = trim((string) $validated['message']);
+        $subject = !empty($validated['subject'])
+            ? trim((string) $validated['subject'])
+            : 'Regarding your interview – ' . $postTitle;
+
+        $body = '<p>Dear ' . e($candidate->candidateName) . ',</p>'
+            . '<p>' . nl2br(e($message)) . '</p>';
+
+        if ($candidate->interviewDate) {
+            $interviewAt = Carbon::parse($candidate->interviewDate)->format('d M Y, h:i A');
+            $interviewerName = $candidate->interviewer ?? '—';
+            $body .= '<p><strong>Scheduled interview:</strong> ' . e($interviewAt) . '<br>'
+                . '<strong>Interviewer:</strong> ' . e($interviewerName) . '</p>';
+        }
+
+        try {
+            $emailPayload = [
+                'to_address' => $candidate->email,
+                'subject' => $subject,
+                'message' => $body,
+                'path' => null,
+            ];
+
+            if ($interviewerUser && !empty($interviewerUser->email)) {
+                $emailPayload['cc_address'] = $interviewerUser->email;
+            }
+
+            app(\App\Repositories\Contracts\EmailRepositoryInterface::class)->sendEmail($emailPayload);
+        } catch (\Throwable $th) {
+            return response()->json(['message' => 'Failed to send email. Please check SMTP settings.'], 500);
+        }
+
+        return response()->json(['message' => 'Email sent successfully.']);
+    }
+
+    public function openCandidateCv(string $id)
+    {
+        $candidate = ProposalCandidate::where('id', $id)
+            ->where('createdBy', $this->getUserId())
+            ->firstOrFail();
+
+        if (!$candidate->cvPath || !Storage::disk('local')->exists($candidate->cvPath)) {
+            abort(404, 'CV not found.');
+        }
+
+        $path = Storage::disk('local')->path($candidate->cvPath);
+        $mimeType = Storage::disk('local')->mimeType($candidate->cvPath) ?: 'application/octet-stream';
+        $fileName = $candidate->cvOriginalName ?: ($candidate->candidateName . '-cv');
+
+        return response()->file($path, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="' . $fileName . '"',
         ]);
     }
 
@@ -321,8 +743,215 @@ class ProposalManagementController extends Controller
         return implode(' / ', $parts);
     }
 
+    private function mapCandidate(ProposalCandidate $candidate): array
+    {
+        $historyQuery = ProposalCandidate::with('post')
+            ->where('createdBy', $candidate->createdBy)
+            ->where('id', '!=', $candidate->id);
+
+        $this->applyCandidateHistoryMatch($historyQuery, $candidate);
+
+        $history = $historyQuery
+            ->orderByDesc('createdDate')
+            ->limit(10)
+            ->get()
+            ->map(function (ProposalCandidate $historyCandidate) {
+                return [
+                    'postTitle' => $historyCandidate->post ? $historyCandidate->post->title : '',
+                    'stage' => $historyCandidate->stage,
+                    'createdDate' => $this->formatApiDateTime($historyCandidate->createdDate, $historyCandidate->modifiedDate),
+                    'interviewDate' => $this->formatApiDateTime($historyCandidate->interviewDate),
+                    'interviewer' => $historyCandidate->interviewer ?? null,
+                ];
+            })
+            ->values();
+
+        return [
+            'id' => $candidate->id,
+            'postId' => $candidate->postId,
+            'candidateName' => $candidate->candidateName,
+            'candidateCode' => $candidate->candidateCode,
+            'phone' => $candidate->phone,
+            'email' => $candidate->email,
+            'category' => $candidate->category,
+            'experienceYears' => $candidate->experienceYears,
+            'workMode' => $candidate->workMode,
+            'address' => $candidate->address,
+            'cvOriginalName' => $candidate->cvOriginalName,
+            'hasCv' => !empty($candidate->cvPath),
+            'stage' => $candidate->stage,
+            'interviewLevel' => $candidate->interviewLevel,
+            'interviewDate' => $this->formatApiDateTime($candidate->interviewDate),
+            'interviewer' => $candidate->interviewer ?? null,
+            'interviewerUserId' => $candidate->interviewerUserId ?? null,
+            'analysisNotes' => $candidate->analysisNotes,
+            'rejectionReason' => $candidate->rejectionReason ?? null,
+            'createdDate' => $this->formatApiDateTime($candidate->createdDate, $candidate->modifiedDate),
+            'history' => $history,
+        ];
+    }
+
     private function getUserId(): string
     {
         return Auth::parseToken()->getPayload()->get('userId');
+    }
+
+    /** ISO-8601 string for Angular date pipes (avoids null / invalid DB values). */
+    private function formatApiDateTime(mixed $value, mixed $fallback = null): ?string
+    {
+        foreach ([$value, $fallback] as $candidate) {
+            if ($candidate === null || $candidate === '') {
+                continue;
+            }
+
+            try {
+                return Carbon::parse($candidate)->toIso8601String();
+            } catch (\Throwable $th) {
+                continue;
+            }
+        }
+
+        return null;
+    }
+
+    /** @return string|null 13-digit CNIC without separators */
+    private function normalizeCnicDigits(?string $cnic): ?string
+    {
+        if ($cnic === null || trim($cnic) === '') {
+            return null;
+        }
+
+        $digits = preg_replace('/\D/', '', trim($cnic));
+
+        return strlen($digits) === 13 ? $digits : null;
+    }
+
+    private function formatCnicFromInput(string $cnic): string
+    {
+        $digits = $this->normalizeCnicDigits($cnic);
+
+        return $digits
+            ? substr($digits, 0, 5) . '-' . substr($digits, 5, 7) . '-' . substr($digits, 12, 1)
+            : trim($cnic);
+    }
+
+    private function sendInterviewScheduleEmails(
+        ProposalCandidate $candidate,
+        ProposalPost $post,
+        Users $interviewerUser,
+        bool $isReschedule = false,
+        bool $sendCandidateEmail = false,
+        ?string $candidateEmailMessage = null
+    ): void {
+        try {
+            $interviewAt = Carbon::parse($candidate->interviewDate)->format('d M Y, h:i A');
+            $postTitle = $post->title;
+            $levelLabels = [
+                'basic' => 'Beginner',
+                'intermediate' => 'Intermediate',
+                'advanced' => 'Advanced',
+            ];
+            $levelLabel = $levelLabels[$candidate->interviewLevel] ?? ($candidate->interviewLevel ?? 'Not set');
+            $interviewerName = trim(
+                ($interviewerUser->firstName ?? '') . ' ' . ($interviewerUser->lastName ?? '')
+            ) ?: $interviewerUser->userName;
+
+            if ($isReschedule) {
+                if (!$sendCandidateEmail || empty($candidate->email)) {
+                    return;
+                }
+
+                $candidateBody = '<p>Dear ' . e($candidate->candidateName) . ',</p>'
+                    . '<p>Your interview for <strong>' . e($postTitle) . '</strong> has been <strong>rescheduled</strong>.</p>'
+                    . '<p><strong>Date &amp; time:</strong> ' . e($interviewAt) . '<br>'
+                    . '<strong>Interviewer:</strong> ' . e($interviewerName) . '<br>'
+                    . '<strong>Interview kit:</strong> ' . e($levelLabel) . '</p>';
+
+                if ($candidateEmailMessage !== null && $candidateEmailMessage !== '') {
+                    $candidateBody .= '<p><strong>Message:</strong></p>'
+                        . '<p>' . nl2br(e($candidateEmailMessage)) . '</p>';
+                }
+
+                $candidateBody .= '<p>Please be available at the updated time.</p>';
+
+                $emailPayload = [
+                    'to_address' => $candidate->email,
+                    'subject' => 'Interview rescheduled – ' . $postTitle,
+                    'message' => $candidateBody,
+                    'path' => null,
+                ];
+
+                if (!empty($interviewerUser->email)) {
+                    $emailPayload['cc_address'] = $interviewerUser->email;
+                }
+
+                app(\App\Repositories\Contracts\EmailRepositoryInterface::class)->sendEmail($emailPayload);
+
+                return;
+            }
+
+            if (!empty($candidate->email)) {
+                $candidateBody = '<p>Dear ' . e($candidate->candidateName) . ',</p>'
+                    . '<p>Your interview for <strong>' . e($postTitle) . '</strong> has been scheduled.</p>'
+                    . '<p><strong>Date &amp; time:</strong> ' . e($interviewAt) . '<br>'
+                    . '<strong>Interviewer:</strong> ' . e($interviewerName) . '<br>'
+                    . '<strong>Interview kit:</strong> ' . e($levelLabel) . '</p>'
+                    . '<p>Please be available at the scheduled time.</p>';
+
+                app(\App\Repositories\Contracts\EmailRepositoryInterface::class)->sendEmail([
+                    'to_address' => $candidate->email,
+                    'subject' => 'Interview scheduled – ' . $postTitle,
+                    'message' => $candidateBody,
+                    'path' => null,
+                ]);
+            }
+
+            if (!empty($interviewerUser->email)) {
+                $interviewerBody = '<p>Dear ' . e($interviewerName) . ',</p>'
+                    . '<p>You are assigned to interview <strong>' . e($candidate->candidateName) . '</strong> for <strong>'
+                    . e($postTitle) . '</strong>.</p>'
+                    . '<p><strong>Date &amp; time:</strong> ' . e($interviewAt) . '<br>'
+                    . '<strong>Candidate email:</strong> ' . e($candidate->email ?: '—') . '<br>'
+                    . '<strong>Candidate phone:</strong> ' . e($candidate->phone ?: '—') . '<br>'
+                    . '<strong>Interview kit:</strong> ' . e($levelLabel) . '</p>';
+
+                app(\App\Repositories\Contracts\EmailRepositoryInterface::class)->sendEmail([
+                    'to_address' => $interviewerUser->email,
+                    'subject' => 'Interview assignment – ' . $postTitle,
+                    'message' => $interviewerBody,
+                    'path' => null,
+                ]);
+            }
+        } catch (\Throwable $th) {
+            // Email failure should not block candidate status update.
+        }
+    }
+
+    private function applyCandidateHistoryMatch($query, ProposalCandidate $candidate): void
+    {
+        $cnicDigits = $this->normalizeCnicDigits($candidate->candidateCode);
+        $email = !empty($candidate->email) ? strtolower(trim($candidate->email)) : null;
+
+        if (!$cnicDigits && !$email) {
+            $query->whereRaw('0 = 1');
+
+            return;
+        }
+
+        $query->where(function ($matchQuery) use ($cnicDigits, $email) {
+            if ($cnicDigits) {
+                $matchQuery->whereRaw(
+                    "REPLACE(REPLACE(REPLACE(candidateCode, '-', ''), ' ', ''), '.', '') = ?",
+                    [$cnicDigits]
+                );
+            }
+            if ($email) {
+                if ($cnicDigits) {
+                    $matchQuery->orWhereRaw('LOWER(TRIM(email)) = ?', [$email]);
+                } else {
+                    $matchQuery->whereRaw('LOWER(TRIM(email)) = ?', [$email]);
+                }
+            }
+        });
     }
 }
