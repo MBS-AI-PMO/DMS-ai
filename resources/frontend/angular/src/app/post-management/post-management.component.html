@@ -1,0 +1,220 @@
+<section class="content pm-module">
+  <div class="content-block">
+    <div class="pm-page-header">
+      <div>
+        <span class="page-title">{{ "POST_MANAGEMENT" | translate }}</span>
+        <p class="pm-page-subtitle">Create job posts, share apply links, and manage applicants.</p>
+      </div>
+      <button mat-flat-button color="primary" type="button" (click)="resetPostForm(); showPostForm = true">
+        <mat-icon>add</mat-icon> Add Post
+      </button>
+    </div>
+
+    <div class="row" *ngIf="showPostForm">
+      <div class="col-12">
+        <mat-card class="action-card pm-card mat-elevation-z0">
+          <mat-card-content class="p-4">
+            <h6 class="section-title mb-3">
+              <mat-icon>post_add</mat-icon>
+              {{ editingPostId ? 'Edit Post' : 'Create Post' }}
+            </h6>
+            <div class="row">
+              <div class="col-md-4">
+                <mat-form-field appearance="outline" class="w-100 mb-2">
+                  <mat-label>Post Title</mat-label>
+                  <input matInput [(ngModel)]="newPostTitle" placeholder="Developer, Designer, HR">
+                </mat-form-field>
+              </div>
+              <div class="col-md-4">
+                <mat-form-field appearance="outline" class="w-100 mb-2">
+                  <mat-label>Department</mat-label>
+                  <input matInput [(ngModel)]="newPostDepartment" placeholder="HR, Technical, Operations">
+                </mat-form-field>
+              </div>
+              <div class="col-md-4">
+                <mat-form-field appearance="outline" class="w-100 mb-2">
+                  <mat-label>Category</mat-label>
+                  <input matInput [(ngModel)]="newPostCategory" placeholder="IT, Sales, Finance">
+                </mat-form-field>
+              </div>
+              <div class="col-md-4">
+                <mat-form-field appearance="outline" class="w-100 mb-2">
+                  <mat-label>Experience (Years)</mat-label>
+                  <input matInput type="number" min="0" [(ngModel)]="newPostExperienceYears">
+                </mat-form-field>
+              </div>
+              <div class="col-md-4">
+                <mat-form-field appearance="outline" class="w-100 mb-2">
+                  <mat-label>Work Mode</mat-label>
+                  <mat-select [(ngModel)]="newPostWorkMode">
+                    <mat-option value="remote">Remote</mat-option>
+                    <mat-option value="physical">Physical</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <div class="col-md-4" *ngIf="newPostWorkMode === 'physical'">
+                <mat-form-field appearance="outline" class="w-100 mb-2">
+                  <mat-label>Address</mat-label>
+                  <input matInput [(ngModel)]="newPostAddress" placeholder="Office address">
+                </mat-form-field>
+              </div>
+              <div class="col-md-4">
+                <mat-form-field appearance="outline" class="w-100 mb-2">
+                  <mat-label>Description</mat-label>
+                  <input matInput [(ngModel)]="newPostDescription">
+                </mat-form-field>
+              </div>
+            </div>
+            <div class="question-bank mb-3">
+              <div class="fw-semibold mb-3">Interview Questions</div>
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="question-title">Basic Questions</div>
+                  <div class="question-row" *ngFor="let question of newPostBasicQuestions; let i = index; trackBy: trackByIndex">
+                    <mat-form-field appearance="outline" class="w-100 mb-2">
+                      <mat-label>Question {{ i + 1 }}</mat-label>
+                      <input matInput [(ngModel)]="newPostBasicQuestions[i]" placeholder="Enter question">
+                    </mat-form-field>
+                    <button mat-icon-button color="warn" type="button" (click)="removeQuestion('basic', i)">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                  <button mat-stroked-button color="primary" type="button" (click)="addQuestion('basic')">
+                    <mat-icon>add</mat-icon> Add Basic Question
+                  </button>
+                </div>
+                <div class="col-md-4">
+                  <div class="question-title">Intermediate Questions</div>
+                  <div class="question-row" *ngFor="let question of newPostIntermediateQuestions; let i = index; trackBy: trackByIndex">
+                    <mat-form-field appearance="outline" class="w-100 mb-2">
+                      <mat-label>Question {{ i + 1 }}</mat-label>
+                      <input matInput [(ngModel)]="newPostIntermediateQuestions[i]" placeholder="Enter question">
+                    </mat-form-field>
+                    <button mat-icon-button color="warn" type="button" (click)="removeQuestion('intermediate', i)">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                  <button mat-stroked-button color="primary" type="button" (click)="addQuestion('intermediate')">
+                    <mat-icon>add</mat-icon> Add Intermediate Question
+                  </button>
+                </div>
+                <div class="col-md-4">
+                  <div class="question-title">Expert Questions</div>
+                  <div class="question-row" *ngFor="let question of newPostExpertQuestions; let i = index; trackBy: trackByIndex">
+                    <mat-form-field appearance="outline" class="w-100 mb-2">
+                      <mat-label>Question {{ i + 1 }}</mat-label>
+                      <input matInput [(ngModel)]="newPostExpertQuestions[i]" placeholder="Enter question">
+                    </mat-form-field>
+                    <button mat-icon-button color="warn" type="button" (click)="removeQuestion('expert', i)">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                  <button mat-stroked-button color="primary" type="button" (click)="addQuestion('expert')">
+                    <mat-icon>add</mat-icon> Add Expert Question
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="text-end pt-2">
+              <button mat-button type="button" (click)="resetPostForm()">Cancel</button>
+              <button mat-flat-button color="primary" type="button" (click)="createPost()">
+                {{ editingPostId ? 'Update Post' : 'Save Post' }}
+              </button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+
+    <mat-card class="pm-card mat-elevation-z0">
+      <div class="pm-card-toolbar">
+        <h6 class="pm-card-title">
+          <mat-icon>work</mat-icon> Job Posts
+        </h6>
+        <span class="pm-badge-count">{{ posts.length }} {{ posts.length === 1 ? 'post' : 'posts' }}</span>
+      </div>
+      <div class="pm-table-wrap" *ngIf="posts.length > 0">
+        <table class="table pm-table">
+          <thead>
+            <tr>
+              <th>Post</th>
+              <th>Department</th>
+              <th>Category</th>
+              <th>Experience</th>
+              <th>Mode</th>
+              <th class="text-center">Candidates</th>
+              <th>Apply Link</th>
+              <th>Created</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let post of posts">
+              <td>
+                <div class="pm-post-title">{{ post.title }}</div>
+                <div class="pm-post-desc" *ngIf="post.description">{{ post.description }}</div>
+              </td>
+              <td>{{ post.department || 'General' }}</td>
+              <td>{{ post.category || '—' }}</td>
+              <td>{{ post.experienceYears !== null && post.experienceYears !== undefined ? post.experienceYears + ' yrs' : '—' }}</td>
+              <td>
+                <span class="pm-chip" [ngClass]="post.workMode === 'remote' ? 'pm-chip-remote' : 'pm-chip-physical'">
+                  {{ post.workMode === 'remote' ? 'Remote' : 'Physical' }}
+                </span>
+              </td>
+              <td class="text-center">
+                <span class="pm-count-pill">{{ post.candidates.length }}</span>
+              </td>
+              <td>
+                <a class="pm-link-btn" [href]="getApplyLink(post)" target="_blank" (click)="$event.stopPropagation()">
+                  <mat-icon>open_in_new</mat-icon> Open
+                </a>
+              </td>
+              <td class="text-nowrap">{{ formatDisplayDate(post.createdDate) }}</td>
+              <td class="text-end">
+                <div class="pm-actions">
+                  <button
+                    mat-icon-button
+                    class="pm-icon-btn pm-icon-btn-primary"
+                    type="button"
+                    matTooltip="View candidates"
+                    (click)="selectPost(post.id); $event.stopPropagation()">
+                    <mat-icon>groups</mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    class="pm-icon-btn pm-icon-btn-primary"
+                    type="button"
+                    matTooltip="Copy apply link"
+                    (click)="copyApplyLink(post); $event.stopPropagation()">
+                    <mat-icon>content_copy</mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    class="pm-icon-btn"
+                    type="button"
+                    matTooltip="Edit post"
+                    (click)="editPost(post); $event.stopPropagation()">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    class="pm-icon-btn pm-icon-btn-danger"
+                    type="button"
+                    matTooltip="Delete post"
+                    (click)="deletePost(post); $event.stopPropagation()">
+                    <mat-icon>delete_outline</mat-icon>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pm-empty" *ngIf="posts.length === 0">
+        <mat-icon>work_outline</mat-icon>
+        <p>No job posts yet. Click <strong>Add Post</strong> to create one.</p>
+      </div>
+    </mat-card>
+  </div>
+</section>

@@ -1,9 +1,17 @@
+import { DOCUMENT } from '@angular/common';
 import { SecurityService } from './security.service';
 import { LicenseInitializerService } from '@mlglobtech/license-validator-docphp';
 import { ToastrService } from 'ngx-toastr';
+import { removeLicenseBanner } from './license-validator-bypass';
 
-export function initializeApp(licenseService: LicenseInitializerService, toastrService: ToastrService, securityService: SecurityService): () => Promise<void> {
-  return () => new Promise<void>((resolve, reject) => {
+export function initializeApp(
+  document: Document,
+  licenseService: LicenseInitializerService,
+  toastrService: ToastrService,
+  securityService: SecurityService
+): () => Promise<void> {
+  return () => new Promise<void>((resolve) => {
+    removeLicenseBanner(document);
     return licenseService.initialize().then((result) => {
       if (result == "success") {
         return resolve();

@@ -1,4 +1,9 @@
 import { NgModule } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { Router } from '@angular/router';
+import { JwtHelperService } from '@auth0/angular-jwt';
+import { LicenseValidatorService } from '@mlglobtech/license-validator-docphp';
+import { createLicenseValidatorBypass } from '@core/security/license-validator-bypass';
 import { CoreModule } from './core/core.module';
 import { SharedModule } from './shared/shared.module';
 import { BrowserModule } from '@angular/platform-browser';
@@ -70,6 +75,11 @@ export function createTranslateLoader(http: HttpClient) {
     WINDOW_PROVIDERS,
     { provide: APP_BASE_HREF, useValue: '/' },
     provideHttpClient(withInterceptorsFromDi()),
+    {
+      provide: LicenseValidatorService,
+      useFactory: createLicenseValidatorBypass,
+      deps: [DOCUMENT, Router, JwtHelperService],
+    },
   ],
 })
 export class AppModule { }

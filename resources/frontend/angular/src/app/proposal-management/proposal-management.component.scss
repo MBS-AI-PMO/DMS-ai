@@ -121,3 +121,76 @@
     flex: 1;
   }
 }
+
+.proposal-main-tabs {
+  ::ng-deep .mat-mdc-tab-body-content {
+    overflow: visible;
+  }
+}
+
+.post-management-wrap {
+  padding-top: 18px;
+}
+
+.post-list {
+  max-height: 520px;
+
+  .active-post {
+    background-color: #eef4ff;
+    border-left: 3px solid #2e5bff;
+  }
+}
+
+.candidate-file-input {
+  max-width: 360px;
+}
+
+.candidate-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  padding: 16px;
+}
+
+.candidate-header {
+  align-items: flex-start;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.flow-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.flow-step {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 10px;
+
+  &.active {
+    background: #e0ecff;
+    border-color: #2e5bff;
+    color: #1d4ed8;
+  }
+}
+
+.empty-post-state {
+  align-items: center;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  color: #64748b;
+  display: flex;
+  justify-content: center;
+  min-height: 220px;
+  padding: 24px;
+  text-align: center;
+}

@@ -61,11 +61,40 @@ interface ProposalFileViewModel extends ProposalFile {
   displayLabel: string;
 }
 
+type CandidateStage = 'cv_received' | 'shortlisted' | 'interview_scheduled' | 'approved' | 'rejected' | 'selected';
+type InterviewLevel = 'basic' | 'intermediate' | 'advanced';
+
+interface ProposalCandidate {
+  id: string;
+  postId: string;
+  candidateName: string;
+  candidateCode?: string;
+  phone?: string;
+  email?: string;
+  cvOriginalName?: string;
+  hasCv: boolean;
+  stage: CandidateStage;
+  interviewLevel?: InterviewLevel;
+  interviewDate?: string;
+  analysisNotes?: string;
+  createdDate: string;
+}
+
+interface ProposalPost {
+  id: string;
+  title: string;
+  department?: string;
+  description?: string;
+  createdDate: string;
+  candidates: ProposalCandidate[];
+}
+
 interface ProposalDashboardData {
   rootFolderId: string;
   folders: ProposalFolder[];
   files: ProposalFile[];
   fileRequests: ProposalFileRequest[];
+  posts: ProposalPost[];
 }
 
 @Component({
@@ -101,6 +130,7 @@ export class ProposalManagementComponent extends BaseComponent implements OnInit
   folders: ProposalFolder[] = [];
   files: ProposalFile[] = [];
   fileRequests: ProposalFileRequest[] = [];
+  posts: ProposalPost[] = [];
   currentFolderId = '';
   loading = false;
 
@@ -118,13 +148,34 @@ export class ProposalManagementComponent extends BaseComponent implements OnInit
   newRequestLinkExpiryTime = '';
   uploadRows: Array<File | null> = [null];
   activeAction: 'subfolder' | null = null;
+  selectedManagementTabIndex = 0;
   selectedTabIndex = 0;
   fileTypes: { key: string; value: number }[] = [];
   fileSizeOptions = Object.keys(FileSizes)
     .filter((key) => isNaN(Number(key)))
     .map((key) => FileSizes[key as keyof typeof FileSizes]);
 
+  selectedPostId = '';
+  newPostTitle = '';
+  newPostDepartment = '';
+  newPostDescription = '';
+  newCandidateName = '';
+  newCandidateCode = '';
+  newCandidatePhone = '';
+  newCandidateEmail = '';
+  newCandidateCv: File | null = null;
+  readonly candidateStages: CandidateStage[] = [
+    'cv_received',
+    'shortlisted',
+    'interview_scheduled',
+    'approved',
+    'rejected',
+    'selected',
+  ];
+  readonly interviewLevels: InterviewLevel[] = ['basic', 'intermediate', 'advanced'];
+
   ngOnInit(): void {
+    this.selectedManagementTabIndex = window.location.pathname.includes('post-management') ? 1 : 0;
     this.fileTypes = this.getEnumValues(FileType);
     this.loadData();
   }
@@ -139,15 +190,102 @@ export class ProposalManagementComponent extends BaseComponent implements OnInit
           this.folders = response.folders;
           this.files = response.files;
           this.fileRequests = response.fileRequests;
+          this.posts = response.posts || [];
           this.currentFolderId = this.currentFolderId || response.rootFolderId;
           if (!this.folders.find((folder) => folder.id === this.currentFolderId)) {
             this.currentFolderId = response.rootFolderId;
+          }
+          if (!this.selectedPostId && this.posts.length) {
+            this.selectedPostId = this.posts[0].id;
+          }
+          if (this.selectedPostId && !this.posts.find((post) => post.id === this.selectedPostId)) {
+            this.selectedPostId = this.posts[0]?.id || '';
           }
           this.loading = false;
         },
         error: () => {
           this.loading = false;
         },
+      });
+  }
+
+  createPost(): void {
+    if (!this.newPostTitle.trim()) {
+      return;
+    }
+
+    this.sub$.sink = this.httpClient
+      .post<ProposalPost>('proposal-management/posts', {
+        title: this.newPostTitle.trim(),
+        department: this.newPostDepartment.trim(),
+        description: this.newPostDescription.trim(),
+      })
+      .subscribe((post) => {
+        this.toastrService.success('Post created successfully');
+        this.newPostTitle = '';
+        this.newPostDepartment = '';
+        this.newPostDescription = '';
+        this.selectedPostId = post.id;
+        this.loadData();
+      });
+  }
+
+  selectPost(postId: string): void {
+    this.selectedPostId = postId;
+  }
+
+  onCandidateCvSelected(file: File | null): void {
+    this.newCandidateCv = file;
+  }
+
+  createCandidate(): void {
+    if (!this.selectedPostId || !this.newCandidateName.trim()) {
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('candidateName', this.newCandidateName.trim());
+    formData.append('candidateCode', this.newCandidateCode.trim());
+    formData.append('phone', this.newCandidatePhone.trim());
+    formData.append('email', this.newCandidateEmail.trim());
+    if (this.newCandidateCv) {
+      formData.append('cv', this.newCandidateCv);
+    }
+
+    this.sub$.sink = this.httpClient
+      .post(`proposal-management/posts/${this.selectedPostId}/candidates`, formData)
+      .subscribe(() => {
+        this.toastrService.success('Candidate added successfully');
+        this.resetCandidateForm();
+        this.loadData();
+      });
+  }
+
+  updateCandidate(candidate: ProposalCandidate, changes: Partial<ProposalCandidate>): void {
+    this.sub$.sink = this.httpClient
+      .put(`proposal-management/candidates/${candidate.id}`, {
+        stage: changes.stage || candidate.stage,
+        interviewLevel: changes.interviewLevel || candidate.interviewLevel,
+        interviewDate: changes.interviewDate || candidate.interviewDate,
+        analysisNotes: changes.analysisNotes ?? candidate.analysisNotes,
+      })
+      .subscribe(() => {
+        this.toastrService.success('Candidate updated successfully');
+        this.loadData();
+      });
+  }
+
+  openCandidateCv(candidate: ProposalCandidate): void {
+    if (!candidate.hasCv) {
+      return;
+    }
+
+    this.sub$.sink = this.httpClient
+      .get(`proposal-management/candidates/${candidate.id}/cv`, { responseType: 'blob' })
+      .subscribe((blob) => {
+        const fileUrl = window.URL.createObjectURL(blob);
+        window.open(fileUrl, '_blank');
+        setTimeout(() => window.URL.revokeObjectURL(fileUrl), 60_000);
       });
   }
 
@@ -318,6 +456,14 @@ export class ProposalManagementComponent extends BaseComponent implements OnInit
     return this.fileRequests.filter((fileRequest) => fileRequest.folderId === this.currentFolderId);
   }
 
+  get selectedPost(): ProposalPost | null {
+    return this.posts.find((post) => post.id === this.selectedPostId) || null;
+  }
+
+  get selectedPostCandidates(): ProposalCandidate[] {
+    return this.selectedPost?.candidates || [];
+  }
+
   get breadcrumbFolders(): ProposalFolder[] {
     const breadcrumb: ProposalFolder[] = [];
     let folder = this.currentFolder;
@@ -364,6 +510,45 @@ export class ProposalManagementComponent extends BaseComponent implements OnInit
       return '> 100 MB';
     }
     return `< ${sizeInMb} MB`;
+  }
+
+  getStageLabel(stage: CandidateStage): string {
+    const stageLabels: Record<CandidateStage, string> = {
+      cv_received: 'CV Received',
+      shortlisted: 'Shortlisted',
+      interview_scheduled: 'Interview Scheduled',
+      approved: 'Approved',
+      rejected: 'Rejected',
+      selected: 'Selected',
+    };
+    return stageLabels[stage];
+  }
+
+  getStageBadgeClass(stage: CandidateStage): string {
+    const badgeClasses: Record<CandidateStage, string> = {
+      cv_received: 'bg-secondary',
+      shortlisted: 'bg-info',
+      interview_scheduled: 'bg-primary',
+      approved: 'bg-warning text-dark',
+      rejected: 'bg-danger',
+      selected: 'bg-success',
+    };
+    return badgeClasses[stage];
+  }
+
+  getInterviewLevelLabel(level?: InterviewLevel): string {
+    if (!level) {
+      return 'Not selected';
+    }
+    return level.charAt(0).toUpperCase() + level.slice(1);
+  }
+
+  resetCandidateForm(): void {
+    this.newCandidateName = '';
+    this.newCandidateCode = '';
+    this.newCandidatePhone = '';
+    this.newCandidateEmail = '';
+    this.newCandidateCv = null;
   }
 
   private getFolderTrailIds(folderId: string): string[] {

@@ -37,6 +37,19 @@ class EmailRepository  implements EmailRepositoryInterface
             $mail->SMTPSecure = $smtpSettings['encryption'];
             $mail->Port       = $smtpSettings['port'];
             $mail->addAddress($attribute['to_address']);
+
+            if (!empty($attribute['cc_address'])) {
+                $ccAddresses = is_array($attribute['cc_address'])
+                    ? $attribute['cc_address']
+                    : [$attribute['cc_address']];
+                foreach ($ccAddresses as $ccAddress) {
+                    $ccAddress = trim((string) $ccAddress);
+                    if ($ccAddress !== '') {
+                        $mail->addCC($ccAddress);
+                    }
+                }
+            }
+
             $mail->setFrom($smtpSettings['fromEmail'], $smtpSettings['fromName'] ?? $smtpSettings['fromEmail']);
             $mail->isHTML(true);
             $mail->CharSet = 'UTF-8';

@@ -1,0 +1,85 @@
+.apply-page {
+  align-items: center;
+  background: #f1f2f7;
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.apply-card {
+  border-radius: 14px;
+  max-width: 760px;
+  width: 100%;
+}
+
+.apply-icon {
+  color: #2e5bff;
+  font-size: 48px;
+  height: 48px;
+  width: 48px;
+}
+
+.job-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+
+  span {
+    background: #eef4ff;
+    border: 1px solid #dbeafe;
+    border-radius: 999px;
+    color: #1d4ed8;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 10px;
+  }
+}
+
+.cnic-primary-block {
+  background: #eff6ff;
+  border: 1px solid #93c5fd;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.cnic-primary-label {
+  align-items: center;
+  color: #1e40af;
+  display: flex;
+  font-size: 14px;
+  font-weight: 600;
+  gap: 8px;
+  margin-bottom: 8px;
+
+  mat-icon {
+    font-size: 22px;
+    height: 22px;
+    width: 22px;
+  }
+}
+
+.cnic-field {
+  background: #fff;
+  border-radius: 8px;
+}
+
+.file-input-custom {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.submitted-state {
+  color: #334155;
+  padding: 44px 16px;
+  text-align: center;
+
+  mat-icon {
+    color: #22c55e;
+    font-size: 56px;
+    height: 56px;
+    width: 56px;
+  }
+}

@@ -1,0 +1,274 @@
+<section class="content pm-module">
+  <div class="content-block">
+    <div class="pm-page-header">
+      <div>
+        <span class="page-title">Post Candidates</span>
+        <p class="pm-page-subtitle" *ngIf="post">Applicants for <strong>{{ post.title }}</strong></p>
+      </div>
+      <button mat-stroked-button class="pm-btn-primary-outline" type="button" routerLink="/post-management">
+        <mat-icon>arrow_back</mat-icon> Back to Posts
+      </button>
+    </div>
+
+    <ng-container *ngIf="post; else postNotFound">
+      <div class="pm-hero d-flex flex-wrap align-items-start justify-content-between gap-3">
+        <div>
+          <h1 class="pm-hero-title">{{ post.title }}</h1>
+          <div class="pm-hero-chips">
+            <span class="pm-chip">{{ post.department || 'General' }}</span>
+            <span class="pm-chip">{{ post.category || 'No category' }}</span>
+            <span class="pm-chip" *ngIf="post.experienceYears !== null && post.experienceYears !== undefined">
+              {{ post.experienceYears }} years exp.
+            </span>
+            <span class="pm-chip" [ngClass]="post.workMode === 'remote' ? 'pm-chip-remote' : 'pm-chip-physical'">
+              {{ post.workMode === 'remote' ? 'Remote' : 'Physical' }}
+            </span>
+            <span class="pm-count-pill">{{ post.candidates.length }} candidates</span>
+          </div>
+          <p class="pm-hero-meta mb-0" *ngIf="post.description">{{ post.description }}</p>
+          <p class="pm-hero-meta mb-0" *ngIf="post.workMode === 'physical' && post.address">
+            <mat-icon class="align-middle" style="font-size:14px;width:14px;height:14px">place</mat-icon>
+            {{ post.address }}
+          </p>
+        </div>
+        <button mat-flat-button color="primary" type="button" (click)="copyApplyLink(post)">
+          <mat-icon>link</mat-icon> Copy Apply Link
+        </button>
+      </div>
+
+      <mat-card class="pm-card mat-elevation-z0">
+        <div class="pm-card-toolbar">
+          <h6 class="pm-card-title">
+            <mat-icon>people</mat-icon> Applicants
+          </h6>
+        </div>
+
+        <div class="pm-table-wrap" *ngIf="post.candidates.length > 0">
+          <table class="table pm-table candidate-table">
+            <thead>
+              <tr>
+                <th>Candidate</th>
+                <th>Contact</th>
+                <th>Experience</th>
+                <th>Mode</th>
+                <th>Status</th>
+                <th>Interview</th>
+                <th>Applied</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let candidate of post.candidates"
+                [class.pm-row-selected]="candidate.id === selectedCandidateId">
+                <td>
+                  <div class="pm-candidate-cell">
+                    <div class="pm-avatar">{{ candidate.candidateName.charAt(0) | uppercase }}</div>
+                    <div>
+                      <div class="pm-candidate-name">{{ candidate.candidateName }}</div>
+                      <div class="pm-candidate-meta">CNIC {{ candidate.candidateCode || '—' }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="text-nowrap">{{ candidate.phone || '—' }}</div>
+                  <div class="pm-candidate-meta">{{ candidate.email || '—' }}</div>
+                </td>
+                <td>{{ candidate.experienceYears !== null && candidate.experienceYears !== undefined ? candidate.experienceYears + ' yrs' : '—' }}</td>
+                <td>
+                  <span class="pm-chip" *ngIf="candidate.workMode" [ngClass]="candidate.workMode === 'remote' ? 'pm-chip-remote' : 'pm-chip-physical'">
+                    {{ candidate.workMode === 'remote' ? 'Remote' : 'Physical' }}
+                  </span>
+                  <span *ngIf="!candidate.workMode">—</span>
+                </td>
+                <td>
+                  <span class="pm-status" [ngClass]="'pm-status-' + candidate.stage">
+                    {{ getStageLabel(candidate.stage) }}
+                  </span>
+                  <div class="text-danger small mt-1" *ngIf="candidate.stage === 'rejected' && candidate.rejectionReason">
+                    {{ candidate.rejectionReason }}
+                  </div>
+                </td>
+                <td>
+                  <div class="pm-interview-cell" *ngIf="candidate.interviewDate || candidate.interviewer; else noInterview">
+                    <div class="pm-interview-date" *ngIf="candidate.interviewDate">{{ formatDisplayDateTime(candidate.interviewDate) }}</div>
+                    <div class="pm-interview-meta" *ngIf="candidate.interviewer">{{ candidate.interviewer }}</div>
+                  </div>
+                  <ng-template #noInterview>—</ng-template>
+                </td>
+                <td class="text-nowrap">{{ formatDisplayDate(candidate.createdDate) }}</td>
+                <td class="text-end">
+                  <div class="pm-actions">
+                    <button mat-icon-button class="pm-icon-btn" type="button" matTooltip="History" (click)="navigateToHistory(candidate)">
+                      <mat-icon>history</mat-icon>
+                    </button>
+                    <button mat-icon-button class="pm-icon-btn" type="button" matTooltip="Notes" (click)="viewCandidate(candidate)">
+                      <mat-icon>sticky_note_2</mat-icon>
+                    </button>
+                    <button
+                      mat-icon-button
+                      class="pm-icon-btn pm-icon-btn-primary"
+                      type="button"
+                      matTooltip="Approve & schedule"
+                      *ngIf="canApproveCandidate(candidate)"
+                      (click)="openApproveScheduleDialog(candidate)">
+                      <mat-icon>event_available</mat-icon>
+                    </button>
+                    <button
+                      mat-icon-button
+                      class="pm-icon-btn pm-icon-btn-primary"
+                      type="button"
+                      matTooltip="Reschedule"
+                      *ngIf="canRescheduleInterview(candidate)"
+                      (click)="openApproveScheduleDialog(candidate)">
+                      <mat-icon>event_repeat</mat-icon>
+                    </button>
+                    <button
+                      mat-icon-button
+                      class="pm-icon-btn"
+                      type="button"
+                      matTooltip="Email candidate"
+                      *ngIf="canEmailCandidate(candidate)"
+                      (click)="openCandidateEmailDialog(candidate)">
+                      <mat-icon>mail</mat-icon>
+                    </button>
+                    <button
+                      mat-icon-button
+                      class="pm-icon-btn pm-icon-btn-danger"
+                      type="button"
+                      matTooltip="Reject"
+                      *ngIf="canRejectCandidate(candidate)"
+                      (click)="openRejectDialog(candidate)">
+                      <mat-icon>person_off</mat-icon>
+                    </button>
+                    <button
+                      mat-icon-button
+                      class="pm-icon-btn"
+                      type="button"
+                      matTooltip="View CV"
+                      [disabled]="!candidate.hasCv"
+                      (click)="openCandidateCv(candidate)">
+                      <mat-icon>description</mat-icon>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pm-empty" *ngIf="post.candidates.length === 0">
+          <mat-icon>person_search</mat-icon>
+          <p>No applications yet. Share the apply link to receive candidates.</p>
+        </div>
+      </mat-card>
+
+      <ng-container *ngIf="selectedCandidate as candidate">
+        <div class="candidate-detail-panel mt-3">
+          <div class="candidate-header mb-3">
+            <div class="pm-candidate-cell">
+              <div class="pm-avatar">{{ candidate.candidateName.charAt(0) | uppercase }}</div>
+              <div>
+                <h6 class="mb-1 pm-candidate-name" style="font-size:1rem">{{ candidate.candidateName }}</h6>
+                <div class="pm-candidate-meta">
+                  {{ candidate.candidateCode || 'No CNIC' }} · {{ candidate.phone || 'No phone' }}
+                </div>
+                <div class="pm-candidate-meta" *ngIf="candidate.email">{{ candidate.email }}</div>
+              </div>
+            </div>
+            <span class="pm-status" [ngClass]="'pm-status-' + candidate.stage">
+              {{ getStageLabel(candidate.stage) }}
+            </span>
+          </div>
+
+          <div class="alert alert-danger py-2 small mb-3" *ngIf="candidate.stage === 'rejected' && candidate.rejectionReason">
+            <strong>Rejection reason:</strong> {{ candidate.rejectionReason }}
+          </div>
+
+          <div class="flow-steps my-3">
+            <span
+              *ngFor="let stage of candidateStages"
+              class="flow-step"
+              [ngClass]="{'active': candidate.stage === stage}">
+              {{ getStageLabel(stage) }}
+            </span>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <mat-form-field appearance="outline" class="w-100">
+                <mat-label>Interview Date</mat-label>
+                <input matInput type="datetime-local" [(ngModel)]="candidate.interviewDate">
+              </mat-form-field>
+            </div>
+            <div class="col-md-4">
+              <mat-form-field appearance="outline" class="w-100">
+                <mat-label>Interviewer</mat-label>
+                <input matInput [(ngModel)]="candidate.interviewer" placeholder="Assigned interviewer">
+              </mat-form-field>
+            </div>
+            <div class="col-md-4">
+              <mat-form-field appearance="outline" class="w-100">
+                <mat-label>Analysis / Notes</mat-label>
+                <input matInput [(ngModel)]="candidate.analysisNotes" placeholder="Screening notes">
+              </mat-form-field>
+            </div>
+          </div>
+
+          <div class="d-flex align-items-center gap-2 flex-wrap mb-3" *ngIf="canApproveCandidate(candidate) || canRescheduleInterview(candidate)">
+            <span class="text-muted small">Interview kit</span>
+            <span class="pm-chip">Auto: {{ getInterviewLevelLabel(getAutoInterviewLevel(candidate)) }}</span>
+            <button
+              mat-stroked-button
+              type="button"
+              *ngFor="let level of interviewLevels"
+              [color]="getCandidateInterviewLevel(candidate) === level ? 'primary' : undefined"
+              (click)="openApproveScheduleDialog(candidate, level)">
+              {{ getInterviewLevelLabel(level) }}
+            </button>
+          </div>
+
+          <div class="question-bank mb-3">
+            <div class="fw-semibold mb-2">
+              {{ getInterviewLevelLabel(getCandidateInterviewLevel(candidate)) }} — Interview Questions
+            </div>
+            <ol class="mb-0 ps-3">
+              <li *ngFor="let question of getInterviewQuestions(candidate)" class="mb-1">{{ question }}</li>
+            </ol>
+          </div>
+
+          <div class="pm-btn-toolbar pt-2 border-top">
+            <button mat-stroked-button color="primary" type="button" (click)="updateCandidate(candidate, { stage: 'shortlisted', analysisNotes: candidate.analysisNotes })">
+              Shortlist
+            </button>
+            <button mat-stroked-button color="primary" type="button" *ngIf="canApproveCandidate(candidate)" (click)="openApproveScheduleDialog(candidate)">
+              Schedule Interview
+            </button>
+            <button mat-stroked-button color="primary" type="button" *ngIf="canRescheduleInterview(candidate)" (click)="openApproveScheduleDialog(candidate)">
+              Reschedule
+            </button>
+            <button mat-stroked-button type="button" *ngIf="canEmailCandidate(candidate)" (click)="openCandidateEmailDialog(candidate)">
+              <mat-icon>mail</mat-icon> Email
+            </button>
+            <button mat-stroked-button color="warn" type="button" *ngIf="canRejectCandidate(candidate)" (click)="openRejectDialog(candidate)">
+              Reject
+            </button>
+            <button mat-stroked-button class="text-success" type="button" (click)="updateCandidate(candidate, { stage: 'selected', analysisNotes: candidate.analysisNotes })">
+              Mark Selected
+            </button>
+          </div>
+        </div>
+      </ng-container>
+    </ng-container>
+
+    <ng-template #postNotFound>
+      <mat-card class="pm-card mat-elevation-z0">
+        <div class="pm-empty">
+          <mat-icon>error_outline</mat-icon>
+          <p>Post not found.</p>
+          <button mat-stroked-button routerLink="/post-management" class="mt-2">Back to Posts</button>
+        </div>
+      </mat-card>
+    </ng-template>
+  </div>
+</section>
