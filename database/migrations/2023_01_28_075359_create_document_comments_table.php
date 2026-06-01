@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('documentComments', function (Blueprint $table) {
+        Schema::create('documentcomments', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('documentId')->nullable(false);
             $table->foreign('documentId')->references('id')->on('documents');
@@ -36,6 +36,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('documentComments');
+        Schema::dropIfExists('documentcomments');
     }
 };

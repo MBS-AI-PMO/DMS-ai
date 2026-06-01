@@ -4,14 +4,14 @@ namespace App\Models;
 
 use Ramsey\Uuid\Uuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 
-class ReminderSchedulers extends Model
+
+class ReminderSchedulers extends BaseModel
 {
     use HasFactory;
     const CREATED_AT = 'createdDate';
     public $timestamps = false;
-    protected  $table = 'reminderSchedulers';
+    protected $table = 'reminderschedulers';
 
     protected $fillable = [
         'frequency', 'isActive', 'duration', 'documentId', 'isEmailNotification', 'isRead',

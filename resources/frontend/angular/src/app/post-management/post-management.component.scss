@@ -1,5 +1,144 @@
+$pm-primary: #4f46e5;
+$pm-primary-soft: #eef2ff;
+$pm-border: #e2e8f0;
+$pm-text: #0f172a;
+$pm-muted: #64748b;
+
 .question-row {
   align-items: flex-start;
   display: flex;
   gap: 8px;
+}
+
+.pm-post-form {
+  padding: 1.5rem 1.75rem 1.25rem;
+
+  .pm-form-title {
+    color: $pm-text;
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 1.25rem;
+  }
+
+  .pm-field-step {
+    color: $pm-primary;
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.35rem;
+    text-transform: uppercase;
+  }
+
+  .row.g-3 {
+    --bs-gutter-y: 0.5rem;
+  }
+
+  mat-form-field {
+    width: 100%;
+  }
+
+  .pm-form-note {
+    align-items: flex-start;
+    background: $pm-primary-soft;
+    border: 1px solid rgba(79, 70, 229, 0.15);
+    border-radius: 10px;
+    color: $pm-muted;
+    display: flex;
+    font-size: 0.8125rem;
+    gap: 10px;
+    line-height: 1.45;
+    margin-top: 0.5rem;
+    padding: 12px 14px;
+
+    mat-icon {
+      color: $pm-primary;
+      flex-shrink: 0;
+      font-size: 18px;
+      height: 18px;
+      margin-top: 1px;
+      width: 18px;
+    }
+
+    strong {
+      color: $pm-text;
+    }
+  }
+
+  .pm-form-actions {
+    align-items: center;
+    border-top: 1px solid $pm-border;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+  }
+}
+
+.pm-tabs {
+  margin-top: 0.5rem;
+}
+
+.pm-tab-body {
+  padding: 1rem 0 0.5rem;
+}
+
+.pm-data-card {
+  overflow: hidden;
+
+  .pm-search-field {
+    margin: 0;
+    max-width: 280px;
+    width: 100%;
+
+    .mat-mdc-form-field-subscript-wrapper {
+      display: none;
+    }
+  }
+
+  .pm-paginator {
+    background: #f8fafc;
+    border-top: 1px solid $pm-border;
+  }
+
+  .pm-row-num {
+    color: $pm-muted;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    width: 48px;
+  }
+
+  .pm-cell-name {
+    color: $pm-text;
+    font-weight: 600;
+  }
+
+  .pm-tag {
+    background: $pm-primary-soft;
+    border-radius: 6px;
+    color: $pm-primary;
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 10px;
+  }
+
+  .pm-date-cell {
+    color: $pm-muted;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+  }
+
+  .pm-table-hover tbody tr:hover {
+    background: #fafbff;
+  }
+
+  .pm-empty mat-icon {
+    color: #94a3b8;
+    font-size: 40px;
+    height: 40px;
+    margin-bottom: 8px;
+    width: 40px;
+  }
 }

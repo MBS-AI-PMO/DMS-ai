@@ -4,7 +4,7 @@ namespace App\Models;
 
 use App\Traits\Uuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
 use Ramsey\Uuid\Uuid;
@@ -12,14 +12,14 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use User;
 
-class DocumentWorkflow extends Model
+class DocumentWorkflow extends BaseModel
 {
     use HasFactory, SoftDeletes;
     use Notifiable, Uuids;
     const CREATED_AT = 'createdDate';
     const UPDATED_AT = 'modifiedDate';
 
-    protected $table = 'documentWorkflow'; // Table name
+    protected $table = 'documentworkflow'; // Table name
     protected $fillable = ['documentId', 'workflowId', 'currentStepId', 'status'];
 
 
@@ -73,8 +73,8 @@ class DocumentWorkflow extends Model
             $model->modifiedBy = $userId;
         });
 
-        static::addGlobalScope('documentWorkflow.isDeleted', function (Builder $builder) {
-            $builder->where('documentWorkflow.isDeleted', '=', 0);
+        static::addGlobalScope('documentworkflow.isDeleted', function (Builder $builder) {
+            $builder->where('documentworkflow.isDeleted', '=', 0);
         });
     }
 }

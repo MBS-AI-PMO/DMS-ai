@@ -4,16 +4,16 @@ namespace App\Models;
 
 use Ramsey\Uuid\Uuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 
-class RoleClaims extends Model
+
+class RoleClaims extends BaseModel
 {
     use HasFactory;
     protected $primaryKey = "id";
     protected $keyType = 'string';
     public $incrementing = false;
 
-    public $table = 'roleClaims';
+    protected $table = 'roleclaims';
     public $timestamps = false;
 
     protected $fillable = ['roleId', 'actionId', 'claimType'];

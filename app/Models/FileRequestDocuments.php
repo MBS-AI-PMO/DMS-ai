@@ -4,16 +4,16 @@ namespace App\Models;
 
 use App\Traits\Uuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class FileRequestDocuments extends Model
+class FileRequestDocuments extends BaseModel
 {
     use HasFactory, Uuids;
     public $timestamps = false;
     public $incrementing = false;
 
-    protected $table = 'fileRequestDocuments';
+    protected $table = 'filerequestdocuments';
     protected $primaryKey = "id";
 
     protected $fillable = [

@@ -4,18 +4,18 @@ namespace App\Models;
 use Ramsey\Uuid\Uuid;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+
 use Illuminate\Notifications\Notifiable;
 use App\Traits\Uuids;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class DocumentStatus extends Model
+class DocumentStatus extends BaseModel
 {
     use HasFactory, SoftDeletes;
     use Notifiable, Uuids;
     protected $primaryKey = "id";
-    protected  $table = 'documentStatus';
+    protected $table = 'documentstatus';
     public $incrementing = false;
 
     const CREATED_AT = 'createdDate';
@@ -42,7 +42,7 @@ class DocumentStatus extends Model
         // });
 
         static::addGlobalScope('isDeleted', function (Builder $builder) {
-            $builder->where('documentStatus.isDeleted', '=', 0);
+            $builder->where('documentstatus.isDeleted', '=', 0);
         });
     }
 }

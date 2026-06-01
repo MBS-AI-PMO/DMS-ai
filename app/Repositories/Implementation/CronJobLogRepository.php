@@ -29,7 +29,7 @@ class CronJobLogRepository extends BaseRepository implements CronJobLogRepositor
 
     public function getAllCronJobLogs($attributes)
     {
-        $query = CronJobLogs::select(['cronJobLogs.*']);
+        $query = CronJobLogs::select(['cronjoblogs.*']);
 
         $orderByArray =  explode(' ', $attributes->orderBy);
         $orderBy = $orderByArray[0] ?? 'startedAt';
@@ -38,10 +38,10 @@ class CronJobLogRepository extends BaseRepository implements CronJobLogRepositor
         $query = $query->orderBy($orderBy, $direction);
 
         if ($attributes->jobName) {
-            $query = $query->where('cronJobLogs.jobName',  'like', '%' . urldecode($attributes->jobName) . '%');
+            $query = $query->where('cronjoblogs.jobName',  'like', '%' . urldecode($attributes->jobName) . '%');
         }
         if ($attributes->output) {
-            $query = $query->where('cronJobLogs.output',  'like', '%' . $attributes->output . '%');
+            $query = $query->where('cronjoblogs.output',  'like', '%' . $attributes->output . '%');
         }
         $results = $query->skip($attributes->skip)->take($attributes->pageSize)->get();
         return $results;
@@ -52,10 +52,10 @@ class CronJobLogRepository extends BaseRepository implements CronJobLogRepositor
         $query = CronJobLogs::query();
 
         if ($attributes->jobName) {
-            $query = $query->where('cronJobLogs.jobName',  'like', '%' . urldecode($attributes->jobName) . '%');
+            $query = $query->where('cronjoblogs.jobName',  'like', '%' . urldecode($attributes->jobName) . '%');
         }
         if ($attributes->output) {
-            $query = $query->where('cronJobLogs.output',  'like', '%' . $attributes->output . '%');
+            $query = $query->where('cronjoblogs.output',  'like', '%' . $attributes->output . '%');
         }
 
         $count = $query->count();

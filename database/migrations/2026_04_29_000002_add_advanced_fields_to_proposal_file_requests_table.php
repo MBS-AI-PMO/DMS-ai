@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::table('proposalFileRequests', function (Blueprint $table) {
+        Schema::table('proposalfilerequests', function (Blueprint $table) {
             $table->string('email')->nullable()->after('title');
             $table->unsignedInteger('maxDocument')->default(1)->after('description');
             $table->unsignedInteger('sizeInMb')->default(5)->after('maxDocument');
@@ -20,7 +20,7 @@ return new class extends Migration {
 
     public function down(): void
     {
-        Schema::table('proposalFileRequests', function (Blueprint $table) {
+        Schema::table('proposalfilerequests', function (Blueprint $table) {
             $table->dropColumn([
                 'email',
                 'maxDocument',

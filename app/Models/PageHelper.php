@@ -4,17 +4,17 @@ namespace App\Models;
 
 use Ramsey\Uuid\Uuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+
 use Illuminate\Notifications\Notifiable;
 use App\Traits\Uuids;
 
-class PageHelper extends Model
+class PageHelper extends BaseModel
 {
     use HasFactory;
     use Notifiable, Uuids;
     protected $primaryKey = "id";
     public $timestamps = false;
-    public $table = 'pageHelper';
+    protected $table = 'pagehelper';
 
     protected $fillable = [
         'name',

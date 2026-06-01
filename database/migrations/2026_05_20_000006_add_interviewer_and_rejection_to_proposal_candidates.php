@@ -7,11 +7,11 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::table('proposalCandidates', function (Blueprint $table) {
-            if (!Schema::hasColumn('proposalCandidates', 'interviewer')) {
+        Schema::table('proposalcandidates', function (Blueprint $table) {
+            if (!Schema::hasColumn('proposalcandidates', 'interviewer')) {
                 $table->string('interviewer', 255)->nullable()->after('interviewDate');
             }
-            if (!Schema::hasColumn('proposalCandidates', 'rejectionReason')) {
+            if (!Schema::hasColumn('proposalcandidates', 'rejectionReason')) {
                 $table->text('rejectionReason')->nullable()->after('analysisNotes');
             }
         });
@@ -19,11 +19,11 @@ return new class extends Migration {
 
     public function down(): void
     {
-        Schema::table('proposalCandidates', function (Blueprint $table) {
-            if (Schema::hasColumn('proposalCandidates', 'rejectionReason')) {
+        Schema::table('proposalcandidates', function (Blueprint $table) {
+            if (Schema::hasColumn('proposalcandidates', 'rejectionReason')) {
                 $table->dropColumn('rejectionReason');
             }
-            if (Schema::hasColumn('proposalCandidates', 'interviewer')) {
+            if (Schema::hasColumn('proposalcandidates', 'interviewer')) {
                 $table->dropColumn('interviewer');
             }
         });

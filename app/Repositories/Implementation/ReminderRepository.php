@@ -118,23 +118,23 @@ class ReminderRepository extends BaseRepository implements ReminderRepositoryInt
             $model = $this->model->newInstance($request);
             $saved = $model->save();
 
-            if ($request['reminderUsers']) {
-                $model->reminderUsers()->createMany($request['reminderUsers']);
+            if ($request['reminderusers']) {
+                $model->reminderusers()->createMany($request['reminderusers']);
             } else {
                 $userId = Auth::parseToken()->getPayload()->get('userId');
-                $model->reminderUsers()->createMany(array(['userId' => $userId, 'reminderId' => $model->id]));
+                $model->reminderusers()->createMany(array(['userId' => $userId, 'reminderId' => $model->id]));
             }
 
-            if (isset($request['dailyReminders'])) {
-                $model->dailyReminders()->createMany($request['dailyReminders']);
+            if (isset($request['dailyreminders'])) {
+                $model->dailyreminders()->createMany($request['dailyreminders']);
             }
 
-            if (isset($request['halfYearlyReminders'])) {
-                $model->halfYearlyReminders()->createMany($request['halfYearlyReminders']);
+            if (isset($request['halfyearlyreminders'])) {
+                $model->halfyearlyreminders()->createMany($request['halfyearlyreminders']);
             }
 
-            if (isset($request['quarterlyReminders'])) {
-                $model->quarterlyReminders()->createMany($request['quarterlyReminders']);
+            if (isset($request['quarterlyreminders'])) {
+                $model->quarterlyreminders()->createMany($request['quarterlyreminders']);
             }
 
             DB::commit();
@@ -161,10 +161,10 @@ class ReminderRepository extends BaseRepository implements ReminderRepositoryInt
             $model->isEmailNotification = $request->isEmailNotification;
             $model->startDate = $request->startDate;
             $model->endDate = $request->endDate;
-            $reminderUsers = $request->reminderUsers;
-            $dailyReminders = $request->dailyReminders;
-            $halfYearlyReminders = $request->halfYearlyReminders;
-            $quarterlyReminders = $request->quarterlyReminders;
+            $reminderusers = $request->reminderusers;
+            $dailyreminders = $request->dailyreminders;
+            $halfyearlyreminders = $request->halfyearlyreminders;
+            $quarterlyreminders = $request->quarterlyreminders;
 
             $saved = $model->save();
             $this->resetModel();
@@ -182,23 +182,23 @@ class ReminderRepository extends BaseRepository implements ReminderRepositoryInt
             $quarterlyReminder = QuarterlyReminders::where('reminderId', '=', $id)->get('id');
             QuarterlyReminders::destroy($quarterlyReminder);
 
-            if ($reminderUsers) {
-                $model->reminderUsers()->createMany($reminderUsers);
+            if ($reminderusers) {
+                $model->reminderusers()->createMany($reminderusers);
             } else {
                 $userId = Auth::parseToken()->getPayload()->get('userId');
-                $model->reminderUsers()->createMany(array(['userId' => $userId, 'reminderId' => $model->id]));
+                $model->reminderusers()->createMany(array(['userId' => $userId, 'reminderId' => $model->id]));
             }
 
-            if (isset($dailyReminders)) {
-                $model->dailyReminders()->createMany($dailyReminders);
+            if (isset($dailyreminders)) {
+                $model->dailyreminders()->createMany($dailyreminders);
             }
 
-            if (isset($halfYearlyReminders)) {
-                $model->halfYearlyReminders()->createMany($halfYearlyReminders);
+            if (isset($halfyearlyreminders)) {
+                $model->halfyearlyreminders()->createMany($halfyearlyreminders);
             }
 
-            if (isset($quarterlyReminders)) {
-                $model->quarterlyReminders()->createMany($quarterlyReminders);
+            if (isset($quarterlyreminders)) {
+                $model->quarterlyreminders()->createMany($quarterlyreminders);
             }
 
             if (!$saved) {
@@ -216,10 +216,10 @@ class ReminderRepository extends BaseRepository implements ReminderRepositoryInt
 
     public function findReminder($id)
     {
-        $model = $this->model->with('reminderUsers')
-            ->with('quarterlyReminders')
-            ->with('halfYearlyReminders')
-            ->with('dailyReminders')->findOrFail($id);
+        $model = $this->model->with('reminderusers')
+            ->with('quarterlyreminders')
+            ->with('halfyearlyreminders')
+            ->with('dailyreminders')->findOrFail($id);
         $this->resetModel();
         return $this->parseResult($model);
     }
@@ -245,9 +245,9 @@ class ReminderRepository extends BaseRepository implements ReminderRepositoryInt
             })
             ->orWhereExists(function ($query) use ($userId) {
                 $query->select(DB::raw(1))
-                    ->from('reminderUsers')
-                    ->whereRaw('reminderUsers.reminderId = reminders.id')
-                    ->where('reminderUsers.userId', '=', $userId);
+                    ->from('reminderusers')
+                    ->whereRaw('reminderusers.reminderId = reminders.id')
+                    ->where('reminderusers.userId', '=', $userId);
             });
 
         $orderByArray =  explode(' ', $attributes->orderBy);
@@ -292,9 +292,9 @@ class ReminderRepository extends BaseRepository implements ReminderRepositoryInt
             })
             ->orWhereExists(function ($query) use ($userId) {
                 $query->select(DB::raw(1))
-                    ->from('reminderUsers')
-                    ->whereRaw('reminderUsers.reminderId = reminders.id')
-                    ->where('reminderUsers.userId', '=', $userId);
+                    ->from('reminderusers')
+                    ->whereRaw('reminderusers.reminderId = reminders.id')
+                    ->where('reminderusers.userId', '=', $userId);
             });
 
         if ($attributes->subject) {

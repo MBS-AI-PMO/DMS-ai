@@ -3,17 +3,17 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+
 use Ramsey\Uuid\Uuid;
 
-class WorkflowStep extends Model
+class WorkflowStep extends BaseModel
 {
     use HasFactory;
     protected $primaryKey = "id";
     public $timestamps = false;
     public $incrementing = false;
 
-    protected $table = 'workflowSteps'; // Table name
+    protected $table = 'workflowsteps'; // Table name
     protected $fillable = ['workflowId', 'name'];
 
     public function workflow()

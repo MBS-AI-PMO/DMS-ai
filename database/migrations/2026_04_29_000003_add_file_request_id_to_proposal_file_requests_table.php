@@ -7,15 +7,15 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::table('proposalFileRequests', function (Blueprint $table) {
+        Schema::table('proposalfilerequests', function (Blueprint $table) {
             $table->uuid('fileRequestId')->nullable()->after('folderId');
-            $table->foreign('fileRequestId')->references('id')->on('fileRequests')->nullOnDelete();
+            $table->foreign('fileRequestId')->references('id')->on('filerequests')->nullOnDelete();
         });
     }
 
     public function down(): void
     {
-        Schema::table('proposalFileRequests', function (Blueprint $table) {
+        Schema::table('proposalfilerequests', function (Blueprint $table) {
             $table->dropForeign(['fileRequestId']);
             $table->dropColumn('fileRequestId');
         });

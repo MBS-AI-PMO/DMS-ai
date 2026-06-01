@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('documentMetaDatas', function (Blueprint $table) {
+        Schema::create('documentmetadatas', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('documentId')->nullable(false);
             $table->foreign('documentId')->references('id')->on('documents');
@@ -35,6 +35,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('documentMetaDatas');
+        Schema::dropIfExists('documentmetadatas');
     }
 };

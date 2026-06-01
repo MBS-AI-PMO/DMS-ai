@@ -97,16 +97,16 @@ class FileRequestDocumentRepository extends BaseRepository implements FileReques
     public function approveDocument($request)
     {
         try {
-            $fileRequestDocuments = FileRequestDocuments::findOrFail($request->fileRequestDocumentId);
-            if ($fileRequestDocuments == null) {
+            $filerequestdocuments = FileRequestDocuments::findOrFail($request->fileRequestDocumentId);
+            if ($filerequestdocuments == null) {
                 return response()->json([
                     'message' => 'Document does not exists.',
                 ], 409);
             }
 
-            $fileRequestDocuments->fileRequestDocumentStatus = FileRequestDocumentStatusEnum::APPROVED->value;
+            $filerequestdocuments->fileRequestDocumentStatus = FileRequestDocumentStatusEnum::APPROVED->value;
 
-            if (!Storage::disk('local')->exists($fileRequestDocuments->url)) {
+            if (!Storage::disk('local')->exists($filerequestdocuments->url)) {
                 return response()->json([
                     'message' => 'Document does not exists.',
                 ], 409);
@@ -125,7 +125,7 @@ class FileRequestDocumentRepository extends BaseRepository implements FileReques
                     ], 409);
                 }
 
-                $localPath = Storage::disk('local')->path($fileRequestDocuments->url);
+                $localPath = Storage::disk('local')->path($filerequestdocuments->url);
                 try {
                     $file = fopen(Storage::disk('local')->path($localPath), 'r');
                     $moved = Storage::disk('s3')->put('documents', $file);
@@ -142,12 +142,12 @@ class FileRequestDocumentRepository extends BaseRepository implements FileReques
             }
 
             // skip index for large files.
-            $fileSize = Storage::disk('local')->size($fileRequestDocuments->url);
-            $this->documentRepository->saveDocument($request, $fileRequestDocuments->url, $fileSize);
+            $fileSize = Storage::disk('local')->size($filerequestdocuments->url);
+            $this->documentRepository->saveDocument($request, $filerequestdocuments->url, $fileSize);
 
-            $fileRequestDocuments->approvedRejectedDate = Carbon::now();
-            $fileRequestDocuments->approvalOrRejectedById = Auth::parseToken()->getPayload()->get('userId');;
-            $fileRequestDocuments->save();
+            $filerequestdocuments->approvedRejectedDate = Carbon::now();
+            $filerequestdocuments->approvalOrRejectedById = Auth::parseToken()->getPayload()->get('userId');;
+            $filerequestdocuments->save();
 
             return response()->json([], 201);
         } catch (\Exception $e) {
@@ -160,18 +160,18 @@ class FileRequestDocumentRepository extends BaseRepository implements FileReques
     public function rejectDocument($request)
     {
         try {
-            $fileRequestDocuments = FileRequestDocuments::findOrFail($request->id);
-            if ($fileRequestDocuments == null) {
+            $filerequestdocuments = FileRequestDocuments::findOrFail($request->id);
+            if ($filerequestdocuments == null) {
                 return response()->json([
                     'message' => 'Document does not exists.',
                 ], 409);
             }
 
-            $fileRequestDocuments->fileRequestDocumentStatus = FileRequestDocumentStatusEnum::REJECTED->value;
-            $fileRequestDocuments->approvedRejectedDate = Carbon::now();
-            $fileRequestDocuments->approvalOrRejectedById = Auth::parseToken()->getPayload()->get('userId');;
-            $fileRequestDocuments->reason = $request->reason;
-            $fileRequestDocuments->save();
+            $filerequestdocuments->fileRequestDocumentStatus = FileRequestDocumentStatusEnum::REJECTED->value;
+            $filerequestdocuments->approvedRejectedDate = Carbon::now();
+            $filerequestdocuments->approvalOrRejectedById = Auth::parseToken()->getPayload()->get('userId');;
+            $filerequestdocuments->reason = $request->reason;
+            $filerequestdocuments->save();
             return response()->json([], 201);
         } catch (\Exception $e) {
             return response()->json([

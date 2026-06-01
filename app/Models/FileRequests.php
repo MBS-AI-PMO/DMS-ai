@@ -6,19 +6,19 @@ use Ramsey\Uuid\Uuid;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+
 use Illuminate\Notifications\Notifiable;
 use App\Traits\Uuids;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class FileRequests extends Model
+class FileRequests extends BaseModel
 {
     use HasFactory, SoftDeletes;
     use Notifiable, Uuids;
 
-    protected $table = 'fileRequests';
+    protected $table = 'filerequests';
     protected $primaryKey = "id";
     const CREATED_AT = 'createdDate';
     const UPDATED_AT = 'modifiedDate';
@@ -48,7 +48,7 @@ class FileRequests extends Model
         return $this->belongsTo(Users::class, 'createdBy');
     }
 
-    public function fileRequestDocuments(): HasMany
+    public function filerequestdocuments(): HasMany
     {
         return $this->hasMany(FileRequestDocuments::class, 'fileRequestId');
     }
@@ -70,7 +70,7 @@ class FileRequests extends Model
             }
         });
         static::addGlobalScope('isDeleted', function (Builder $builder) {
-            $builder->where('fileRequests.isDeleted', '=', 0);
+            $builder->where('filerequests.isDeleted', '=', 0);
         });
     }
 }

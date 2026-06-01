@@ -35,7 +35,7 @@ class WorkflowTransitionRepository extends BaseRepository implements WorkflowTra
 
     public function getWorkflowTransitions($id)
     {
-        return $this->model->with(['workflowTransitionRoles', 'workflowTransitionUsers'])
+        return $this->model->with(['workflowtransitionroles', 'workflowtransitionusers'])
             ->where('workflowId', $id)
             ->get();
     }
@@ -68,11 +68,11 @@ class WorkflowTransitionRepository extends BaseRepository implements WorkflowTra
                 ]);
 
                 foreach ($transitionData['roleIds']  as $roleId) {
-                    $transition->workflowTransitionRoles()->create(['roleId' => $roleId]);
+                    $transition->workflowtransitionroles()->create(['roleId' => $roleId]);
                 }
 
                 foreach ($transitionData['userIds']  as $userId) {
-                    $transition->workflowTransitionUsers()->create(['userId' => $userId]);
+                    $transition->workflowtransitionusers()->create(['userId' => $userId]);
                 }
             }
 
@@ -93,18 +93,18 @@ class WorkflowTransitionRepository extends BaseRepository implements WorkflowTra
             DB::beginTransaction();
 
             // Load existing transitions
-            $workflowTransitions = WorkflowTransition::with(['workflowTransitionUsers', 'workflowTransitionRoles'])
+            $workflowtransitions = WorkflowTransition::with(['workflowtransitionusers', 'workflowtransitionroles'])
                 ->where('workflowId', $id)
                 ->get();
 
-            if ($workflowTransitions->isEmpty()) {
+            if ($workflowtransitions->isEmpty()) {
                 return response()->json(['message' => 'Not Found'], 404);
             }
 
             // Index request transitions by ID
             $requestDict = collect($request)->keyBy(fn($item) => (string) $item['id']);
 
-            $workflowTransitions->each(function ($transition) use ($requestDict) {
+            $workflowtransitions->each(function ($transition) use ($requestDict) {
                 $transitionId = (string) $transition->id;
 
                 if (!$requestDict->has($transitionId)) return;
@@ -117,8 +117,8 @@ class WorkflowTransitionRepository extends BaseRepository implements WorkflowTra
                 ]);
 
                 // Clean up old
-                $transition->workflowTransitionRoles()->forceDelete();
-                $transition->workflowTransitionUsers()->forceDelete();
+                $transition->workflowtransitionroles()->forceDelete();
+                $transition->workflowtransitionusers()->forceDelete();
 
                 // Roles
                 $roleData = collect($req['roleIds'] ?? [])
@@ -127,7 +127,7 @@ class WorkflowTransitionRepository extends BaseRepository implements WorkflowTra
                     ->toArray();
 
                 if (!empty($roleData)) {
-                    $transition->workflowTransitionRoles()->createMany($roleData);
+                    $transition->workflowtransitionroles()->createMany($roleData);
                 }
 
                 // Users
@@ -137,7 +137,7 @@ class WorkflowTransitionRepository extends BaseRepository implements WorkflowTra
                     ->toArray();
 
                 if (!empty($userData)) {
-                    $transition->workflowTransitionUsers()->createMany($userData);
+                    $transition->workflowtransitionusers()->createMany($userData);
                 }
             });
 

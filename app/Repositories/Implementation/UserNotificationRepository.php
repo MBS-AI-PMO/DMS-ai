@@ -43,25 +43,25 @@ class UserNotificationRepository extends BaseRepository implements UserNotificat
         }
 
         $query = UserNotifications::select([
-            'userNotifications.*',
+            'usernotifications.*',
             'documents.id as documentId',
             'documents.name as documentName',
             'workflows.name as workflowName',
             'workflowDocument.name as workflowDocumentName',
-            'fileRequests.subject as fileRequestSubject',
-        ])->where('userNotifications.userId', '=', $userId)
-            ->where('userNotifications.createdDate', '<=', Carbon::now())
+            'filerequests.subject as fileRequestSubject',
+        ])->where('usernotifications.userId', '=', $userId)
+            ->where('usernotifications.createdDate', '<=', Carbon::now())
             ->leftJoin('documents', function ($join) {
-                $join->on('userNotifications.documentId', '=', 'documents.id')
+                $join->on('usernotifications.documentId', '=', 'documents.id')
                     ->where('documents.isDeleted', '=', false)
                     ->where('documents.isPermanentDelete', '=', false);
             })
-            ->leftJoin('documentWorkflow', 'userNotifications.documentWorkflowId', '=', 'documentWorkflow.id')
-            ->leftJoin('documents as workflowDocument', 'workflowDocument.id', '=', 'documentWorkflow.documentId')
-            ->leftJoin('workflows', 'documentWorkflow.workflowId', '=', 'workflows.id')
-            ->leftJoin('fileRequests', 'userNotifications.fileRequestId', '=', 'fileRequests.id')
-            ->orderBy('userNotifications.isRead', 'DESC')
-            ->orderBy('userNotifications.createdDate', 'DESC');
+            ->leftJoin('documentworkflow', 'usernotifications.documentworkflowId', '=', 'documentworkflow.id')
+            ->leftJoin('documents as workflowDocument', 'workflowDocument.id', '=', 'documentworkflow.documentId')
+            ->leftJoin('workflows', 'documentworkflow.workflowId', '=', 'workflows.id')
+            ->leftJoin('filerequests', 'usernotifications.fileRequestId', '=', 'filerequests.id')
+            ->orderBy('usernotifications.isRead', 'DESC')
+            ->orderBy('usernotifications.createdDate', 'DESC');
 
         $results = $query->take(10)->get();
 
@@ -76,39 +76,39 @@ class UserNotificationRepository extends BaseRepository implements UserNotificat
         }
 
         $query = UserNotifications::select([
-            'userNotifications.*',
+            'usernotifications.*',
             'documents.id as documentId',
             'documents.name as documentName',
             'workflows.name as workflowName',
             'workflowDocument.name as workflowDocumentName',
-            'fileRequests.subject as fileRequestSubject',
-        ])->where('userNotifications.userId', '=', $userId)
-            ->where('userNotifications.createdDate', '<=', Carbon::now())
+            'filerequests.subject as fileRequestSubject',
+        ])->where('usernotifications.userId', '=', $userId)
+            ->where('usernotifications.createdDate', '<=', Carbon::now())
             ->leftJoin('documents', function ($join) {
-                $join->on('userNotifications.documentId', '=', 'documents.id')
+                $join->on('usernotifications.documentId', '=', 'documents.id')
                     ->where('documents.isDeleted', '=', false)
                     ->where('documents.isPermanentDelete', '=', false);
             })
-            ->leftJoin('documentWorkflow', 'userNotifications.documentWorkflowId', '=', 'documentWorkflow.id')
-            ->leftJoin('documents as workflowDocument', 'workflowDocument.id', '=', 'documentWorkflow.documentId')
-            ->leftJoin('workflows', 'documentWorkflow.workflowId', '=', 'workflows.id')
-            ->leftJoin('fileRequests', 'userNotifications.fileRequestId', '=', 'fileRequests.id');
+            ->leftJoin('documentworkflow', 'usernotifications.documentworkflowId', '=', 'documentworkflow.id')
+            ->leftJoin('documents as workflowDocument', 'workflowDocument.id', '=', 'documentworkflow.documentId')
+            ->leftJoin('workflows', 'documentworkflow.workflowId', '=', 'workflows.id')
+            ->leftJoin('filerequests', 'usernotifications.fileRequestId', '=', 'filerequests.id');
 
         $orderByArray =  explode(' ', $attributes->orderBy);
         $orderBy = $orderByArray[0];
         $direction = $orderByArray[1] ?? 'asc';
 
         if ($orderBy == 'message') {
-            $query = $query->orderBy('userNotifications.message', $direction);
+            $query = $query->orderBy('usernotifications.message', $direction);
         }
 
         if ($orderBy == 'createdDate') {
-            $query = $query->orderBy('userNotifications.createdDate', $direction);
+            $query = $query->orderBy('usernotifications.createdDate', $direction);
         }
 
         if ($attributes->name) {
             $query = $query->where(function ($query) use ($attributes) {
-                $query->where('userNotifications.message', 'like', '%' . $attributes->name . '%')
+                $query->where('usernotifications.message', 'like', '%' . $attributes->name . '%')
                     ->orWhere(function ($query) use ($attributes) {
                         $query->where('documents.name', 'like', '%' . $attributes->name . '%');
                     })->orWhere(function ($query) use ($attributes) {
@@ -116,7 +116,7 @@ class UserNotificationRepository extends BaseRepository implements UserNotificat
                     })->orWhere(function ($query) use ($attributes) {
                         $query->where('workflowDocument.name', 'like', '%' . $attributes->name . '%');
                     })->orWhere(function ($query) use ($attributes) {
-                        $query->where('fileRequests.subject', 'like', '%' . $attributes->name . '%');
+                        $query->where('filerequests.subject', 'like', '%' . $attributes->name . '%');
                     });
             });
         }
@@ -135,17 +135,17 @@ class UserNotificationRepository extends BaseRepository implements UserNotificat
         }
 
         $query = UserNotifications::query()
-            ->where('userNotifications.userId', '=', $userId)
-            ->where('userNotifications.createdDate', '<=', Carbon::now())
+            ->where('usernotifications.userId', '=', $userId)
+            ->where('usernotifications.createdDate', '<=', Carbon::now())
             ->leftJoin('documents', function ($join) {
-                $join->on('userNotifications.documentId', '=', 'documents.id')
+                $join->on('usernotifications.documentId', '=', 'documents.id')
                     ->where('documents.isDeleted', '=', false)
                     ->where('documents.isPermanentDelete', '=', false);
             });
 
         if ($attributes->name) {
             $query = $query->where(function ($query) use ($attributes) {
-                $query->where('userNotifications.message', 'like', '%' . $attributes->name . '%')
+                $query->where('usernotifications.message', 'like', '%' . $attributes->name . '%')
                     ->orWhere(function ($query) use ($attributes) {
                         $query->where('documents.name', 'like', '%' . $attributes->name . '%');
                     });
@@ -177,9 +177,9 @@ class UserNotificationRepository extends BaseRepository implements UserNotificat
             throw new RepositoryException('User does not exist.');
         }
 
-        $userNotifications = UserNotifications::where('userId', $userId)->get();
+        $usernotifications = UserNotifications::where('userId', $userId)->get();
 
-        foreach ($userNotifications as $userNotification) {
+        foreach ($usernotifications as $userNotification) {
             $userNotification->isRead = true;
             $userNotification->save();
         }
@@ -194,10 +194,10 @@ class UserNotificationRepository extends BaseRepository implements UserNotificat
             throw new RepositoryException('User does not exist.');
         }
 
-        $userNotifications = UserNotifications::where('userId', '=', $userId)
+        $usernotifications = UserNotifications::where('userId', '=', $userId)
             ->where('documentId', '=', $documentId)->get();
 
-        foreach ($userNotifications as $userNotification) {
+        foreach ($usernotifications as $userNotification) {
             $userNotification->isRead = true;
             $userNotification->save();
         }

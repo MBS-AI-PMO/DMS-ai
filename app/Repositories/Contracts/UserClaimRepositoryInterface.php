@@ -5,5 +5,5 @@ use App\Repositories\Contracts\BaseRepositoryInterface;
 
 interface UserClaimRepositoryInterface extends BaseRepositoryInterface
 {
-     public function updateUserClaim($id, $userRoles);
+     public function updateUserClaim($id, $userroles);
 }

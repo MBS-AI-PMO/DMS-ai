@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('documentStatus', function (Blueprint $table) {
+        Schema::create('documentstatus', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('name');
             $table->string('description')->nullable();
@@ -32,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('documentStatus');
+        Schema::dropIfExists('documentstatus');
     }
 };

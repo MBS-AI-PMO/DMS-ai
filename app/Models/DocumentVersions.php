@@ -6,18 +6,18 @@ use Ramsey\Uuid\Uuid;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+
 use Illuminate\Notifications\Notifiable;
 use App\Traits\Uuids;
 use Illuminate\Database\Eloquent\Builder;
 
-class DocumentVersions extends Model
+class DocumentVersions extends BaseModel
 {
     use HasFactory, SoftDeletes;
     use Notifiable, Uuids;
     const CREATED_AT = 'createdDate';
     const UPDATED_AT = 'modifiedDate';
-    protected  $table = 'documentVersions';
+    protected $table = 'documentversions';
     public $incrementing = false;
 
     protected $fillable = [
@@ -61,7 +61,7 @@ class DocumentVersions extends Model
         });
 
         static::addGlobalScope('isDeleted', function (Builder $builder) {
-            $builder->where('documentVersions.isDeleted', '=', 0);
+            $builder->where('documentversions.isDeleted', '=', 0);
         });
     }
 }

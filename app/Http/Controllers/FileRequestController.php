@@ -46,7 +46,7 @@ class FileRequestController extends Controller
             'isLinkExpired' => $fileRequest->isLinkExpired,
             'hasPassword' => !empty($fileRequest->password) ? true : false,
             'password' => !empty($fileRequest->password) ? '*****' : '',
-            'fileRequestDocuments' => $fileRequest->fileRequestDocuments,
+            'filerequestdocuments' => $fileRequest->filerequestdocuments,
         ];
         return response($entityDto, 201);
     }

@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('documentTokens', function (Blueprint $table) {
+        Schema::create('documenttokens', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->dateTime('createdDate');
             $table->uuid('documentId')->nullable(false);
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('documentTokens');
+        Schema::dropIfExists('documenttokens');
     }
 };

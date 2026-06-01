@@ -7,17 +7,17 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::table('proposalCandidates', function (Blueprint $table) {
-            if (!Schema::hasColumn('proposalCandidates', 'category')) {
+        Schema::table('proposalcandidates', function (Blueprint $table) {
+            if (!Schema::hasColumn('proposalcandidates', 'category')) {
                 $table->string('category')->nullable()->after('email');
             }
-            if (!Schema::hasColumn('proposalCandidates', 'experienceYears')) {
+            if (!Schema::hasColumn('proposalcandidates', 'experienceYears')) {
                 $table->unsignedSmallInteger('experienceYears')->nullable()->after('category');
             }
-            if (!Schema::hasColumn('proposalCandidates', 'workMode')) {
+            if (!Schema::hasColumn('proposalcandidates', 'workMode')) {
                 $table->string('workMode', 20)->nullable()->after('experienceYears');
             }
-            if (!Schema::hasColumn('proposalCandidates', 'address')) {
+            if (!Schema::hasColumn('proposalcandidates', 'address')) {
                 $table->string('address', 500)->nullable()->after('workMode');
             }
         });
@@ -25,17 +25,17 @@ return new class extends Migration {
 
     public function down(): void
     {
-        Schema::table('proposalCandidates', function (Blueprint $table) {
-            if (Schema::hasColumn('proposalCandidates', 'address')) {
+        Schema::table('proposalcandidates', function (Blueprint $table) {
+            if (Schema::hasColumn('proposalcandidates', 'address')) {
                 $table->dropColumn('address');
             }
-            if (Schema::hasColumn('proposalCandidates', 'workMode')) {
+            if (Schema::hasColumn('proposalcandidates', 'workMode')) {
                 $table->dropColumn('workMode');
             }
-            if (Schema::hasColumn('proposalCandidates', 'experienceYears')) {
+            if (Schema::hasColumn('proposalcandidates', 'experienceYears')) {
                 $table->dropColumn('experienceYears');
             }
-            if (Schema::hasColumn('proposalCandidates', 'category')) {
+            if (Schema::hasColumn('proposalcandidates', 'category')) {
                 $table->dropColumn('category');
             }
         });

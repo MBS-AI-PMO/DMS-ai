@@ -3,218 +3,452 @@
     <div class="pm-page-header">
       <div>
         <span class="page-title">{{ "POST_MANAGEMENT" | translate }}</span>
-        <p class="pm-page-subtitle">Create job posts, share apply links, and manage applicants.</p>
+        <p class="pm-page-subtitle">Categories → Departments (with interview questions) → Job posts.</p>
       </div>
-      <button mat-flat-button color="primary" type="button" (click)="resetPostForm(); showPostForm = true">
-        <mat-icon>add</mat-icon> Add Post
-      </button>
     </div>
 
-    <div class="row" *ngIf="showPostForm">
-      <div class="col-12">
-        <mat-card class="action-card pm-card mat-elevation-z0">
-          <mat-card-content class="p-4">
-            <h6 class="section-title mb-3">
-              <mat-icon>post_add</mat-icon>
-              {{ editingPostId ? 'Edit Post' : 'Create Post' }}
-            </h6>
-            <div class="row">
-              <div class="col-md-4">
-                <mat-form-field appearance="outline" class="w-100 mb-2">
-                  <mat-label>Post Title</mat-label>
-                  <input matInput [(ngModel)]="newPostTitle" placeholder="Developer, Designer, HR">
-                </mat-form-field>
+    <mat-tab-group class="pm-tabs" animationDuration="0ms">
+      <!-- Categories -->
+      <mat-tab label="Categories">
+        <div class="pm-tab-body">
+          <div class="d-flex justify-content-end mb-3">
+            <button mat-flat-button color="primary" type="button" (click)="resetCategoryForm(); showCategoryForm = true">
+              <mat-icon>add</mat-icon> Add Category
+            </button>
+          </div>
+
+          <mat-card class="pm-card mat-elevation-z0 mb-3" *ngIf="showCategoryForm">
+            <mat-card-content class="p-4">
+              <h6 class="section-title mb-3">{{ editingCategoryId ? 'Edit Category' : 'New Category' }}</h6>
+              <mat-form-field appearance="outline" class="w-100 mb-2">
+                <mat-label>Category name</mat-label>
+                <input matInput [(ngModel)]="categoryName" placeholder="IT, HR, Sales">
+              </mat-form-field>
+              <div class="text-end">
+                <button mat-button type="button" (click)="resetCategoryForm()">Cancel</button>
+                <button mat-flat-button color="primary" type="button" (click)="saveCategory()">Save</button>
               </div>
-              <div class="col-md-4">
-                <mat-form-field appearance="outline" class="w-100 mb-2">
-                  <mat-label>Department</mat-label>
-                  <input matInput [(ngModel)]="newPostDepartment" placeholder="HR, Technical, Operations">
-                </mat-form-field>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="pm-card pm-data-card mat-elevation-z0">
+            <div class="pm-card-toolbar">
+              <div class="pm-card-title">
+                <mat-icon>category</mat-icon>
+                <span>All Categories</span>
+                <span class="pm-badge-count">{{ filteredCategories.length }}</span>
               </div>
-              <div class="col-md-4">
-                <mat-form-field appearance="outline" class="w-100 mb-2">
-                  <mat-label>Category</mat-label>
-                  <input matInput [(ngModel)]="newPostCategory" placeholder="IT, Sales, Finance">
-                </mat-form-field>
-              </div>
-              <div class="col-md-4">
-                <mat-form-field appearance="outline" class="w-100 mb-2">
-                  <mat-label>Experience (Years)</mat-label>
-                  <input matInput type="number" min="0" [(ngModel)]="newPostExperienceYears">
-                </mat-form-field>
-              </div>
-              <div class="col-md-4">
-                <mat-form-field appearance="outline" class="w-100 mb-2">
-                  <mat-label>Work Mode</mat-label>
-                  <mat-select [(ngModel)]="newPostWorkMode">
-                    <mat-option value="remote">Remote</mat-option>
-                    <mat-option value="physical">Physical</mat-option>
-                  </mat-select>
-                </mat-form-field>
-              </div>
-              <div class="col-md-4" *ngIf="newPostWorkMode === 'physical'">
-                <mat-form-field appearance="outline" class="w-100 mb-2">
-                  <mat-label>Address</mat-label>
-                  <input matInput [(ngModel)]="newPostAddress" placeholder="Office address">
-                </mat-form-field>
-              </div>
-              <div class="col-md-4">
-                <mat-form-field appearance="outline" class="w-100 mb-2">
-                  <mat-label>Description</mat-label>
-                  <input matInput [(ngModel)]="newPostDescription">
-                </mat-form-field>
-              </div>
+              <mat-form-field appearance="outline" class="pm-search-field" subscriptSizing="dynamic">
+                <mat-label>Search</mat-label>
+                <mat-icon matPrefix>search</mat-icon>
+                <input
+                  matInput
+                  [(ngModel)]="categorySearch"
+                  (ngModelChange)="onCategorySearchChange()"
+                  placeholder="Filter by name"
+                />
+              </mat-form-field>
             </div>
-            <div class="question-bank mb-3">
-              <div class="fw-semibold mb-3">Interview Questions</div>
+
+            <div class="pm-table-wrap" *ngIf="filteredCategories.length">
+              <table class="table pm-table pm-table-hover">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th class="text-end">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let cat of paginatedCategories; let i = index">
+                    <td class="pm-row-num">{{ categoryPageIndex * categoryPageSize + i + 1 }}</td>
+                    <td><span class="pm-cell-name">{{ cat.name }}</span></td>
+                    <td class="text-end pm-actions">
+                      <button mat-icon-button class="pm-icon-btn pm-icon-btn-primary" type="button" matTooltip="Edit" (click)="editCategory(cat)">
+                        <mat-icon>edit</mat-icon>
+                      </button>
+                      <button mat-icon-button class="pm-icon-btn" color="warn" type="button" matTooltip="Delete" (click)="deleteCategory(cat)">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <mat-paginator
+              *ngIf="filteredCategories.length"
+              class="pm-paginator"
+              [length]="filteredCategories.length"
+              [pageIndex]="categoryPageIndex"
+              [pageSize]="categoryPageSize"
+              [pageSizeOptions]="pageSizeOptions"
+              (page)="onCategoryPage($event)"
+              showFirstLastButtons
+              aria-label="Categories pagination"
+            ></mat-paginator>
+
+            <div class="pm-empty" *ngIf="!categories.length">
+              <mat-icon>folder_open</mat-icon>
+              <p>Create a category first (e.g. IT, HR).</p>
+            </div>
+            <div class="pm-empty" *ngIf="categories.length && !filteredCategories.length">
+              <mat-icon>search_off</mat-icon>
+              <p>No categories match your search.</p>
+            </div>
+          </mat-card>
+        </div>
+      </mat-tab>
+
+      <!-- Departments -->
+      <mat-tab label="Departments">
+        <div class="pm-tab-body">
+          <div class="d-flex justify-content-end mb-3">
+            <button mat-flat-button color="primary" type="button" (click)="openNewDepartmentForm()" [disabled]="!categories.length">
+              <mat-icon>add</mat-icon> Add Department
+            </button>
+          </div>
+          <p class="text-muted small mb-2" *ngIf="!categories.length">Add at least one category before creating departments.</p>
+
+          <mat-card class="pm-card mat-elevation-z0 mb-3" *ngIf="showDepartmentForm">
+            <mat-card-content class="p-4">
+              <h6 class="section-title mb-3">{{ editingDepartmentId ? 'Edit Department' : 'New Department' }}</h6>
               <div class="row">
                 <div class="col-md-4">
-                  <div class="question-title">Basic Questions</div>
-                  <div class="question-row" *ngFor="let question of newPostBasicQuestions; let i = index; trackBy: trackByIndex">
-                    <mat-form-field appearance="outline" class="w-100 mb-2">
-                      <mat-label>Question {{ i + 1 }}</mat-label>
-                      <input matInput [(ngModel)]="newPostBasicQuestions[i]" placeholder="Enter question">
-                    </mat-form-field>
-                    <button mat-icon-button color="warn" type="button" (click)="removeQuestion('basic', i)">
-                      <mat-icon>delete</mat-icon>
-                    </button>
-                  </div>
-                  <button mat-stroked-button color="primary" type="button" (click)="addQuestion('basic')">
-                    <mat-icon>add</mat-icon> Add Basic Question
-                  </button>
+                  <mat-form-field appearance="outline" class="w-100 mb-2">
+                    <mat-label>Category</mat-label>
+                    <mat-select [(ngModel)]="departmentCategoryId">
+                      <mat-option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</mat-option>
+                    </mat-select>
+                  </mat-form-field>
                 </div>
                 <div class="col-md-4">
-                  <div class="question-title">Intermediate Questions</div>
-                  <div class="question-row" *ngFor="let question of newPostIntermediateQuestions; let i = index; trackBy: trackByIndex">
-                    <mat-form-field appearance="outline" class="w-100 mb-2">
-                      <mat-label>Question {{ i + 1 }}</mat-label>
-                      <input matInput [(ngModel)]="newPostIntermediateQuestions[i]" placeholder="Enter question">
-                    </mat-form-field>
-                    <button mat-icon-button color="warn" type="button" (click)="removeQuestion('intermediate', i)">
-                      <mat-icon>delete</mat-icon>
-                    </button>
-                  </div>
-                  <button mat-stroked-button color="primary" type="button" (click)="addQuestion('intermediate')">
-                    <mat-icon>add</mat-icon> Add Intermediate Question
-                  </button>
-                </div>
-                <div class="col-md-4">
-                  <div class="question-title">Expert Questions</div>
-                  <div class="question-row" *ngFor="let question of newPostExpertQuestions; let i = index; trackBy: trackByIndex">
-                    <mat-form-field appearance="outline" class="w-100 mb-2">
-                      <mat-label>Question {{ i + 1 }}</mat-label>
-                      <input matInput [(ngModel)]="newPostExpertQuestions[i]" placeholder="Enter question">
-                    </mat-form-field>
-                    <button mat-icon-button color="warn" type="button" (click)="removeQuestion('expert', i)">
-                      <mat-icon>delete</mat-icon>
-                    </button>
-                  </div>
-                  <button mat-stroked-button color="primary" type="button" (click)="addQuestion('expert')">
-                    <mat-icon>add</mat-icon> Add Expert Question
-                  </button>
+                  <mat-form-field appearance="outline" class="w-100 mb-2">
+                    <mat-label>Department name</mat-label>
+                    <input matInput [(ngModel)]="departmentName" placeholder="HR, Frontend, Accounts">
+                  </mat-form-field>
                 </div>
               </div>
-            </div>
-            <div class="text-end pt-2">
-              <button mat-button type="button" (click)="resetPostForm()">Cancel</button>
-              <button mat-flat-button color="primary" type="button" (click)="createPost()">
-                {{ editingPostId ? 'Update Post' : 'Save Post' }}
-              </button>
-            </div>
-          </mat-card-content>
-        </mat-card>
-      </div>
-    </div>
-
-    <mat-card class="pm-card mat-elevation-z0">
-      <div class="pm-card-toolbar">
-        <h6 class="pm-card-title">
-          <mat-icon>work</mat-icon> Job Posts
-        </h6>
-        <span class="pm-badge-count">{{ posts.length }} {{ posts.length === 1 ? 'post' : 'posts' }}</span>
-      </div>
-      <div class="pm-table-wrap" *ngIf="posts.length > 0">
-        <table class="table pm-table">
-          <thead>
-            <tr>
-              <th>Post</th>
-              <th>Department</th>
-              <th>Category</th>
-              <th>Experience</th>
-              <th>Mode</th>
-              <th class="text-center">Candidates</th>
-              <th>Apply Link</th>
-              <th>Created</th>
-              <th class="text-end">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let post of posts">
-              <td>
-                <div class="pm-post-title">{{ post.title }}</div>
-                <div class="pm-post-desc" *ngIf="post.description">{{ post.description }}</div>
-              </td>
-              <td>{{ post.department || 'General' }}</td>
-              <td>{{ post.category || '—' }}</td>
-              <td>{{ post.experienceYears !== null && post.experienceYears !== undefined ? post.experienceYears + ' yrs' : '—' }}</td>
-              <td>
-                <span class="pm-chip" [ngClass]="post.workMode === 'remote' ? 'pm-chip-remote' : 'pm-chip-physical'">
-                  {{ post.workMode === 'remote' ? 'Remote' : 'Physical' }}
-                </span>
-              </td>
-              <td class="text-center">
-                <span class="pm-count-pill">{{ post.candidates.length }}</span>
-              </td>
-              <td>
-                <a class="pm-link-btn" [href]="getApplyLink(post)" target="_blank" (click)="$event.stopPropagation()">
-                  <mat-icon>open_in_new</mat-icon> Open
-                </a>
-              </td>
-              <td class="text-nowrap">{{ formatDisplayDate(post.createdDate) }}</td>
-              <td class="text-end">
-                <div class="pm-actions">
-                  <button
-                    mat-icon-button
-                    class="pm-icon-btn pm-icon-btn-primary"
-                    type="button"
-                    matTooltip="View candidates"
-                    (click)="selectPost(post.id); $event.stopPropagation()">
-                    <mat-icon>groups</mat-icon>
-                  </button>
-                  <button
-                    mat-icon-button
-                    class="pm-icon-btn pm-icon-btn-primary"
-                    type="button"
-                    matTooltip="Copy apply link"
-                    (click)="copyApplyLink(post); $event.stopPropagation()">
-                    <mat-icon>content_copy</mat-icon>
-                  </button>
-                  <button
-                    mat-icon-button
-                    class="pm-icon-btn"
-                    type="button"
-                    matTooltip="Edit post"
-                    (click)="editPost(post); $event.stopPropagation()">
-                    <mat-icon>edit</mat-icon>
-                  </button>
-                  <button
-                    mat-icon-button
-                    class="pm-icon-btn pm-icon-btn-danger"
-                    type="button"
-                    matTooltip="Delete post"
-                    (click)="deletePost(post); $event.stopPropagation()">
-                    <mat-icon>delete_outline</mat-icon>
-                  </button>
+              <div class="question-bank mb-3">
+                <div class="fw-semibold mb-2">Interview questions (assigned to all posts in this department)</div>
+                <div class="row">
+                  <div class="col-md-4" *ngFor="let level of ['basic', 'intermediate', 'expert']">
+                    <div class="question-title text-capitalize">{{ level }}</div>
+                    <ng-container [ngSwitch]="level">
+                      <ng-container *ngSwitchCase="'basic'">
+                        <div class="question-row" *ngFor="let q of deptBasicQuestions; let i = index; trackBy: trackByIndex">
+                          <mat-form-field appearance="outline" class="w-100 mb-2">
+                            <mat-label>Q{{ i + 1 }}</mat-label>
+                            <input matInput [(ngModel)]="deptBasicQuestions[i]">
+                          </mat-form-field>
+                          <button mat-icon-button color="warn" type="button" (click)="removeDeptQuestion('basic', i)"><mat-icon>delete</mat-icon></button>
+                        </div>
+                        <button mat-stroked-button type="button" (click)="addDeptQuestion('basic')"><mat-icon>add</mat-icon> Add</button>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'intermediate'">
+                        <div class="question-row" *ngFor="let q of deptIntermediateQuestions; let i = index; trackBy: trackByIndex">
+                          <mat-form-field appearance="outline" class="w-100 mb-2">
+                            <mat-label>Q{{ i + 1 }}</mat-label>
+                            <input matInput [(ngModel)]="deptIntermediateQuestions[i]">
+                          </mat-form-field>
+                          <button mat-icon-button color="warn" type="button" (click)="removeDeptQuestion('intermediate', i)"><mat-icon>delete</mat-icon></button>
+                        </div>
+                        <button mat-stroked-button type="button" (click)="addDeptQuestion('intermediate')"><mat-icon>add</mat-icon> Add</button>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'expert'">
+                        <div class="question-row" *ngFor="let q of deptExpertQuestions; let i = index; trackBy: trackByIndex">
+                          <mat-form-field appearance="outline" class="w-100 mb-2">
+                            <mat-label>Q{{ i + 1 }}</mat-label>
+                            <input matInput [(ngModel)]="deptExpertQuestions[i]">
+                          </mat-form-field>
+                          <button mat-icon-button color="warn" type="button" (click)="removeDeptQuestion('expert', i)"><mat-icon>delete</mat-icon></button>
+                        </div>
+                        <button mat-stroked-button type="button" (click)="addDeptQuestion('expert')"><mat-icon>add</mat-icon> Add</button>
+                      </ng-container>
+                    </ng-container>
+                  </div>
                 </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="pm-empty" *ngIf="posts.length === 0">
-        <mat-icon>work_outline</mat-icon>
-        <p>No job posts yet. Click <strong>Add Post</strong> to create one.</p>
-      </div>
-    </mat-card>
+              </div>
+              <div class="text-end">
+                <button mat-button type="button" (click)="resetDepartmentForm()">Cancel</button>
+                <button mat-flat-button color="primary" type="button" (click)="saveDepartment()">Save Department</button>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="pm-card pm-data-card mat-elevation-z0">
+            <div class="pm-card-toolbar">
+              <div class="pm-card-title">
+                <mat-icon>business</mat-icon>
+                <span>All Departments</span>
+                <span class="pm-badge-count">{{ filteredDepartments.length }}</span>
+              </div>
+              <mat-form-field appearance="outline" class="pm-search-field" subscriptSizing="dynamic">
+                <mat-label>Search</mat-label>
+                <mat-icon matPrefix>search</mat-icon>
+                <input
+                  matInput
+                  [(ngModel)]="departmentSearch"
+                  (ngModelChange)="onDepartmentSearchChange()"
+                  placeholder="Department or category"
+                />
+              </mat-form-field>
+            </div>
+
+            <div class="pm-table-wrap" *ngIf="filteredDepartments.length">
+              <table class="table pm-table pm-table-hover">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Department</th>
+                    <th>Category</th>
+                    <th class="text-end">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let dept of paginatedDepartments; let i = index">
+                    <td class="pm-row-num">{{ departmentPageIndex * departmentPageSize + i + 1 }}</td>
+                    <td><span class="pm-cell-name">{{ dept.name }}</span></td>
+                    <td><span class="pm-tag">{{ dept.categoryName || '—' }}</span></td>
+                    <td class="text-end pm-actions">
+                      <button mat-icon-button class="pm-icon-btn pm-icon-btn-primary" type="button" matTooltip="Edit" (click)="editDepartment(dept)">
+                        <mat-icon>edit</mat-icon>
+                      </button>
+                      <button mat-icon-button class="pm-icon-btn" color="warn" type="button" matTooltip="Delete" (click)="deleteDepartment(dept)">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <mat-paginator
+              *ngIf="filteredDepartments.length"
+              class="pm-paginator"
+              [length]="filteredDepartments.length"
+              [pageIndex]="departmentPageIndex"
+              [pageSize]="departmentPageSize"
+              [pageSizeOptions]="pageSizeOptions"
+              (page)="onDepartmentPage($event)"
+              showFirstLastButtons
+              aria-label="Departments pagination"
+            ></mat-paginator>
+
+            <div class="pm-empty" *ngIf="!departments.length">
+              <mat-icon>apartment</mat-icon>
+              <p>No departments yet.</p>
+            </div>
+            <div class="pm-empty" *ngIf="departments.length && !filteredDepartments.length">
+              <mat-icon>search_off</mat-icon>
+              <p>No departments match your search.</p>
+            </div>
+          </mat-card>
+        </div>
+      </mat-tab>
+
+      <!-- Posts -->
+      <mat-tab label="Job Posts">
+        <div class="pm-tab-body">
+          <div class="d-flex justify-content-end mb-3">
+            <button mat-flat-button color="primary" type="button" (click)="openNewPostForm()" [disabled]="!departments.length">
+              <mat-icon>add</mat-icon> Add Post
+            </button>
+          </div>
+          <p class="text-muted small mb-2" *ngIf="!departments.length">Create a department first. Interview questions come from the department automatically.</p>
+
+          <mat-card class="pm-card mat-elevation-z0 mb-3" *ngIf="showPostForm">
+            <mat-card-content class="pm-post-form">
+              <h6 class="pm-form-title">{{ editingPostId ? 'Edit Post' : 'Create Post' }}</h6>
+
+              <div class="row g-3">
+                <div class="col-12">
+                  <mat-form-field appearance="outline" class="w-100">
+                    <mat-label>Post title</mat-label>
+                    <input matInput [(ngModel)]="newPostTitle" placeholder="e.g. Senior PHP Developer">
+                  </mat-form-field>
+                </div>
+
+                <div class="col-md-6">
+                  <span class="pm-field-step">Step 1</span>
+                  <mat-form-field appearance="outline" class="w-100">
+                    <mat-label>Category</mat-label>
+                    <mat-select
+                      [(ngModel)]="newPostCategoryId"
+                      (ngModelChange)="onPostCategoryChange()"
+                      placeholder="Choose category"
+                    >
+                      <mat-option *ngFor="let cat of categories" [value]="cat.id">
+                        {{ cat.name }}
+                      </mat-option>
+                    </mat-select>
+                    <mat-hint>Select category first</mat-hint>
+                  </mat-form-field>
+                </div>
+
+                <div class="col-md-6">
+                  <span class="pm-field-step">Step 2</span>
+                  <mat-form-field appearance="outline" class="w-100">
+                    <mat-label>Department</mat-label>
+                    <mat-select
+                      [(ngModel)]="newPostDepartmentId"
+                      [disabled]="!newPostCategoryId || !postFormDepartments.length"
+                      placeholder="Select department"
+                    >
+                      <mat-option *ngFor="let dept of postFormDepartments" [value]="dept.id">
+                        {{ dept.name }}
+                      </mat-option>
+                    </mat-select>
+                    <mat-hint *ngIf="!newPostCategoryId">Available after category is selected</mat-hint>
+                    <mat-hint *ngIf="newPostCategoryId && !postFormDepartments.length">
+                      No departments in this category
+                    </mat-hint>
+                  </mat-form-field>
+                </div>
+
+                <div [ngClass]="newPostWorkMode === 'remote' ? 'col-md-6' : 'col-md-4'">
+                  <mat-form-field appearance="outline" class="w-100">
+                    <mat-label>Experience (years)</mat-label>
+                    <input matInput type="number" min="0" [(ngModel)]="newPostExperienceYears">
+                  </mat-form-field>
+                </div>
+
+                <div [ngClass]="newPostWorkMode === 'remote' ? 'col-md-6' : 'col-md-4'">
+                  <mat-form-field appearance="outline" class="w-100">
+                    <mat-label>Work mode</mat-label>
+                    <mat-select [(ngModel)]="newPostWorkMode">
+                      <mat-option value="remote">Remote</mat-option>
+                      <mat-option value="physical">Physical</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+
+                <div class="col-md-4" *ngIf="newPostWorkMode === 'physical'">
+                  <mat-form-field appearance="outline" class="w-100">
+                    <mat-label>Address</mat-label>
+                    <input matInput [(ngModel)]="newPostAddress" placeholder="Office location">
+                  </mat-form-field>
+                </div>
+
+                <div class="col-12">
+                  <mat-form-field appearance="outline" class="w-100">
+                    <mat-label>Description</mat-label>
+                    <textarea matInput rows="3" [(ngModel)]="newPostDescription" placeholder="Job summary and requirements"></textarea>
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <div class="pm-form-note" *ngIf="selectedDepartment">
+                <mat-icon>info_outline</mat-icon>
+                <span>
+                  Interview questions will be taken from
+                  <strong>{{ selectedDepartment.name }}</strong> department (not edited per post).
+                </span>
+              </div>
+
+              <div class="pm-form-actions">
+                <button mat-button type="button" (click)="resetPostForm()">Cancel</button>
+                <button mat-flat-button color="primary" type="button" (click)="createPost()">Save Post</button>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="pm-card pm-data-card mat-elevation-z0">
+            <div class="pm-card-toolbar">
+              <div class="pm-card-title">
+                <mat-icon>work</mat-icon>
+                <span>All Job Posts</span>
+                <span class="pm-badge-count">{{ filteredPosts.length }}</span>
+              </div>
+              <mat-form-field appearance="outline" class="pm-search-field" subscriptSizing="dynamic">
+                <mat-label>Search</mat-label>
+                <mat-icon matPrefix>search</mat-icon>
+                <input
+                  matInput
+                  [(ngModel)]="postSearch"
+                  (ngModelChange)="onPostSearchChange()"
+                  placeholder="Title, department, category"
+                />
+              </mat-form-field>
+            </div>
+
+            <div class="pm-table-wrap" *ngIf="filteredPosts.length">
+              <table class="table pm-table pm-table-hover">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Post</th>
+                    <th>Department</th>
+                    <th>Category</th>
+                    <th>Exp.</th>
+                    <th>Mode</th>
+                    <th class="text-center">Candidates</th>
+                    <th>Apply</th>
+                    <th>Created</th>
+                    <th class="text-end">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let post of paginatedPosts; let i = index">
+                    <td class="pm-row-num">{{ postPageIndex * postPageSize + i + 1 }}</td>
+                    <td><div class="pm-post-title">{{ post.title }}</div></td>
+                    <td>{{ post.department || '—' }}</td>
+                    <td><span class="pm-tag">{{ post.category || '—' }}</span></td>
+                    <td>{{ post.experienceYears != null ? post.experienceYears + ' yrs' : '—' }}</td>
+                    <td>
+                      <span class="pm-chip" [class.pm-chip-remote]="post.workMode === 'remote'" [class.pm-chip-physical]="post.workMode !== 'remote'">
+                        {{ post.workMode === 'remote' ? 'Remote' : 'Physical' }}
+                      </span>
+                    </td>
+                    <td class="text-center"><span class="pm-count-pill">{{ post.candidates.length }}</span></td>
+                    <td>
+                      <a class="pm-link-btn" [href]="getApplyLink(post)" target="_blank" rel="noopener">
+                        <mat-icon>open_in_new</mat-icon> Open
+                      </a>
+                    </td>
+                    <td class="pm-date-cell">{{ formatDisplayDate(post.createdDate) }}</td>
+                    <td class="text-end pm-actions">
+                      <button mat-icon-button class="pm-icon-btn pm-icon-btn-primary" type="button" matTooltip="Candidates" (click)="selectPost(post.id)">
+                        <mat-icon>groups</mat-icon>
+                      </button>
+                      <button mat-icon-button class="pm-icon-btn" type="button" matTooltip="Copy link" (click)="copyApplyLink(post)">
+                        <mat-icon>content_copy</mat-icon>
+                      </button>
+                      <button mat-icon-button class="pm-icon-btn pm-icon-btn-primary" type="button" matTooltip="Edit" (click)="editPost(post)">
+                        <mat-icon>edit</mat-icon>
+                      </button>
+                      <button mat-icon-button class="pm-icon-btn" color="warn" type="button" matTooltip="Delete" (click)="deletePost(post)">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <mat-paginator
+              *ngIf="filteredPosts.length"
+              class="pm-paginator"
+              [length]="filteredPosts.length"
+              [pageIndex]="postPageIndex"
+              [pageSize]="postPageSize"
+              [pageSizeOptions]="pageSizeOptions"
+              (page)="onPostPage($event)"
+              showFirstLastButtons
+              aria-label="Job posts pagination"
+            ></mat-paginator>
+
+            <div class="pm-empty" *ngIf="!posts.length">
+              <mat-icon>post_add</mat-icon>
+              <p>No job posts yet.</p>
+            </div>
+            <div class="pm-empty" *ngIf="posts.length && !filteredPosts.length">
+              <mat-icon>search_off</mat-icon>
+              <p>No posts match your search.</p>
+            </div>
+          </mat-card>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
   </div>
 </section>

@@ -45,7 +45,7 @@ class EmailLogRepository  extends BaseRepository  implements EmailLogRepositoryI
 
     public function getEmailLogs($attributes)
     {
-        $query = EmailLogs::select(['emailLogs.*'])->with('emailLogAttachments');
+        $query = EmailLogs::select(['emaillogs.*'])->with('emaillogattachments');
 
         $orderByArray =  explode(' ', $attributes->orderBy);
         $orderBy = $orderByArray[0];
@@ -54,15 +54,15 @@ class EmailLogRepository  extends BaseRepository  implements EmailLogRepositoryI
         $query = $query->orderBy($orderBy, $direction);
 
         if ($attributes->senderEmail) {
-            $query = $query->where('emailLogs.senderEmail',  'like', '%' . $attributes->senderEmail . '%');
+            $query = $query->where('emaillogs.senderEmail',  'like', '%' . $attributes->senderEmail . '%');
         }
 
         if ($attributes->recipientEmail) {
-            $query = $query->where('emailLogs.recipientEmail',  'like', '%' . $attributes->recipientEmail . '%');
+            $query = $query->where('emaillogs.recipientEmail',  'like', '%' . $attributes->recipientEmail . '%');
         }
 
         if ($attributes->subject) {
-            $query = $query->where('emailLogs.subject',  'like', '%' . $attributes->subject . '%');
+            $query = $query->where('emaillogs.subject',  'like', '%' . $attributes->subject . '%');
         }
 
         return $query->skip($attributes->skip)->take($attributes->pageSize)->get();
@@ -73,15 +73,15 @@ class EmailLogRepository  extends BaseRepository  implements EmailLogRepositoryI
         $query = EmailLogs::query();
 
         if ($attributes->senderEmail) {
-            $query = $query->where('emailLogs.senderEmail',  'like', '%' . $attributes->senderEmail . '%');
+            $query = $query->where('emaillogs.senderEmail',  'like', '%' . $attributes->senderEmail . '%');
         }
 
         if ($attributes->recipientEmail) {
-            $query = $query->where('emailLogs.recipientEmail',  'like', '%' . $attributes->recipientEmail . '%');
+            $query = $query->where('emaillogs.recipientEmail',  'like', '%' . $attributes->recipientEmail . '%');
         }
 
         if ($attributes->subject) {
-            $query = $query->where('emailLogs.subject',  'like', '%' . $attributes->subject . '%');
+            $query = $query->where('emaillogs.subject',  'like', '%' . $attributes->subject . '%');
         }
         $count = $query->count();
         return $count;
@@ -90,12 +90,12 @@ class EmailLogRepository  extends BaseRepository  implements EmailLogRepositoryI
     public function deleteEmailLog($id)
     {
         try {
-            $model = $this->model->with('emailLogAttachments')
+            $model = $this->model->with('emaillogattachments')
                 ->findOrFail($id);
 
             if ($model) {
-                if (isset($model->emailLogAttachments)) {
-                    foreach ($model->emailLogAttachments as $attachment) {
+                if (isset($model->emaillogattachments)) {
+                    foreach ($model->emaillogattachments as $attachment) {
                         try {
                             $path = storage_path('app') . $attachment->path;
                             if (file_exists($path)) {

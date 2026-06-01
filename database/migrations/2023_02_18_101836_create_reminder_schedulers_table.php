@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('reminderSchedulers', function (Blueprint $table) {
+        Schema::create('reminderschedulers', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->dateTime('duration');
             $table->boolean('isActive');
@@ -37,6 +37,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('reminderSchedulers');
+        Schema::dropIfExists('reminderschedulers');
     }
 };

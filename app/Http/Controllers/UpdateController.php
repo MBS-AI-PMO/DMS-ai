@@ -168,12 +168,12 @@ class UpdateController extends Controller
     private function validateCode()
     {
         try {
-            $companyProfile = CompanyProfiles::first();
-            if (!$companyProfile) {
+            $companyprofile = CompanyProfiles::first();
+            if (!$companyprofile) {
                 return;
             }
-            $key = $companyProfile->licenseKey;
-            $code = $companyProfile->purchaseCode;
+            $key = $companyprofile->licenseKey;
+            $code = $companyprofile->purchaseCode;
 
             if (!$key || !$code) {
                 return;
@@ -181,9 +181,9 @@ class UpdateController extends Controller
 
             $result = $this->getCode($key, $code);
             if (!$result) {
-                $companyProfile->licenseKey = '';
-                $companyProfile->purchaseCode = '';
-                $companyProfile->save();
+                $companyprofile->licenseKey = '';
+                $companyprofile->purchaseCode = '';
+                $companyprofile->save();
             }
         } catch (\Throwable $th) {
             Log::error('License validation failed: ' . $th->getMessage());

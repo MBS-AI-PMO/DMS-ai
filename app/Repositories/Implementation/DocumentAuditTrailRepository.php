@@ -38,7 +38,7 @@ class DocumentAuditTrailRepository extends BaseRepository implements DocumentAud
     {
 
         $query = DocumentAuditTrails::select([
-            'documentAuditTrails.*',
+            'documentaudittrails.*',
             'documents.name as documentName',
             'categories.name as categoryName',
             'categories.name as categoryName',
@@ -46,11 +46,11 @@ class DocumentAuditTrailRepository extends BaseRepository implements DocumentAud
             DB::raw("CONCAT(userRole.firstName,' ', userRole.lastName) as permissionUser"),
             DB::raw("CONCAT(users.firstName,' ', users.lastName) as createdBy")
         ])
-            ->join('documents', 'documentAuditTrails.documentId', '=', 'documents.id')
+            ->join('documents', 'documentaudittrails.documentId', '=', 'documents.id')
             ->join('categories', 'documents.categoryId', '=', 'categories.id')
-            ->join('users', 'documentAuditTrails.createdBy', '=', 'users.id')
-            ->leftJoin('roles', 'documentAuditTrails.assignToRoleId', '=', 'roles.id')
-            ->leftJoin('users as userRole', 'documentAuditTrails.assignToUserId', '=', 'userRole.id');
+            ->join('users', 'documentaudittrails.createdBy', '=', 'users.id')
+            ->leftJoin('roles', 'documentaudittrails.assignToRoleId', '=', 'roles.id')
+            ->leftJoin('users as userRole', 'documentaudittrails.assignToUserId', '=', 'userRole.id');
 
         $orderByArray =  explode(' ', $attributes->orderBy);
         $orderBy = $orderByArray[0];
@@ -61,11 +61,11 @@ class DocumentAuditTrailRepository extends BaseRepository implements DocumentAud
         } else if ($orderBy == 'documentName') {
             $query = $query->orderBy('documents.name', $direction);
         } else if ($orderBy == 'createdDate') {
-            $query = $query->orderBy('documentAuditTrails.createdDate', $direction);
+            $query = $query->orderBy('documentaudittrails.createdDate', $direction);
         } else if ($orderBy == 'createdBy') {
             $query = $query->orderBy('users.firstName', $direction);
         } else if ($orderBy == 'operationName') {
-            $query = $query->orderBy('documentAuditTrails.operationName', $direction);
+            $query = $query->orderBy('documentaudittrails.operationName', $direction);
         } else if ($orderBy == 'permissionRole') {
             $query = $query->orderBy('roles.name', $direction);
         } else if ($orderBy == 'permissionUser') {
@@ -95,7 +95,7 @@ class DocumentAuditTrailRepository extends BaseRepository implements DocumentAud
         }
 
         if ($attributes->createdBy) {
-            $query = $query->where('documentAuditTrails.createdBy',  $attributes->createdBy);
+            $query = $query->where('documentaudittrails.createdBy',  $attributes->createdBy);
         }
 
         $results = $query->skip($attributes->skip)->take($attributes->pageSize)->get();
@@ -106,7 +106,7 @@ class DocumentAuditTrailRepository extends BaseRepository implements DocumentAud
     public function getDocumentAuditTrailsCount($attributes)
     {
         $query = DocumentAuditTrails::query()
-            ->join('documents', 'documentAuditTrails.documentId', '=', 'documents.id')
+            ->join('documents', 'documentaudittrails.documentId', '=', 'documents.id')
             ->join('categories', 'documents.categoryId', '=', 'categories.id')
             ->join('users', 'documents.createdBy', '=', 'users.id');
 
@@ -134,7 +134,7 @@ class DocumentAuditTrailRepository extends BaseRepository implements DocumentAud
         }
 
         if ($attributes->createdBy) {
-            $query = $query->where('documentAuditTrails.createdBy',  $attributes->createdBy);
+            $query = $query->where('documentaudittrails.createdBy',  $attributes->createdBy);
         }
 
         $count = $query->count();
@@ -164,7 +164,7 @@ class DocumentAuditTrailRepository extends BaseRepository implements DocumentAud
         $model->name = $request->name;
         $model->description = $request->description;
         $model->categoryId = $request->categoryId;
-        $metaDatas = $request->documentMetaDatas;
+        $metaDatas = $request->documentmetadatas;
         $saved = $model->save();
         $this->resetModel();
         $result = $this->parseResult($model);

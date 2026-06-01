@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('documents', function (Blueprint $table) {
             $table->uuid('statusId')->nullable();
-            $table->foreign('statusId')->references('id')->on('documentStatus');
+            $table->foreign('statusId')->references('id')->on('documentstatus');
         });
     }
 

@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('proposalPosts', function (Blueprint $table) {
+        Schema::create('proposalposts', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('title');
             $table->string('department')->nullable();
@@ -19,7 +19,7 @@ return new class extends Migration {
             $table->foreign('createdBy')->references('id')->on('users');
         });
 
-        Schema::create('proposalCandidates', function (Blueprint $table) {
+        Schema::create('proposalcandidates', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('postId');
             $table->string('candidateName');
@@ -36,14 +36,14 @@ return new class extends Migration {
             $table->dateTime('createdDate');
             $table->dateTime('modifiedDate')->nullable();
 
-            $table->foreign('postId')->references('id')->on('proposalPosts')->cascadeOnDelete();
+            $table->foreign('postId')->references('id')->on('proposalposts')->cascadeOnDelete();
             $table->foreign('createdBy')->references('id')->on('users');
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('proposalCandidates');
-        Schema::dropIfExists('proposalPosts');
+        Schema::dropIfExists('proposalcandidates');
+        Schema::dropIfExists('proposalposts');
     }
 };

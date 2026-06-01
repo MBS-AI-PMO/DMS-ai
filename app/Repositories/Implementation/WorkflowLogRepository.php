@@ -32,25 +32,25 @@ class WorkflowLogRepository extends BaseRepository implements WorkflowLogReposit
     public function getWorkflowLogs($attributes)
     {
         $query = WorkflowLog::select([
-            'workflowLogs.id',
+            'workflowlogs.id',
             'workflows.name as workflowName',
-            'workflowLogs.documentWorkflowId',
-            'workflowLogs.createdDate',
-            'workflowLogs.comment',
-            'workflowLogs.type',
-            'workflowTransitions.name as transitionName',
+            'workflowlogs.documentworkflowId',
+            'workflowlogs.createdDate',
+            'workflowlogs.comment',
+            'workflowlogs.type',
+            'workflowtransitions.name as transitionName',
             'fromStep.name as fromStepName',
             'toStep.name as toStepName',
             'documents.name as documentName',
             'documents.id as documentId',
             DB::raw("CONCAT(users.firstName,' ', users.lastName) as createdByName"),
-        ])->join('documentWorkflow', 'workflowLogs.documentWorkflowId', '=', 'documentWorkflow.id')
-            ->join('workflows', 'documentWorkflow.workflowId', '=', 'workflows.id')
-            ->join('documents', 'documents.id', '=', 'documentWorkflow.documentId')
-            ->leftjoin('users', 'workflowLogs.createdBy', '=', 'users.id')
-            ->leftjoin('workflowTransitions', 'workflowTransitions.id', '=', 'workflowLogs.transitionId')
-            ->leftjoin('workflowSteps as fromStep', 'fromStep.id', '=', 'workflowTransitions.fromStepId')
-            ->leftjoin('workflowSteps as toStep', 'toStep.id', '=', 'workflowTransitions.toStepId');
+        ])->join('documentworkflow', 'workflowlogs.documentworkflowId', '=', 'documentworkflow.id')
+            ->join('workflows', 'documentworkflow.workflowId', '=', 'workflows.id')
+            ->join('documents', 'documents.id', '=', 'documentworkflow.documentId')
+            ->leftjoin('users', 'workflowlogs.createdBy', '=', 'users.id')
+            ->leftjoin('workflowtransitions', 'workflowtransitions.id', '=', 'workflowlogs.transitionId')
+            ->leftjoin('workflowsteps as fromStep', 'fromStep.id', '=', 'workflowtransitions.fromStepId')
+            ->leftjoin('workflowsteps as toStep', 'toStep.id', '=', 'workflowtransitions.toStepId');
 
         // Ordering
         $orderByArray = explode(' ', $attributes->orderBy);
@@ -60,9 +60,9 @@ class WorkflowLogRepository extends BaseRepository implements WorkflowLogReposit
         if ($orderBy == 'workflowName') {
             $query = $query->orderBy('workflows.name', $direction);
         } else if ($orderBy == 'createdDate') {
-            $query = $query->orderBy('workflowLogs.createdDate', $direction);
+            $query = $query->orderBy('workflowlogs.createdDate', $direction);
         } else if ($orderBy == 'status') {
-            $query = $query->orderBy('documentWorkflow.status', $direction);
+            $query = $query->orderBy('documentworkflow.status', $direction);
         } else if ($orderBy == 'createdByName') {
             $query = $query->orderBy('users.firstName', $direction);
         } else if ($orderBy == 'documentName') {
@@ -75,7 +75,7 @@ class WorkflowLogRepository extends BaseRepository implements WorkflowLogReposit
         }
 
         if ($attributes->status) {
-            $query = $query->where('documentWorkflow.status', $attributes->status);
+            $query = $query->where('documentworkflow.status', $attributes->status);
         }
 
         if ($attributes->documentName) {
@@ -95,9 +95,9 @@ class WorkflowLogRepository extends BaseRepository implements WorkflowLogReposit
     public function getWorkflowLogCount($attributes)
     {
         $query = WorkflowLog::query()
-            ->join('documentWorkflow', 'workflowLogs.documentWorkflowId', '=', 'documentWorkflow.id')
-            ->join('workflows', 'documentWorkflow.workflowId', '=', 'workflows.id')
-            ->join('documents', 'documents.id', '=', 'documentWorkflow.documentId');
+            ->join('documentworkflow', 'workflowlogs.documentworkflowId', '=', 'documentworkflow.id')
+            ->join('workflows', 'documentworkflow.workflowId', '=', 'workflows.id')
+            ->join('documents', 'documents.id', '=', 'documentworkflow.documentId');
 
         // // Filters
         if ($attributes->workflowName) {
@@ -105,7 +105,7 @@ class WorkflowLogRepository extends BaseRepository implements WorkflowLogReposit
         }
 
         if ($attributes->status) {
-            $query = $query->where('documentWorkflow.status', $attributes->status);
+            $query = $query->where('documentworkflow.status', $attributes->status);
         }
 
         if ($attributes->documentName) {

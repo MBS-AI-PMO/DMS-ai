@@ -4,15 +4,15 @@ namespace App\Models;
 
 use Ramsey\Uuid\Uuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 
-class UserClaims extends Model
+
+class UserClaims extends BaseModel
 {
     use HasFactory;
     protected $primaryKey = "id";
     protected $keyType = 'string';
     public $incrementing = false;
-    public $table = 'userClaims';
+    protected $table = 'userclaims';
     public $timestamps = false;
 
     protected $fillable = ['userId','actionId','claimType'];

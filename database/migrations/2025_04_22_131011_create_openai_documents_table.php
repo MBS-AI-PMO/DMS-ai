@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('openaiDocuments', function (Blueprint $table) {
+        Schema::create('openaidocuments', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->text('prompt');
             $table->text('model');
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('openaiDocuments');
+        Schema::dropIfExists('openaidocuments');
     }
 };

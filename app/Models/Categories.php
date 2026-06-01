@@ -6,16 +6,18 @@ use Ramsey\Uuid\Uuid;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+
 use Illuminate\Notifications\Notifiable;
 use App\Traits\Uuids;
 use Illuminate\Database\Eloquent\Builder;
 
 
-class Categories extends Model
+class Categories extends BaseModel
 {
     use HasFactory, SoftDeletes;
     use Notifiable, Uuids;
+
+    protected $table = 'categories';
     protected $primaryKey = "id";
 
     const CREATED_AT = 'createdDate';

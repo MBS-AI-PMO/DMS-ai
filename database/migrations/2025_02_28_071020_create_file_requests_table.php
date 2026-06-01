@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up()
     {
-        Schema::create('fileRequests', function (Blueprint $table) {
+        Schema::create('filerequests', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('subject');
             $table->string('email')->nullable();
@@ -31,6 +31,6 @@ return new class extends Migration {
 
     public function down()
     {
-        Schema::dropIfExists('fileRequests');
+        Schema::dropIfExists('filerequests');
     }
 };

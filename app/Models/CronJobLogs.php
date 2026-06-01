@@ -2,17 +2,17 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+
 use Ramsey\Uuid\Uuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
 use App\Traits\Uuids;
 
-class CronJobLogs extends Model
+class CronJobLogs extends BaseModel
 {
     use HasFactory, Uuids;
     protected $primaryKey = "id";
-    public $table = 'cronJobLogs';
+    protected $table = 'cronjoblogs';
     public $timestamps = false;
 
     protected $fillable = [

@@ -437,13 +437,13 @@ class CompanyProfileRepository extends BaseRepository implements CompanyProfileR
 
             DB::beginTransaction();
 
-            $companyProfile = $this->model->first();
-            if (!$companyProfile) {
+            $companyprofile = $this->model->first();
+            if (!$companyprofile) {
                 throw new \Exception("Company profile not found.");
             }
 
-            $companyProfile->archiveDocumentRetensionPeriod = $request->period ?? 0;
-            $companyProfile->save();
+            $companyprofile->archiveDocumentRetensionPeriod = $request->period ?? 0;
+            $companyprofile->save();
 
             DB::commit();
 
@@ -521,13 +521,13 @@ class CompanyProfileRepository extends BaseRepository implements CompanyProfileR
         // Delete Email Logs
         if ($model->emailLogRetentionPeriod) {
             try {
-                $emailLogs = EmailLogs::where('sentAt', '<', now()->subDays($model->emailLogRetentionPeriod))
-                    ->with('emailLogAttachments')
+                $emaillogs = EmailLogs::where('sentAt', '<', now()->subDays($model->emailLogRetentionPeriod))
+                    ->with('emaillogattachments')
                     ->get();
 
-                foreach ($emailLogs as $log) {
-                    if (isset($log->emailLogAttachments)) {
-                        foreach ($log->emailLogAttachments as $attachment) {
+                foreach ($emaillogs as $log) {
+                    if (isset($log->emaillogattachments)) {
+                        foreach ($log->emaillogattachments as $attachment) {
                             try {
                                 $path = storage_path('app') . $attachment->path;
                                 if (file_exists($path)) {

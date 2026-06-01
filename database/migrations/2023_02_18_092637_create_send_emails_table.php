@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('sendEmails', function (Blueprint $table) {
+        Schema::create('sendemails', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('subject')->nullable();
             $table->string('message')->nullable();
@@ -40,6 +40,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('sendEmails');
+        Schema::dropIfExists('sendemails');
     }
 };

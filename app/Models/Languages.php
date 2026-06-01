@@ -6,17 +6,17 @@ use Ramsey\Uuid\Uuid;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+
 use Illuminate\Notifications\Notifiable;
 use App\Traits\Uuids;
 use Illuminate\Database\Eloquent\Builder;
 
-class Languages extends Model
+class Languages extends BaseModel
 {
     use HasFactory, SoftDeletes;
     use Notifiable, Uuids;
     protected $primaryKey = "id";
-    public $table = 'languages';
+    protected $table = 'languages';
     const CREATED_AT = 'createdDate';
     const UPDATED_AT = 'modifiedDate';
 

@@ -23,8 +23,8 @@ class ClientController extends Controller
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'companyName' => "required:clients,companyName,$id,id,deleted_at,NULL",
-            'email' => "required|unique:clients,email,$id,id,deleted_at,NULL"
+            'companyName' => 'required|string|max:255',
+            'email' => "required|email|unique:clients,email,$id,id,deleted_at,NULL",
         ]);
 
         if ($validator->fails()) {
@@ -37,8 +37,8 @@ class ClientController extends Controller
     {
 
         $validator = Validator::make($request->all(), [
-            'companyName' => "required:clients,companyName,NULL,id,deleted_at,NULL",
-            'email' => "required|unique:clients,email,NULL,id,deleted_at,NULL"
+            'companyName' => 'required|string|max:255',
+            'email' => 'required|email|unique:clients,email,NULL,id,deleted_at,NULL',
         ]);
 
         if ($validator->fails()) {

@@ -121,7 +121,7 @@ class EmailSMTPSettingRepository extends BaseRepository implements EmailSMTPSett
             $mail->Body    = 'Account Configuration Test';
             $mail->AltBody = 'Account Configuration Test';
             $mail->Sendmail   = '/usr/sbin/sendmail -bs';
-            $emailLogAttachments = [];
+            $emaillogattachments = [];
 
 
             $emailLog = [
@@ -139,7 +139,7 @@ class EmailSMTPSettingRepository extends BaseRepository implements EmailSMTPSett
                 $emailLog['errorMessage'] = $th->getMessage();
             }
 
-            $this->emailLogRepository->createLog($emailLog, $emailLogAttachments);
+            $this->emailLogRepository->createLog($emailLog, $emaillogattachments);
         } catch (\Throwable $th) {
             return false;
         }

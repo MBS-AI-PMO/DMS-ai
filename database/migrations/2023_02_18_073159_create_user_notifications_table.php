@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('userNotifications', function (Blueprint $table) {
+        Schema::create('usernotifications', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('userId')->nullable(false);
             $table->foreign('userId')->references('id')->on('users');
@@ -33,6 +33,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('userNotifications');
+        Schema::dropIfExists('usernotifications');
     }
 };

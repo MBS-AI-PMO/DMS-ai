@@ -100,17 +100,17 @@ class FileRequestRepository extends BaseRepository implements FileRequestReposit
     public function getFileRequest($attributes)
     {
         $query = FileRequests::select([
-            'fileRequests.id',
-            'fileRequests.subject',
-            'fileRequests.email',
-            'fileRequests.maxDocument',
-            'fileRequests.sizeInMb',
-            'fileRequests.fileRequestStatus',
-            'fileRequests.allowExtension',
-            'fileRequests.linkExpiryTime',
-            'fileRequests.createdDate',
+            'filerequests.id',
+            'filerequests.subject',
+            'filerequests.email',
+            'filerequests.maxDocument',
+            'filerequests.sizeInMb',
+            'filerequests.fileRequestStatus',
+            'filerequests.allowExtension',
+            'filerequests.linkExpiryTime',
+            'filerequests.createdDate',
             DB::raw("CONCAT(users.firstName,' ', users.lastName) as createdByName")
-        ])->leftjoin('users', 'fileRequests.createdBy', '=', 'users.id');
+        ])->leftjoin('users', 'filerequests.createdBy', '=', 'users.id');
 
         $orderByArray =  explode(' ', $attributes->orderBy);
         $orderBy = $orderByArray[0];
@@ -180,10 +180,10 @@ class FileRequestRepository extends BaseRepository implements FileRequestReposit
 
     public function getFileRequestData($id)
     {
-        $entity = FileRequests::with(['createdByUser', 'fileRequestDocuments'])
+        $entity = FileRequests::with(['createdByUser', 'filerequestdocuments'])
             ->findOrFail($id);
 
-        $isMaxDocumentReached = $entity->fileRequestDocuments->count() >= $entity->maxDocument;
+        $isMaxDocumentReached = $entity->filerequestdocuments->count() >= $entity->maxDocument;
 
         $isLinkExpired = false;
 
@@ -195,7 +195,7 @@ class FileRequestRepository extends BaseRepository implements FileRequestReposit
             }
         }
 
-        $fileRequestDocuments = $entity->fileRequestDocuments->map(function ($item) {
+        $filerequestdocuments = $entity->filerequestdocuments->map(function ($item) {
             return [
                 'id' => $item->id,
                 'name' => $item->name,
@@ -220,7 +220,7 @@ class FileRequestRepository extends BaseRepository implements FileRequestReposit
             'isMaxDocumentReached' => $isMaxDocumentReached,
             'isLinkExpired' => $isLinkExpired,
             'hasPassword' => !empty($entity->password) ? true : false,
-            'fileRequestDocuments' => $fileRequestDocuments,
+            'filerequestdocuments' => $filerequestdocuments,
         ];
         return response($entityDto, 200);
     }

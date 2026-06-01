@@ -6,14 +6,14 @@ use Ramsey\Uuid\Uuid;
 use Illuminate\Notifications\Notifiable;
 use App\Traits\Uuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 
-class UserNotifications extends Model
+
+class UserNotifications extends BaseModel
 {
     use HasFactory;
     use Notifiable, Uuids;
     protected $primaryKey = "id";
-    public $table = 'userNotifications';
+    protected $table = 'usernotifications';
     // public $timestamps = false;
     const CREATED_AT = 'createdDate';
     const UPDATED_AT = 'modifiedDate';
@@ -23,7 +23,7 @@ class UserNotifications extends Model
         'message',
         'isRead',
         'documentId',
-        'documentWorkflowId',
+        'documentworkflowId',
         'fileRequestId',
         'notificationType',
         'createdDate'

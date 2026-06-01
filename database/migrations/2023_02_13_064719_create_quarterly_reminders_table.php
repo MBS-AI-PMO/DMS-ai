@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('quarterlyReminders', function (Blueprint $table) {
+        Schema::create('quarterlyreminders', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('reminderId')->nullable(false);
             $table->foreign('reminderId')->references('id')->on('reminders');
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('quarterlyReminders');
+        Schema::dropIfExists('quarterlyreminders');
     }
 };

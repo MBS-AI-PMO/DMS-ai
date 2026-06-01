@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('documentRolePermissions', function (Blueprint $table) {
+        Schema::create('documentrolepermissions', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('documentId')->nullable(false);
             $table->foreign('documentId')->references('id')->on('documents');
@@ -41,6 +41,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('documentRolePermissions');
+        Schema::dropIfExists('documentrolepermissions');
     }
 };

@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('emailSMTPSettings', function (Blueprint $table) {
+        Schema::create('emailsmtpsettings', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('host');
             $table->string('userName');
@@ -38,6 +38,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('emailSMTPSettings');
+        Schema::dropIfExists('emailsmtpsettings');
     }
 };

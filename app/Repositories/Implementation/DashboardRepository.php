@@ -17,16 +17,16 @@ class DashboardRepository  implements DashboardRepositoryInterface
     public function getReminders($month, $year)
     {
         $reminders = array();
-        $dailyReminders = $this->getDailyReminders($month, $year);
+        $dailyreminders = $this->getDailyReminders($month, $year);
         $weeklyReminders = $this->getWeeklyReminders($month, $year);
         $monthlyReminders = $this->getMonthlyReminders($month, $year);
-        $quarterlyReminders = $this->getQuarterlyReminders($month, $year);
-        $halfYearlyReminders = $this->getHalfYearlyReminders($month, $year);
+        $quarterlyreminders = $this->getQuarterlyReminders($month, $year);
+        $halfyearlyreminders = $this->getHalfYearlyReminders($month, $year);
         $yearlyReminders = $this->getYearlyReminders($month, $year);
         $oneTimeReminders = $this->getOneTimeReminder($month, $year);
 
-        if ($dailyReminders) {
-            foreach ($dailyReminders as $dailyReminder) {
+        if ($dailyreminders) {
+            foreach ($dailyreminders as $dailyReminder) {
                 array_push($reminders, $dailyReminder);
             }
         }
@@ -40,13 +40,13 @@ class DashboardRepository  implements DashboardRepositoryInterface
                 array_push($reminders, $monthlyReminder);
             }
         }
-        if ($quarterlyReminders) {
-            foreach ($quarterlyReminders as $quarterlyReminder) {
+        if ($quarterlyreminders) {
+            foreach ($quarterlyreminders as $quarterlyReminder) {
                 array_push($reminders, $quarterlyReminder);
             }
         }
-        if ($halfYearlyReminders) {
-            foreach ($halfYearlyReminders as $halfYearlyReminder) {
+        if ($halfyearlyreminders) {
+            foreach ($halfyearlyreminders as $halfYearlyReminder) {
                 array_push($reminders, $halfYearlyReminder);
             }
         }
@@ -87,11 +87,11 @@ class DashboardRepository  implements DashboardRepositoryInterface
             })
             ->whereExists(function ($query) use ($userId) {
                 $query->select(DB::raw(1))
-                    ->from('reminderUsers')
-                    ->whereRaw('reminderUsers.reminderId = reminders.id')
-                    ->where('reminderUsers.userId', '=', $userId);
+                    ->from('reminderusers')
+                    ->whereRaw('reminderusers.reminderId = reminders.id')
+                    ->where('reminderusers.userId', '=', $userId);
             })
-            ->with(['dailyReminders']);
+            ->with(['dailyreminders']);
 
         $reminders = $reminderQuery->get();
         $result = array();
@@ -107,7 +107,7 @@ class DashboardRepository  implements DashboardRepositoryInterface
                 $tempDate = date('Y-m-d', strtotime($reminderStartDate . '+ ' . $rang . ' days'));
                 $dayofweek = date('w', strtotime($tempDate));
 
-                $array = array_filter($r['dailyReminders']->toArray(), function ($item) use ($dayofweek) {
+                $array = array_filter($r['dailyreminders']->toArray(), function ($item) use ($dayofweek) {
                     return $item["dayOfWeek"] == $dayofweek && $item["isActive"] == 1;
                 });
 
@@ -142,9 +142,9 @@ class DashboardRepository  implements DashboardRepositoryInterface
             ->whereDate('reminders.startDate', '<=', $endDate)
             ->whereExists(function ($query) use ($userId) {
                 $query->select(DB::raw(1))
-                    ->from('reminderUsers')
-                    ->whereRaw('reminderUsers.reminderId = reminders.id')
-                    ->where('reminderUsers.userId', '=', $userId);
+                    ->from('reminderusers')
+                    ->whereRaw('reminderusers.reminderId = reminders.id')
+                    ->where('reminderusers.userId', '=', $userId);
             })
             ->where(function ($query) use ($startDate) {
                 $query = $query->where('reminders.endDate', '')->orWhereNull('reminders.endDate')
@@ -197,9 +197,9 @@ class DashboardRepository  implements DashboardRepositoryInterface
             ->whereDate('reminders.startDate', '<=', $endDate)
             ->whereExists(function ($query) use ($userId) {
                 $query->select(DB::raw(1))
-                    ->from('reminderUsers')
-                    ->whereRaw('reminderUsers.reminderId = reminders.id')
-                    ->where('reminderUsers.userId', '=', $userId);
+                    ->from('reminderusers')
+                    ->whereRaw('reminderusers.reminderId = reminders.id')
+                    ->where('reminderusers.userId', '=', $userId);
             })
             ->where(function ($query) use ($startDate) {
                 $query = $query->where('reminders.endDate', '')->orWhereNull('reminders.endDate')
@@ -237,16 +237,16 @@ class DashboardRepository  implements DashboardRepositoryInterface
         $currentQuater = $this->getCurretQuaterlyQuarter($startDate);
 
         $userId = Auth::parseToken()->getPayload()->get('userId');
-        $reminderQuery = Reminders::select(['reminders.id', 'reminders.subject', 'quarterlyReminders.*'])
-            ->join('quarterlyReminders', 'reminders.id', '=', 'quarterlyReminders.reminderId')
+        $reminderQuery = Reminders::select(['reminders.id', 'reminders.subject', 'quarterlyreminders.*'])
+            ->join('quarterlyreminders', 'reminders.id', '=', 'quarterlyreminders.reminderId')
             ->where('frequency', '=', FrequencyEnum::Quarterly->value)
-            ->where('quarterlyReminders.quarter', '=', $currentQuater)
+            ->where('quarterlyreminders.quarter', '=', $currentQuater)
             ->whereDate('reminders.startDate', '<=', $endDate)
             ->whereExists(function ($query) use ($userId) {
                 $query->select(DB::raw(1))
-                    ->from('reminderUsers')
-                    ->whereRaw('reminderUsers.reminderId = reminders.id')
-                    ->where('reminderUsers.userId', '=', $userId);
+                    ->from('reminderusers')
+                    ->whereRaw('reminderusers.reminderId = reminders.id')
+                    ->where('reminderusers.userId', '=', $userId);
             })
             ->where(function ($query) use ($startDate) {
                 $query = $query->where('reminders.endDate', '')->orWhereNull('reminders.endDate')
@@ -257,9 +257,9 @@ class DashboardRepository  implements DashboardRepositoryInterface
             ->where(function ($query) use ($month) {
                 $query->whereExists(function ($query) use ($month) {
                     $query->select(DB::raw(1))
-                        ->from('quarterlyReminders')
-                        ->whereRaw('quarterlyReminders.reminderId = reminders.id')
-                        ->where('quarterlyReminders.month', '=', $month);
+                        ->from('quarterlyreminders')
+                        ->whereRaw('quarterlyreminders.reminderId = reminders.id')
+                        ->where('quarterlyreminders.month', '=', $month);
                 });
             });
 
@@ -289,16 +289,16 @@ class DashboardRepository  implements DashboardRepositoryInterface
         $currentQuater = $this->getCurretHalfYearlyQuarter($startDate);
 
         $userId = Auth::parseToken()->getPayload()->get('userId');
-        $reminderQuery = Reminders::select(['reminders.id', 'reminders.subject', 'halfYearlyReminders.*'])
-            ->join('halfYearlyReminders', 'reminders.id', '=', 'halfYearlyReminders.reminderId')
+        $reminderQuery = Reminders::select(['reminders.id', 'reminders.subject', 'halfyearlyreminders.*'])
+            ->join('halfyearlyreminders', 'reminders.id', '=', 'halfyearlyreminders.reminderId')
             ->where('frequency', '=', FrequencyEnum::HalfYearly->value)
-            ->where('halfYearlyReminders.quarter', '=', $currentQuater)
+            ->where('halfyearlyreminders.quarter', '=', $currentQuater)
             ->whereDate('reminders.startDate', '<=', $endDate)
             ->whereExists(function ($query) use ($userId) {
                 $query->select(DB::raw(1))
-                    ->from('reminderUsers')
-                    ->whereRaw('reminderUsers.reminderId = reminders.id')
-                    ->where('reminderUsers.userId', '=', $userId);
+                    ->from('reminderusers')
+                    ->whereRaw('reminderusers.reminderId = reminders.id')
+                    ->where('reminderusers.userId', '=', $userId);
             })
             ->where(function ($query) use ($startDate) {
                 $query = $query->where('reminders.endDate', '')->orWhereNull('reminders.endDate')
@@ -309,9 +309,9 @@ class DashboardRepository  implements DashboardRepositoryInterface
             ->where(function ($query) use ($month) {
                 $query->whereExists(function ($query) use ($month) {
                     $query->select(DB::raw(1))
-                        ->from('halfYearlyReminders')
-                        ->whereRaw('halfYearlyReminders.reminderId = reminders.id')
-                        ->where('halfYearlyReminders.month', '=', $month);
+                        ->from('halfyearlyreminders')
+                        ->whereRaw('halfyearlyreminders.reminderId = reminders.id')
+                        ->where('halfyearlyreminders.month', '=', $month);
                 });
             });
 
@@ -346,9 +346,9 @@ class DashboardRepository  implements DashboardRepositoryInterface
             ->whereMonth('reminders.startDate', '=', $month)
             ->whereExists(function ($query) use ($userId) {
                 $query->select(DB::raw(1))
-                    ->from('reminderUsers')
-                    ->whereRaw('reminderUsers.reminderId = reminders.id')
-                    ->where('reminderUsers.userId', '=', $userId);
+                    ->from('reminderusers')
+                    ->whereRaw('reminderusers.reminderId = reminders.id')
+                    ->where('reminderusers.userId', '=', $userId);
             })
             ->where(function ($query) use ($startDate) {
                 $query = $query->where('reminders.endDate', '')->orWhereNull('reminders.endDate')
@@ -381,9 +381,9 @@ class DashboardRepository  implements DashboardRepositoryInterface
             ->whereMonth('reminders.startDate', '=', $month)
             ->whereExists(function ($query) use ($userId) {
                 $query->select(DB::raw(1))
-                    ->from('reminderUsers')
-                    ->whereRaw('reminderUsers.reminderId = reminders.id')
-                    ->where('reminderUsers.userId', '=', $userId);
+                    ->from('reminderusers')
+                    ->whereRaw('reminderusers.reminderId = reminders.id')
+                    ->where('reminderusers.userId', '=', $userId);
             });
 
         $reminders = $reminderQuery->get();

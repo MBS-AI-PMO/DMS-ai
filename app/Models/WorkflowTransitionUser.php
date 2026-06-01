@@ -3,14 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+
 use Ramsey\Uuid\Uuid;
 
-class WorkflowTransitionUser extends Model
+class WorkflowTransitionUser extends BaseModel
 {
     use HasFactory;
 
-    protected $table = 'workflowTransitionUsers'; // Table name
+    protected $table = 'workflowtransitionusers'; // Table name
     public $timestamps = false;
     protected $fillable = ['userId', 'transitionId'];
 

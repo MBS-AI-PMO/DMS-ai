@@ -38,7 +38,7 @@ class RoleRepository extends BaseRepository implements RoleRepositoryInterface
 
     public function findRole($id)
     {
-        $model = $this->model->with('roleClaims')->findOrFail($id);
+        $model = $this->model->with('roleclaims')->findOrFail($id);
         $this->resetModel();
         return $this->parseResult($model);
     }
@@ -72,7 +72,7 @@ class RoleRepository extends BaseRepository implements RoleRepositoryInterface
     }
 
 
-    public function updateRoleClaim($model, $id, $userRoles)
+    public function updateRoleClaim($model, $id, $userroles)
     {
         try {
             DB::beginTransaction();
@@ -80,7 +80,7 @@ class RoleRepository extends BaseRepository implements RoleRepositoryInterface
             RoleClaims::destroy($roleclaim);
             $result = $this->parseResult($model);
 
-            foreach ($userRoles as $action) {
+            foreach ($userroles as $action) {
                 RoleClaims::create(array(
                     'roleId' =>    $action['roleId'],
                     'actionId' =>  $action['actionId'],

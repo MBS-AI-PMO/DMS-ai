@@ -6,17 +6,17 @@ use Ramsey\Uuid\Uuid;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+
 use Illuminate\Notifications\Notifiable;
 use App\Traits\Uuids;
 use Illuminate\Database\Eloquent\Builder;
 
-class SendEmails extends Model
+class SendEmails extends BaseModel
 {
     use HasFactory, SoftDeletes;
     use Notifiable, Uuids;
     protected $primaryKey = "id";
-    public $table = 'sendEmails';
+    protected $table = 'sendemails';
     const CREATED_AT = 'createdDate';
     const UPDATED_AT = 'modifiedDate';
 
@@ -46,7 +46,7 @@ class SendEmails extends Model
         // });
 
         static::addGlobalScope('isDeleted', function (Builder $builder) {
-            $builder->where('sendEmails.isDeleted', '=', 0);
+            $builder->where('sendemails.isDeleted', '=', 0);
         });
     }
 }

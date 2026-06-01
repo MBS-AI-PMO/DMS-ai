@@ -56,17 +56,17 @@ class DocumentVersionsRepository extends BaseRepository implements DocumentVersi
         }
 
         $documentsVersions = DocumentVersions::select([
-            'documentVersions.id',
-            'documentVersions.url',
-            'documentVersions.modifiedDate',
-            'documentVersions.signDate',
+            'documentversions.id',
+            'documentversions.url',
+            'documentversions.modifiedDate',
+            'documentversions.signDate',
             DB::raw("CONCAT(users.firstName,' ', users.lastName) as createdByUser"),
             DB::raw("CONCAT(signedUser.firstName,' ', signedUser.lastName) as signedByUser")
         ])
-            ->leftJoin('users', 'documentVersions.createdBy', '=', 'users.id')
-            ->leftJoin('users as signedUser', 'documentVersions.signById', '=', 'signedUser.id')
-            ->where('documentVersions.documentId', $id)
-            ->orderBy('documentVersions.modifiedDate', 'desc')
+            ->leftJoin('users', 'documentversions.createdBy', '=', 'users.id')
+            ->leftJoin('users as signedUser', 'documentversions.signById', '=', 'signedUser.id')
+            ->where('documentversions.documentId', $id)
+            ->orderBy('documentversions.modifiedDate', 'desc')
             ->get();
 
 

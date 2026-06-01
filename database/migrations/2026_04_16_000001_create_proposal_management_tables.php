@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('proposalFolders', function (Blueprint $table) {
+        Schema::create('proposalfolders', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('name');
             $table->uuid('parentFolderId')->nullable();
@@ -16,10 +16,10 @@ return new class extends Migration {
             $table->dateTime('modifiedDate')->nullable();
 
             $table->foreign('createdBy')->references('id')->on('users');
-            $table->foreign('parentFolderId')->references('id')->on('proposalFolders')->nullOnDelete();
+            $table->foreign('parentFolderId')->references('id')->on('proposalfolders')->nullOnDelete();
         });
 
-        Schema::create('proposalFiles', function (Blueprint $table) {
+        Schema::create('proposalfiles', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('folderId');
             $table->string('title');
@@ -28,11 +28,11 @@ return new class extends Migration {
             $table->uuid('createdBy');
             $table->dateTime('createdDate');
 
-            $table->foreign('folderId')->references('id')->on('proposalFolders')->cascadeOnDelete();
+            $table->foreign('folderId')->references('id')->on('proposalfolders')->cascadeOnDelete();
             $table->foreign('createdBy')->references('id')->on('users');
         });
 
-        Schema::create('proposalFileRequests', function (Blueprint $table) {
+        Schema::create('proposalfilerequests', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('folderId');
             $table->string('title');
@@ -41,15 +41,15 @@ return new class extends Migration {
             $table->uuid('createdBy');
             $table->dateTime('createdDate');
 
-            $table->foreign('folderId')->references('id')->on('proposalFolders')->cascadeOnDelete();
+            $table->foreign('folderId')->references('id')->on('proposalfolders')->cascadeOnDelete();
             $table->foreign('createdBy')->references('id')->on('users');
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('proposalFileRequests');
-        Schema::dropIfExists('proposalFiles');
-        Schema::dropIfExists('proposalFolders');
+        Schema::dropIfExists('proposalfilerequests');
+        Schema::dropIfExists('proposalfiles');
+        Schema::dropIfExists('proposalfolders');
     }
 };

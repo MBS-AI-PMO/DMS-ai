@@ -3,14 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+
 use Ramsey\Uuid\Uuid;
 
-class WorkflowTransition extends Model
+class WorkflowTransition extends BaseModel
 {
     use HasFactory;
 
-    protected $table = 'workflowTransitions'; // Table name
+    protected $table = 'workflowtransitions'; // Table name
     public $timestamps = false;
     public $incrementing = false;
     protected $primaryKey = "id";
@@ -45,13 +45,13 @@ class WorkflowTransition extends Model
     }
 
 
-    public function workflowTransitionRoles()
+    public function workflowtransitionroles()
     {
         return $this->hasMany(WorkflowTransitionRole::class, 'transitionId');
     }
 
 
-    public function workflowTransitionUsers()
+    public function workflowtransitionusers()
     {
         return $this->hasMany(WorkflowTransitionUser::class, 'transitionId');
     }
