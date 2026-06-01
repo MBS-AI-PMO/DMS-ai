@@ -25,14 +25,14 @@ class OpenAIDocumentRepository extends BaseRepository implements OpenAIDocumentR
 
 
         $query = OpenAIDocuments::select([
-            'openaiDocuments.id',
-            'openaiDocuments.prompt',
-            'openaiDocuments.model',
-            'openaiDocuments.created_at',
-            'openaiDocuments.language',
-            'openaiDocuments.maximumLength',
-            'openaiDocuments.creativity',
-            'openaiDocuments.toneOfVoice'
+            'openaidocuments.id',
+            'openaidocuments.prompt',
+            'openaidocuments.model',
+            'openaidocuments.created_at',
+            'openaidocuments.language',
+            'openaidocuments.maximumLength',
+            'openaidocuments.creativity',
+            'openaidocuments.toneOfVoice'
         ]);
 
         $orderByArray =  explode(' ', $attributes->orderBy);
@@ -40,19 +40,19 @@ class OpenAIDocumentRepository extends BaseRepository implements OpenAIDocumentR
         $direction = $orderByArray[1] ?? 'asc';
 
         if ($orderBy == 'prompt') {
-            $query = $query->orderBy('openaiDocuments.prompt', $direction);
+            $query = $query->orderBy('openaidocuments.prompt', $direction);
         } else if ($orderBy == 'model') {
-            $query = $query->orderBy('openaiDocuments.model', $direction);
+            $query = $query->orderBy('openaidocuments.model', $direction);
         } else if ($orderBy == 'language') {
-            $query = $query->orderBy('openaiDocuments.language', $direction);
+            $query = $query->orderBy('openaidocuments.language', $direction);
         } else if ($orderBy == 'maximumLength') {
-            $query = $query->orderBy('openaiDocuments.maximumLength', $direction);
+            $query = $query->orderBy('openaidocuments.maximumLength', $direction);
         } else if ($orderBy == 'creativity') {
-            $query = $query->orderBy('openaiDocuments.creativity', $direction);
+            $query = $query->orderBy('openaidocuments.creativity', $direction);
         } else if ($orderBy == 'toneOfVoice') {
-            $query = $query->orderBy('openaiDocuments.toneOfVoice', $direction);
+            $query = $query->orderBy('openaidocuments.toneOfVoice', $direction);
         } else {
-            $query = $query->orderBy('openaiDocuments.created_at', $direction);
+            $query = $query->orderBy('openaidocuments.created_at', $direction);
         }
 
         if ($attributes->prompt) {

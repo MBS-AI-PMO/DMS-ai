@@ -32,7 +32,7 @@ return new class extends Migration
         });
 
         // Workflow Steps Table
-        Schema::create('workflowSteps', function (Blueprint $table) {
+        Schema::create('workflowsteps', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('workflowId'); // Foreign key to Workflows
             $table->string('name');
@@ -40,7 +40,7 @@ return new class extends Migration
         });
 
         // Workflow Transitions Table
-        Schema::create('workflowTransitions', function (Blueprint $table) {
+        Schema::create('workflowtransitions', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('workflowId'); // Foreign key to Workflows
             $table->uuid('fromStepId'); // Foreign key to Workflow Steps
@@ -50,32 +50,32 @@ return new class extends Migration
             $table->integer('orderNo');
             $table->boolean('isFirstTransaction')->default(false);
             $table->foreign('workflowId')->references('id')->on('workflows');
-            $table->foreign('fromStepId')->references('id')->on('workflowSteps');
-            $table->foreign('toStepId')->references('id')->on('workflowSteps');
+            $table->foreign('fromStepId')->references('id')->on('workflowsteps');
+            $table->foreign('toStepId')->references('id')->on('workflowsteps');
         });
 
         // Workflow Transitions users Table
-        Schema::create('workflowTransitionUsers', function (Blueprint $table) {
+        Schema::create('workflowtransitionusers', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('userId'); // Foreign key to Users
             $table->uuid('transitionId'); // Foreign key to Workflow Transitions
 
             $table->foreign('userId')->references('id')->on('users');
-            $table->foreign('transitionId')->references('id')->on('workflowTransitions');
+            $table->foreign('transitionId')->references('id')->on('workflowtransitions');
         });
 
         // Workflow Transitions Roles Table
-        Schema::create('workflowTransitionRoles', function (Blueprint $table) {
+        Schema::create('workflowtransitionroles', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('roleId'); // Foreign key to roles
             $table->uuid('transitionId'); // Foreign key to Workflow Transitions
 
             $table->foreign('roleId')->references('id')->on('roles');
-            $table->foreign('transitionId')->references('id')->on('workflowTransitions');
+            $table->foreign('transitionId')->references('id')->on('workflowtransitions');
         });
 
         // Document Workflow Table
-        Schema::create('documentWorkflow', function (Blueprint $table) {
+        Schema::create('documentworkflow', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('documentId'); // Foreign key to Documents
             $table->uuid('workflowId'); // Foreign key to Workflows
@@ -92,13 +92,13 @@ return new class extends Migration
             $table->foreign('createdBy')->references('id')->on('users');
             $table->foreign('documentId')->references('id')->on('documents');
             $table->foreign('workflowId')->references('id')->on('workflows');
-            $table->foreign('currentStepId')->references('id')->on('workflowSteps');
+            $table->foreign('currentStepId')->references('id')->on('workflowsteps');
         });
 
         // Workflow Log Table
-        Schema::create('workflowLogs', function (Blueprint $table) {
+        Schema::create('workflowlogs', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('documentWorkflowId'); // Foreign key to Documents
+            $table->uuid('documentworkflowId'); // Foreign key to Documents
             $table->uuid('transitionId')->nullable(); // Foreign key to Workflow Steps
             $table->text('comment')->nullable(); // Optional comments
             $table->enum('type', ['Transition', 'Initiated', 'Cancelled'])->default('Transition');
@@ -108,14 +108,14 @@ return new class extends Migration
             $table->dateTime('createdDate');
             $table->softDeletes()->nullable();
 
-            $table->foreign('documentWorkflowId')->references('id')->on('documentWorkflow');
-            $table->foreign('transitionId')->references('id')->on('workflowTransitions');
+            $table->foreign('documentworkflowId')->references('id')->on('documentworkflow');
+            $table->foreign('transitionId')->references('id')->on('workflowtransitions');
             $table->foreign('createdBy')->references('id')->on('users');
         });
 
         Schema::table('documents', function (Blueprint $table) {
-            $table->uuid('documentWorkflowId')->nullable();
-            $table->foreign('documentWorkflowId')->references('id')->on('documentWorkflow');
+            $table->uuid('documentworkflowId')->nullable();
+            $table->foreign('documentworkflowId')->references('id')->on('documentworkflow');
         });
     }
 
@@ -128,14 +128,14 @@ return new class extends Migration
     public function down()
     {
         Schema::dropIfExists('workflowLog');
-        Schema::dropIfExists('workflowTransitionUsers');
-        Schema::dropIfExists('documentWorkflow');
-        Schema::dropIfExists('workflowTransitions');
-        Schema::dropIfExists('workflowSteps');
+        Schema::dropIfExists('workflowtransitionusers');
+        Schema::dropIfExists('documentworkflow');
+        Schema::dropIfExists('workflowtransitions');
+        Schema::dropIfExists('workflowsteps');
         Schema::dropIfExists('workflows');
 
         Schema::table('documents', function (Blueprint $table) {
-            $table->dropColumn('documentWorkflowId');
+            $table->dropColumn('documentworkflowId');
         });
     }
 };

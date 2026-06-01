@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('pageHelper', function (Blueprint $table) {
+        Schema::create('pagehelper', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('code');
             $table->string('name');
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('pageHelper');
+        Schema::dropIfExists('pagehelper');
     }
 };

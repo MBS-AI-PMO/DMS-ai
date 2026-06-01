@@ -88,8 +88,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/documentAuditTrail', [DocumentAuditTrailController::class, 'saveDocumentAuditTrail']);
     //workflow
     Route::get('/workflow/{id}/visualWorkflow', [WorkflowController::class, 'visualWorkflow']);
-    Route::get('/documentWorkflow/{id}/visualWorkflow', [DocumentWorkflowController::class, 'visualWorkflow']);
-    Route::post('/documentWorkflow/performNextTransition', [DocumentWorkflowController::class, 'performNextTransition']);
+    Route::get('/documentworkflow/{id}/visualWorkflow', [DocumentWorkflowController::class, 'visualWorkflow']);
+    Route::post('/documentworkflow/performNextTransition', [DocumentWorkflowController::class, 'performNextTransition']);
     //document permission check
     Route::get('/documentPermission/{id}/check', [DocumentPermissionController::class, 'checkDocumentPermission']);
 
@@ -102,7 +102,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::middleware('hasToken:SETTING_MANAGE_PROFILE')->group(function () {
-        Route::post('/companyProfile', [CompanyProfileController::class, 'updateCompanyProfile']);
+        Route::post('/companyprofile', [CompanyProfileController::class, 'updateCompanyProfile']);
     });
 
     Route::middleware('hasToken:SETTINGS_STORAGE_SETTINGS')->group(function () {
@@ -396,6 +396,13 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/proposal-management/files', [ProposalManagementController::class, 'uploadFile']);
         Route::get('/proposal-management/files/{id}/open', [ProposalManagementController::class, 'openFile']);
         Route::post('/proposal-management/file-requests', [ProposalManagementController::class, 'createFileRequest']);
+        Route::get('/proposal-management/post-board', [ProposalManagementController::class, 'postBoard']);
+        Route::post('/proposal-management/categories', [ProposalManagementController::class, 'createCategory']);
+        Route::put('/proposal-management/categories/{id}', [ProposalManagementController::class, 'updateCategory']);
+        Route::delete('/proposal-management/categories/{id}', [ProposalManagementController::class, 'deleteCategory']);
+        Route::post('/proposal-management/departments', [ProposalManagementController::class, 'createDepartment']);
+        Route::put('/proposal-management/departments/{id}', [ProposalManagementController::class, 'updateDepartment']);
+        Route::delete('/proposal-management/departments/{id}', [ProposalManagementController::class, 'deleteDepartment']);
         Route::post('/proposal-management/posts', [ProposalManagementController::class, 'createPost']);
         Route::put('/proposal-management/posts/{id}', [ProposalManagementController::class, 'updatePost']);
         Route::delete('/proposal-management/posts/{id}', [ProposalManagementController::class, 'deletePost']);
@@ -447,7 +454,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::middleware('hasToken:MANAGE_DOCUMENT_STATUS')->group(function () {
-        Route::post('/documentStatus', [DocumentStatusController::class, 'create']);
+        Route::post('/documentstatus', [DocumentStatusController::class, 'create']);
         Route::get('/document-status/{id}', [DocumentStatusController::class, 'get']);
         Route::put('/document-status/{id}', [DocumentStatusController::class, 'update']);
         Route::delete('/document-status/{id}', [DocumentStatusController::class, 'delete']);
@@ -495,7 +502,7 @@ Route::middleware(['auth'])->group(function () {
 
         //transitions
         Route::get('/workflow/{id}/transitions', [WorkflowTransitionController::class, 'get']);
-        Route::put('/workflowTransitions/{id}', [WorkflowTransitionController::class, 'update']);
+        Route::put('/workflowtransitions/{id}', [WorkflowTransitionController::class, 'update']);
         Route::post('/workflowTransition', [WorkflowTransitionController::class, 'createWorkFlowTransition']);
     });
 
@@ -508,15 +515,15 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::group(['middleware' => ['hasToken:ALL_DOCUMENTS_START_WORKFLOW,ASSIGNED_DOCUMENTS_START_WORKFLOW']], function () {
-        Route::post('/documentWorkflow', [DocumentWorkflowController::class, 'saveDocumentWorkFlow']);
+        Route::post('/documentworkflow', [DocumentWorkflowController::class, 'saveDocumentWorkFlow']);
     });
 
     Route::middleware('hasToken:WORKFLOW_ALL_CANCEL_WORKFLOW')->group(function () {
-        Route::post('/documentWorkflow/{id}/cancel', [DocumentWorkflowController::class, 'cancelWorkflow']);
+        Route::post('/documentworkflow/{id}/cancel', [DocumentWorkflowController::class, 'cancelWorkflow']);
     });
 
     Route::middleware('hasToken:WORKFLOW_VIEW_ALL_WORKFLOWS')->group(function () {
-        Route::get('/documentWorkflow', [DocumentWorkflowController::class, 'getDocumentWorkFlows']);
+        Route::get('/documentworkflow', [DocumentWorkflowController::class, 'getDocumentWorkFlows']);
     });
 
     Route::group(['middleware' => ['hasToken:WORKFLOW_VIEW_WORKFLOW_LOGS,ALL_DOCUMENTS_VIEW_DETAIL,ASSIGNED_DOCUMENTS_VIEW_DETAIL']], function () {

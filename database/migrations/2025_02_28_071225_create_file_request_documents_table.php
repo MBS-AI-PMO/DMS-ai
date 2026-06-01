@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up()
     {
-        Schema::create('fileRequestDocuments', function (Blueprint $table) {
+        Schema::create('filerequestdocuments', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('name');
             $table->string('url');
@@ -17,13 +17,13 @@ return new class extends Migration {
             $table->uuid('approvalOrRejectedById')->nullable();
             $table->text('reason')->nullable();
             $table->dateTime('createdDate');
-            $table->foreign('fileRequestId')->references('id')->on('fileRequests');
+            $table->foreign('fileRequestId')->references('id')->on('filerequests');
             $table->foreign('approvalOrRejectedById')->references('id')->on('users');
         });
     }
 
     public function down()
     {
-        Schema::dropIfExists('fileRequestDocuments');
+        Schema::dropIfExists('filerequestdocuments');
     }
 };

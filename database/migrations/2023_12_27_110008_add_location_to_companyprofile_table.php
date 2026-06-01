@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('companyProfile', function (Blueprint $table) {
+        Schema::table('companyprofile', function (Blueprint $table) {
             $table->string('location')->default('local')->nullable();
         });
     }
@@ -25,7 +25,7 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('companyProfile', function (Blueprint $table) {
+        Schema::table('companyprofile', function (Blueprint $table) {
             $table->dropColumn('location');
         });
     }

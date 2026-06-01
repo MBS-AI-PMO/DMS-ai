@@ -7,17 +7,17 @@ use App\Repositories\Contracts\CompanyProfileRepositoryInterface;
 
 class CompanyProfileController extends Controller
 {
-    private $companyProfileRepository;
+    private $companyprofileRepository;
 
-    public function __construct(CompanyProfileRepositoryInterface $companyProfileRepository)
+    public function __construct(CompanyProfileRepositoryInterface $companyprofileRepository)
     {
-        $this->companyProfileRepository = $companyProfileRepository;
+        $this->companyprofileRepository = $companyprofileRepository;
     }
 
     public function getCompanyProfile()
     {
         try {
-            return response()->json($this->companyProfileRepository->getCompanyProfile());
+            return response()->json($this->companyprofileRepository->getCompanyProfile());
         } catch (\Throwable $th) {
             return response()->json(['Message' => "Error fetching company profile: Please make sure installation has been finished successfully."], 500);
         }
@@ -25,67 +25,67 @@ class CompanyProfileController extends Controller
 
     public function updateCompanyProfile(Request $request)
     {
-        return response()->json($this->companyProfileRepository->updateCompanyProfile($request->all()));
+        return response()->json($this->companyprofileRepository->updateCompanyProfile($request->all()));
     }
 
     public function updateStorage(Request $request)
     {
-        return $this->companyProfileRepository->updateStorage($request->all());
+        return $this->companyprofileRepository->updateStorage($request->all());
     }
 
     public function getStorage()
     {
-        return $this->companyProfileRepository->getStorage();
+        return $this->companyprofileRepository->getStorage();
     }
 
     public function getOpenAiKey()
     {
-        return $this->companyProfileRepository->getOpenAiKey();
+        return $this->companyprofileRepository->getOpenAiKey();
     }
 
 
     public function saveOpenAiKey(Request $request)
     {
-        return $this->companyProfileRepository->saveOpenAiKey($request);
+        return $this->companyprofileRepository->saveOpenAiKey($request);
     }
 
     public function getGoogleGeminiApiKey()
     {
-        return $this->companyProfileRepository->getGoogleGeminiApiKey();
+        return $this->companyprofileRepository->getGoogleGeminiApiKey();
     }
 
     public function saveGoogleGeminiApiKey(Request $request)
     {
-        return $this->companyProfileRepository->saveGoogleGeminiApiKey($request);
+        return $this->companyprofileRepository->saveGoogleGeminiApiKey($request);
     }
 
     public function updateLicense(Request $request)
     {
-        return response()->json($this->companyProfileRepository->updateLicense($request));
+        return response()->json($this->companyprofileRepository->updateLicense($request));
     }
 
     public function updateArchiveDocumentRetension(Request $request)
     {
-        return response()->json($this->companyProfileRepository->updateArchiveDocumentRetension($request));
+        return response()->json($this->companyprofileRepository->updateArchiveDocumentRetension($request));
     }
 
     public function updateAllowPdfSignature(Request $request)
     {
-        return $this->companyProfileRepository->updateAllowPdfSignature($request->all());
+        return $this->companyprofileRepository->updateAllowPdfSignature($request->all());
     }
 
     public function updateEmailLogRetentionPeriod(Request $request)
     {
-        return $this->companyProfileRepository->updateEmailLogRetentionPeriod($request->all());
+        return $this->companyprofileRepository->updateEmailLogRetentionPeriod($request->all());
     }
 
     public function updateCronJobLogRetentionPeriod(Request $request)
     {
-        return $this->companyProfileRepository->updateCronJobLogRetentionPeriod($request->all());
+        return $this->companyprofileRepository->updateCronJobLogRetentionPeriod($request->all());
     }
 
     public function updateLoginAuditRetentionPeriod(Request $request)
     {
-        return $this->companyProfileRepository->updateLoginAuditRetentionPeriod($request->all());
+        return $this->companyprofileRepository->updateLoginAuditRetentionPeriod($request->all());
     }
 }

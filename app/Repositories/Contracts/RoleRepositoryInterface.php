@@ -8,6 +8,6 @@ interface RoleRepositoryInterface extends BaseRepositoryInterface
 {
      public function findRole($id);
      public function createRole(array $attributes);
-     public function updateRoleClaim($model, $id, $userRoles);
+     public function updateRoleClaim($model, $id, $userroles);
      public function getRolesForDropdown();
 }

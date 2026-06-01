@@ -94,9 +94,9 @@ class DocumentSignatureController extends Controller
                 'createdDate' => Carbon::now()
             ]);
 
-            $companyProfile = CompanyProfiles::first();
+            $companyprofile = CompanyProfiles::first();
 
-            if ($extension == 'pdf' && $companyProfile && $companyProfile->allowPdfSignature) {
+            if ($extension == 'pdf' && $companyprofile && $companyprofile->allowPdfSignature) {
                 // Get the PDF file content from the correct storage
                 if ($document->location == 's3') {
                     $pdfContent = Storage::disk('s3')->get($document->url);

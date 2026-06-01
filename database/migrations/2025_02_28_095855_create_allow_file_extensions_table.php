@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up()
     {
-        Schema::create('allowFileExtensions', function (Blueprint $table) {
+        Schema::create('allowfileextensions', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->tinyInteger('fileType'); // Enum representation
             $table->string('extensions');
@@ -16,7 +16,7 @@ return new class extends Migration {
 
     public function down()
     {
-        Schema::dropIfExists('allowFileExtensions');
+        Schema::dropIfExists('allowfileextensions');
     }
 };
 

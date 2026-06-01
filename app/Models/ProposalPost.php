@@ -4,21 +4,23 @@ namespace App\Models;
 
 use App\Traits\Uuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class ProposalPost extends Model
+class ProposalPost extends BaseModel
 {
     use HasFactory, Uuids;
 
     public $timestamps = false;
-    protected $table = 'proposalPosts';
+    protected $table = 'proposalposts';
     protected $primaryKey = 'id';
 
     protected $fillable = [
         'id',
         'title',
         'department',
+        'departmentId',
         'category',
         'experienceYears',
         'interviewKit',
@@ -38,6 +40,11 @@ class ProposalPost extends Model
         'createdDate' => 'datetime',
         'modifiedDate' => 'datetime',
     ];
+
+    public function departmentRelation(): BelongsTo
+    {
+        return $this->belongsTo(ProposalDepartment::class, 'departmentId');
+    }
 
     public function candidates(): HasMany
     {

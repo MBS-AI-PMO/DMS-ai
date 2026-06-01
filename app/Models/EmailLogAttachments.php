@@ -3,15 +3,15 @@
 namespace App\Models;
 
 use App\Traits\Uuids;
-use Illuminate\Database\Eloquent\Model;
+
 use Ramsey\Uuid\Uuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class EmailLogAttachments extends Model
+class EmailLogAttachments extends BaseModel
 {
     use HasFactory, Uuids;
     protected $primaryKey = "id";
-    public $table = 'emailLogAttachments';
+    protected $table = 'emaillogattachments';
     public $timestamps = false;
 
     protected $fillable = [

@@ -8,16 +8,16 @@ use App\Repositories\Contracts\DocumentStatusRepositoryInterface;
 
 class DocumentStatusController extends Controller
 {
-    private $documentStatusRepository;
+    private $documentstatusRepository;
 
-    public function __construct(DocumentStatusRepositoryInterface $documentStatusRepository)
+    public function __construct(DocumentStatusRepositoryInterface $documentstatusRepository)
     {
-        $this->documentStatusRepository = $documentStatusRepository;
+        $this->documentstatusRepository = $documentstatusRepository;
     }
 
     public function index()
     {
-        return response($this->documentStatusRepository->orderBy('createdDate')->all(), 200);
+        return response($this->documentstatusRepository->orderBy('createdDate')->all(), 200);
     }
 
     public function update(Request $request, $id)
@@ -35,7 +35,7 @@ class DocumentStatusController extends Controller
                 'messages' => ['Status name already exists.']
             ], 409);
         }
-        return  $this->documentStatusRepository->updateStatus($request->all(), $id);
+        return  $this->documentstatusRepository->updateStatus($request->all(), $id);
     }
 
     public function create(Request $request)
@@ -52,18 +52,18 @@ class DocumentStatusController extends Controller
             ], 409);
         }
 
-        return  response($this->documentStatusRepository->create($request->all()), 201);
+        return  response($this->documentstatusRepository->create($request->all()), 201);
     }
 
     public function get($id)
     {
-        $fileRequest = $this->documentStatusRepository->find($id);
+        $fileRequest = $this->documentstatusRepository->find($id);
         return response($fileRequest, 201);
     }
 
     public function delete($id)
     {
-        $isDeleted = $this->documentStatusRepository->deleteStatus($id);
+        $isDeleted = $this->documentstatusRepository->deleteStatus($id);
         if ($isDeleted == true) {
             return response()->json([], 200);
         } else {

@@ -3,17 +3,17 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+
 use Ramsey\Uuid\Uuid;
 use Illuminate\Notifications\Notifiable;
 use App\Traits\Uuids;
 
-class HalfYearlyReminders extends Model
+class HalfYearlyReminders extends BaseModel
 {
     use HasFactory;
     use Notifiable, Uuids;
     protected $primaryKey = "id";
-    protected  $table = 'halfYearlyReminders';
+    protected $table = 'halfyearlyreminders';
     public $incrementing = false;
     public $timestamps = false;
 

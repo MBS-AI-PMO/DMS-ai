@@ -3,18 +3,18 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+
 use Ramsey\Uuid\Uuid;
 use Illuminate\Notifications\Notifiable;
 use App\Traits\Uuids;
 
-class DailyReminders extends Model
+class DailyReminders extends BaseModel
 {
     use HasFactory;
     use Notifiable, Uuids;
 
     protected $primaryKey = "id";
-    protected  $table = 'dailyReminders';
+    protected $table = 'dailyreminders';
     public $incrementing = false;
     public $timestamps = false;
 

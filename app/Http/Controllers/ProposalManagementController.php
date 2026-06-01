@@ -7,6 +7,8 @@ use App\Models\ProposalFileRequest;
 use App\Models\ProposalFolder;
 use App\Models\ProposalCandidate;
 use App\Models\ProposalPost;
+use App\Models\ProposalCategory;
+use App\Models\ProposalDepartment;
 use App\Models\FileRequests;
 use App\Models\FileRequestStatusEnum;
 use App\Models\Users;
@@ -51,7 +53,7 @@ class ProposalManagementController extends Controller
             })
             ->values();
 
-        $fileRequests = ProposalFileRequest::where('createdBy', $userId)
+        $filerequests = ProposalFileRequest::where('createdBy', $userId)
             ->with('linkedFileRequest')
             ->orderByDesc('createdDate')
             ->get()
@@ -113,22 +115,169 @@ class ProposalManagementController extends Controller
                 ];
             })->values(),
             'files' => $files,
-            'fileRequests' => $fileRequests,
+            'filerequests' => $filerequests,
+            'posts' => $posts,
+            'categories' => $this->listCategoriesData($userId),
+            'departments' => $this->listDepartmentsData($userId),
+        ]);
+    }
+
+    public function postBoard()
+    {
+        $userId = $this->getUserId();
+
+        $posts = ProposalPost::with(['candidates' => function ($query) {
+            $query->orderByDesc('createdDate');
+        }])
+            ->where('createdBy', $userId)
+            ->orderByDesc('createdDate')
+            ->get()
+            ->map(fn (ProposalPost $post) => $this->mapPost($post))
+            ->values();
+
+        return response()->json([
+            'categories' => $this->listCategoriesData($userId),
+            'departments' => $this->listDepartmentsData($userId),
             'posts' => $posts,
         ]);
+    }
+
+    public function createCategory(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        $now = Carbon::now();
+        $category = ProposalCategory::create([
+            'id' => Uuid::uuid4()->toString(),
+            'name' => trim($validated['name']),
+            'createdBy' => $this->getUserId(),
+            'createdDate' => $now,
+            'modifiedDate' => $now,
+        ]);
+
+        return response()->json($this->mapCategory($category), 201);
+    }
+
+    public function updateCategory(Request $request, string $id)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        $category = ProposalCategory::where('id', $id)
+            ->where('createdBy', $this->getUserId())
+            ->firstOrFail();
+
+        $category->name = trim($validated['name']);
+        $category->modifiedDate = Carbon::now();
+        $category->save();
+
+        return response()->json($this->mapCategory($category));
+    }
+
+    public function deleteCategory(string $id)
+    {
+        $category = ProposalCategory::where('id', $id)
+            ->where('createdBy', $this->getUserId())
+            ->firstOrFail();
+
+        $hasDepartments = ProposalDepartment::where('categoryId', $category->id)->exists();
+        if ($hasDepartments) {
+            return response()->json([
+                'message' => 'Remove departments in this category first.',
+            ], 422);
+        }
+
+        $category->delete();
+
+        return response()->json([], 200);
+    }
+
+    public function createDepartment(Request $request)
+    {
+        $validated = $request->validate([
+            'categoryId' => 'required|string',
+            'name' => 'required|string|max:255',
+            'basicQuestions' => 'nullable|string',
+            'intermediateQuestions' => 'nullable|string',
+            'expertQuestions' => 'nullable|string',
+        ]);
+
+        $this->findOwnedCategory($validated['categoryId']);
+        $now = Carbon::now();
+
+        $department = ProposalDepartment::create([
+            'id' => Uuid::uuid4()->toString(),
+            'categoryId' => $validated['categoryId'],
+            'name' => trim($validated['name']),
+            'basicQuestions' => $validated['basicQuestions'] ?? null,
+            'intermediateQuestions' => $validated['intermediateQuestions'] ?? null,
+            'expertQuestions' => $validated['expertQuestions'] ?? null,
+            'createdBy' => $this->getUserId(),
+            'createdDate' => $now,
+            'modifiedDate' => $now,
+        ]);
+
+        $department->load('category');
+
+        return response()->json($this->mapDepartment($department), 201);
+    }
+
+    public function updateDepartment(Request $request, string $id)
+    {
+        $validated = $request->validate([
+            'categoryId' => 'required|string',
+            'name' => 'required|string|max:255',
+            'basicQuestions' => 'nullable|string',
+            'intermediateQuestions' => 'nullable|string',
+            'expertQuestions' => 'nullable|string',
+        ]);
+
+        $department = ProposalDepartment::where('id', $id)
+            ->where('createdBy', $this->getUserId())
+            ->firstOrFail();
+
+        $this->findOwnedCategory($validated['categoryId']);
+
+        $department->categoryId = $validated['categoryId'];
+        $department->name = trim($validated['name']);
+        $department->basicQuestions = $validated['basicQuestions'] ?? null;
+        $department->intermediateQuestions = $validated['intermediateQuestions'] ?? null;
+        $department->expertQuestions = $validated['expertQuestions'] ?? null;
+        $department->modifiedDate = Carbon::now();
+        $department->save();
+        $department->load('category');
+
+        return response()->json($this->mapDepartment($department));
+    }
+
+    public function deleteDepartment(string $id)
+    {
+        $department = ProposalDepartment::where('id', $id)
+            ->where('createdBy', $this->getUserId())
+            ->firstOrFail();
+
+        $inUse = ProposalPost::where('departmentId', $department->id)->exists();
+        if ($inUse) {
+            return response()->json([
+                'message' => 'This department is used by job posts. Delete those posts first.',
+            ], 422);
+        }
+
+        $department->delete();
+
+        return response()->json([], 200);
     }
 
     public function createPost(Request $request)
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'department' => 'nullable|string|max:255',
-            'category' => 'nullable|string|max:255',
+            'departmentId' => 'required|string',
             'experienceYears' => 'nullable|integer|min:0|max:60',
             'interviewKit' => 'nullable|string|in:basic,expert,intermediate',
-            'basicQuestions' => 'nullable|string',
-            'intermediateQuestions' => 'nullable|string',
-            'expertQuestions' => 'nullable|string',
             'workMode' => 'nullable|string|in:remote,physical',
             'address' => 'nullable|string|max:500',
             'description' => 'nullable|string',
@@ -136,19 +285,24 @@ class ProposalManagementController extends Controller
 
         $now = Carbon::now();
         $workMode = $validated['workMode'] ?? 'physical';
-        $postColumns = Schema::getColumnListing('proposalPosts');
+        $postColumns = Schema::getColumnListing('proposalposts');
+        $department = $this->findOwnedDepartment($validated['departmentId']);
+
         $postPayload = [
             'id' => Uuid::uuid4()->toString(),
             'title' => trim($validated['title']),
-            'department' => !empty($validated['department']) ? trim($validated['department']) : null,
+            'department' => $department->name,
             'description' => !empty($validated['description']) ? trim($validated['description']) : null,
             'createdBy' => $this->getUserId(),
             'createdDate' => $now,
             'modifiedDate' => $now,
         ];
 
+        if (in_array('departmentId', $postColumns, true)) {
+            $postPayload['departmentId'] = $department->id;
+        }
         if (in_array('category', $postColumns, true)) {
-            $postPayload['category'] = !empty($validated['category']) ? trim($validated['category']) : null;
+            $postPayload['category'] = $department->category?->name;
         }
         if (in_array('experienceYears', $postColumns, true)) {
             $postPayload['experienceYears'] = $validated['experienceYears'] ?? null;
@@ -157,13 +311,13 @@ class ProposalManagementController extends Controller
             $postPayload['interviewKit'] = $validated['interviewKit'] ?? 'basic';
         }
         if (in_array('basicQuestions', $postColumns, true)) {
-            $postPayload['basicQuestions'] = $validated['basicQuestions'] ?? null;
+            $postPayload['basicQuestions'] = $department->basicQuestions;
         }
         if (in_array('intermediateQuestions', $postColumns, true)) {
-            $postPayload['intermediateQuestions'] = $validated['intermediateQuestions'] ?? null;
+            $postPayload['intermediateQuestions'] = $department->intermediateQuestions;
         }
         if (in_array('expertQuestions', $postColumns, true)) {
-            $postPayload['expertQuestions'] = $validated['expertQuestions'] ?? null;
+            $postPayload['expertQuestions'] = $department->expertQuestions;
         }
         if (in_array('workMode', $postColumns, true)) {
             $postPayload['workMode'] = $workMode;
@@ -181,13 +335,9 @@ class ProposalManagementController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'department' => 'nullable|string|max:255',
-            'category' => 'nullable|string|max:255',
+            'departmentId' => 'required|string',
             'experienceYears' => 'nullable|integer|min:0|max:60',
             'interviewKit' => 'nullable|string|in:basic,expert,intermediate',
-            'basicQuestions' => 'nullable|string',
-            'intermediateQuestions' => 'nullable|string',
-            'expertQuestions' => 'nullable|string',
             'workMode' => 'nullable|string|in:remote,physical',
             'address' => 'nullable|string|max:500',
             'description' => 'nullable|string',
@@ -197,13 +347,17 @@ class ProposalManagementController extends Controller
             ->where('createdBy', $this->getUserId())
             ->firstOrFail();
 
+        $department = $this->findOwnedDepartment($validated['departmentId']);
         $workMode = $validated['workMode'] ?? 'physical';
-        $postColumns = Schema::getColumnListing('proposalPosts');
+        $postColumns = Schema::getColumnListing('proposalposts');
         $post->title = trim($validated['title']);
-        $post->department = !empty($validated['department']) ? trim($validated['department']) : null;
+        $post->department = $department->name;
         $post->description = !empty($validated['description']) ? trim($validated['description']) : null;
+        if (in_array('departmentId', $postColumns, true)) {
+            $post->departmentId = $department->id;
+        }
         if (in_array('category', $postColumns, true)) {
-            $post->category = !empty($validated['category']) ? trim($validated['category']) : null;
+            $post->category = $department->category?->name;
         }
         if (in_array('experienceYears', $postColumns, true)) {
             $post->experienceYears = $validated['experienceYears'] ?? null;
@@ -212,13 +366,13 @@ class ProposalManagementController extends Controller
             $post->interviewKit = $validated['interviewKit'] ?? 'basic';
         }
         if (in_array('basicQuestions', $postColumns, true)) {
-            $post->basicQuestions = $validated['basicQuestions'] ?? null;
+            $post->basicQuestions = $department->basicQuestions;
         }
         if (in_array('intermediateQuestions', $postColumns, true)) {
-            $post->intermediateQuestions = $validated['intermediateQuestions'] ?? null;
+            $post->intermediateQuestions = $department->intermediateQuestions;
         }
         if (in_array('expertQuestions', $postColumns, true)) {
-            $post->expertQuestions = $validated['expertQuestions'] ?? null;
+            $post->expertQuestions = $department->expertQuestions;
         }
         if (in_array('workMode', $postColumns, true)) {
             $post->workMode = $workMode;
@@ -306,7 +460,7 @@ class ProposalManagementController extends Controller
         }
 
         $now = Carbon::now();
-        $candidateColumns = Schema::getColumnListing('proposalCandidates');
+        $candidateColumns = Schema::getColumnListing('proposalcandidates');
         $candidatePayload = [
             'id' => Uuid::uuid4()->toString(),
             'postId' => $post->id,
@@ -512,7 +666,7 @@ class ProposalManagementController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:100',
-            'parentFolderId' => 'nullable|exists:proposalFolders,id',
+            'parentFolderId' => 'nullable|exists:proposalfolders,id',
         ]);
 
         $userId = $this->getUserId();
@@ -535,7 +689,7 @@ class ProposalManagementController extends Controller
     {
         $request->validate([
             'file' => 'required|file',
-            'folderId' => 'nullable|exists:proposalFolders,id',
+            'folderId' => 'nullable|exists:proposalfolders,id',
             'title' => 'nullable|string|max:255',
         ]);
 
@@ -575,13 +729,13 @@ class ProposalManagementController extends Controller
             'hasPassword' => 'nullable|boolean',
             'password' => 'nullable|string|max:255|required_if:hasPassword,true',
             'linkExpiryTime' => 'nullable|date',
-            'folderId' => 'nullable|exists:proposalFolders,id',
+            'folderId' => 'nullable|exists:proposalfolders,id',
             'baseUrl' => 'nullable|string|max:500',
         ]);
 
         $userId = $this->getUserId();
         $rootFolder = $this->ensureRootFolder($userId);
-        $requestColumns = Schema::getColumnListing('proposalFileRequests');
+        $requestColumns = Schema::getColumnListing('proposalfilerequests');
         $linkedFileRequestId = null;
 
         if (!empty($validated['email'])) {
@@ -925,6 +1079,92 @@ class ProposalManagementController extends Controller
         } catch (\Throwable $th) {
             // Email failure should not block candidate status update.
         }
+    }
+
+    private function listCategoriesData(string $userId): \Illuminate\Support\Collection
+    {
+        if (!Schema::hasTable('proposalcategories')) {
+            return collect();
+        }
+
+        return ProposalCategory::where('createdBy', $userId)
+            ->orderBy('name')
+            ->get()
+            ->map(fn (ProposalCategory $c) => $this->mapCategory($c))
+            ->values();
+    }
+
+    private function listDepartmentsData(string $userId): \Illuminate\Support\Collection
+    {
+        if (!Schema::hasTable('proposaldepartments')) {
+            return collect();
+        }
+
+        return ProposalDepartment::with('category')
+            ->where('createdBy', $userId)
+            ->orderBy('name')
+            ->get()
+            ->map(fn (ProposalDepartment $d) => $this->mapDepartment($d))
+            ->values();
+    }
+
+    private function mapCategory(ProposalCategory $category): array
+    {
+        return [
+            'id' => $category->id,
+            'name' => $category->name,
+            'createdDate' => $this->formatApiDateTime($category->createdDate, $category->modifiedDate),
+        ];
+    }
+
+    private function mapDepartment(ProposalDepartment $department): array
+    {
+        return [
+            'id' => $department->id,
+            'categoryId' => $department->categoryId,
+            'categoryName' => $department->category?->name,
+            'name' => $department->name,
+            'basicQuestions' => $department->basicQuestions,
+            'intermediateQuestions' => $department->intermediateQuestions,
+            'expertQuestions' => $department->expertQuestions,
+            'createdDate' => $this->formatApiDateTime($department->createdDate, $department->modifiedDate),
+        ];
+    }
+
+    private function mapPost(ProposalPost $post): array
+    {
+        return [
+            'id' => $post->id,
+            'title' => $post->title,
+            'departmentId' => $post->departmentId ?? null,
+            'department' => $post->department,
+            'category' => $post->category,
+            'experienceYears' => $post->experienceYears,
+            'interviewKit' => $post->interviewKit,
+            'basicQuestions' => $post->basicQuestions,
+            'intermediateQuestions' => $post->intermediateQuestions,
+            'expertQuestions' => $post->expertQuestions,
+            'workMode' => $post->workMode,
+            'address' => $post->address,
+            'description' => $post->description,
+            'createdDate' => $this->formatApiDateTime($post->createdDate, $post->modifiedDate),
+            'candidates' => $post->candidates->map(fn (ProposalCandidate $c) => $this->mapCandidate($c))->values(),
+        ];
+    }
+
+    private function findOwnedCategory(string $categoryId): ProposalCategory
+    {
+        return ProposalCategory::where('id', $categoryId)
+            ->where('createdBy', $this->getUserId())
+            ->firstOrFail();
+    }
+
+    private function findOwnedDepartment(string $departmentId): ProposalDepartment
+    {
+        return ProposalDepartment::with('category')
+            ->where('id', $departmentId)
+            ->where('createdBy', $this->getUserId())
+            ->firstOrFail();
     }
 
     private function applyCandidateHistoryMatch($query, ProposalCandidate $candidate): void

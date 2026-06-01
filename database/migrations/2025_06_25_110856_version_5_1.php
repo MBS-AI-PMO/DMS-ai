@@ -23,14 +23,14 @@ return new class extends Migration
             $table->foreign('signById')->references('id')->on('users');
         });
 
-        Schema::table('documentVersions', function (Blueprint $table) {
+        Schema::table('documentversions', function (Blueprint $table) {
             $table->uuid('signById')->nullable();
             $table->dateTime('signDate')->nullable();
 
             $table->foreign('signById')->references('id')->on('users');
         });
 
-        Schema::table('companyProfile', function (Blueprint $table) {
+        Schema::table('companyprofile', function (Blueprint $table) {
             $table->integer('archiveDocumentRetensionPeriod')->nullable();
             $table->boolean('allowPdfSignature')->default(true);
             $table->integer('emailLogRetentionPeriod')->nullable()->default(30);
@@ -38,7 +38,7 @@ return new class extends Migration
             $table->integer('loginAuditRetentionPeriod')->nullable()->default(30);
         });
 
-        Schema::create('cronJobLogs', function (Blueprint $table) {
+        Schema::create('cronjoblogs', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('jobName');
             $table->enum('status', ['success', 'failed'])->default('success');
@@ -48,7 +48,7 @@ return new class extends Migration
             $table->timestamp('endedAt')->nullable();
         });
 
-        Schema::create('emailLogs', function (Blueprint $table) {
+        Schema::create('emaillogs', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('senderEmail');
             $table->string('recipientEmail');
@@ -59,10 +59,10 @@ return new class extends Migration
             $table->timestamp('sentAt')->nullable();
         });
 
-        Schema::create('emailLogAttachments', function (Blueprint $table) {
+        Schema::create('emaillogattachments', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('emailLogId')->nullable(false);
-            $table->foreign('emailLogId')->references('id')->on('emailLogs');
+            $table->foreign('emailLogId')->references('id')->on('emaillogs');
             $table->string('path');
             $table->string('name');
         });
@@ -71,7 +71,7 @@ return new class extends Migration
             $table->boolean('isSystemUser')->default(false);
         });
 
-        Schema::create('documentSignatures', function (Blueprint $table) {
+        Schema::create('documentsignatures', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('documentId')->nullable(false);
             $table->foreign('documentId')->references('id')->on('documents');
@@ -83,14 +83,14 @@ return new class extends Migration
             $table->dateTime('createdDate');
         });
 
-        Schema::table('userNotifications', function (Blueprint $table) {
+        Schema::table('usernotifications', function (Blueprint $table) {
             $table->integer('notificationType')->default(UserNotificationTypeEnum::DOCUMENT_SHARE->value);
 
-            $table->uuid('documentWorkflowId')->nullable(true);
-            $table->foreign('documentWorkflowId')->references('id')->on('documentWorkflow');
+            $table->uuid('documentworkflowId')->nullable(true);
+            $table->foreign('documentworkflowId')->references('id')->on('documentworkflow');
 
             $table->uuid('fileRequestId')->nullable(true);
-            $table->foreign('fileRequestId')->references('id')->on('fileRequests');
+            $table->foreign('fileRequestId')->references('id')->on('filerequests');
         });
     }
 
@@ -109,13 +109,13 @@ return new class extends Migration
             $table->dropColumn('expiredDate');
         });
 
-        Schema::table('documentVersions', function (Blueprint $table) {
+        Schema::table('documentversions', function (Blueprint $table) {
             $table->dropForeign(['signById']);
             $table->dropColumn('signById');
             $table->dropColumn('signDate');
         });
 
-        Schema::table('companyProfile', function (Blueprint $table) {
+        Schema::table('companyprofile', function (Blueprint $table) {
             $table->dropColumn('archiveDocumentRetensionPeriod');
             $table->dropColumn('allowPdfSignature');
             $table->dropColumn('emailLogRetentionPeriod');
@@ -123,20 +123,20 @@ return new class extends Migration
             $table->dropColumn('loginAuditRetentionPeriod');
         });
 
-        Schema::dropIfExists('cronJobLogs');
-        Schema::dropIfExists('emailLogs');
-        Schema::dropIfExists('emailLogAttachments');
+        Schema::dropIfExists('cronjoblogs');
+        Schema::dropIfExists('emaillogs');
+        Schema::dropIfExists('emaillogattachments');
 
         Schema::table('users', function (Blueprint $table) {
             $table->dropColumn('isSystemUser');
         });
 
-        Schema::dropIfExists('documentSignatures');
+        Schema::dropIfExists('documentsignatures');
 
-        Schema::table('userNotifications', function (Blueprint $table) {
+        Schema::table('usernotifications', function (Blueprint $table) {
             $table->dropColumn('notificationType');
-            $table->dropForeign(['documentWorkflowId']);
-            $table->dropColumn('documentWorkflowId');
+            $table->dropForeign(['documentworkflowId']);
+            $table->dropColumn('documentworkflowId');
             $table->dropForeign(['fileRequestId']);
             $table->dropColumn('fileRequestId');
         });

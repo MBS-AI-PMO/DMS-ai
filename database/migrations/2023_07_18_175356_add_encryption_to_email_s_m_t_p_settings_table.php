@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('emailSMTPSettings', function (Blueprint $table) {
+        Schema::table('emailsmtpsettings', function (Blueprint $table) {
             $table->string('encryption')->nullable()->after('isDefault');
             $table->string('fromName')->nullable()->after('isDefault');
             $table->dropColumn('isEnableSSL');
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('emailSMTPSettings');
+        Schema::dropIfExists('emailsmtpsettings');
     }
 };

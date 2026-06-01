@@ -6,18 +6,18 @@ use Ramsey\Uuid\Uuid;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+
 use Illuminate\Notifications\Notifiable;
 use App\Traits\Uuids;
 use Illuminate\Database\Eloquent\Builder;
 
-class AIPromptTemplates extends Model
+class AIPromptTemplates extends BaseModel
 {
     use HasFactory, SoftDeletes;
     use Notifiable, Uuids;
 
     protected $primaryKey = "id";
-    public $table = 'aiPromptTemplates';
+    protected $table = 'aiprompttemplates';
     const UPDATED_AT = 'modifiedDate';
     public $timestamps = false;
 

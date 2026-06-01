@@ -69,7 +69,7 @@ class ArchiveDocumentRepository extends BaseRepository implements ArchiveDocumen
                 ->where('documents.isDeleted', '=', 1)
                 ->join('categories', 'documents.categoryId', '=', 'categories.id')
                 ->join('users', 'documents.deletedBy', '=', 'users.id')
-                ->leftJoin('documentStatus', 'documents.statusId', '=', 'documentStatus.id');
+                ->leftJoin('documentstatus', 'documents.statusId', '=', 'documentstatus.id');
 
             $orderByArray =  explode(' ', $attributes->orderBy);
             $orderBy = $orderByArray[0];
@@ -86,7 +86,7 @@ class ArchiveDocumentRepository extends BaseRepository implements ArchiveDocumen
             } else if ($orderBy == 'location') {
                 $query = $query->orderBy('documents.location', $direction);
             } else if ($orderBy == 'statusName') {
-                $query = $query->orderBy('documentStatus.name', $direction);
+                $query = $query->orderBy('documentstatus.name', $direction);
             }
 
             if ($attributes->categoryId) {
@@ -116,9 +116,9 @@ class ArchiveDocumentRepository extends BaseRepository implements ArchiveDocumen
                 $metaTags = $attributes->metaTags;
                 $query = $query->whereExists(function ($query) use ($metaTags) {
                     $query->select(DB::raw(1))
-                        ->from('documentMetaDatas')
-                        ->whereRaw('documentMetaDatas.documentId = documents.id')
-                        ->where('documentMetaDatas.metatag', 'like', '%' . $metaTags . '%');
+                        ->from('documentmetadatas')
+                        ->whereRaw('documentmetadatas.documentId = documents.id')
+                        ->where('documentmetadatas.metatag', 'like', '%' . $metaTags . '%');
                 });
             }
 
@@ -138,8 +138,8 @@ class ArchiveDocumentRepository extends BaseRepository implements ArchiveDocumen
                 'documents.deleted_at',
                 'categories.id as categoryId',
                 'categories.name as categoryName',
-                'documentStatus.name as statusName',
-                'documentStatus.colorCode as colorCode',
+                'documentstatus.name as statusName',
+                'documentstatus.colorCode as colorCode',
                 DB::raw("CONCAT(users.firstName,' ', users.lastName) as deletedByName")
             ]);
 
@@ -155,7 +155,7 @@ class ArchiveDocumentRepository extends BaseRepository implements ArchiveDocumen
             ->where('documents.isDeleted', '=', 1)
             ->join('categories', 'documents.categoryId', '=', 'categories.id')
             ->join('users', 'documents.deletedBy', '=', 'users.id')
-            ->leftJoin('documentStatus', 'documents.statusId', '=', 'documentStatus.id');
+            ->leftJoin('documentstatus', 'documents.statusId', '=', 'documentstatus.id');
 
         $orderByArray =  explode(' ', $attributes->orderBy);
         $orderBy = $orderByArray[0];
@@ -172,7 +172,7 @@ class ArchiveDocumentRepository extends BaseRepository implements ArchiveDocumen
         } else if ($orderBy == 'location') {
             $query = $query->orderBy('documents.location', $direction);
         } else if ($orderBy == 'statusName') {
-            $query = $query->orderBy('documentStatus.name', $direction);
+            $query = $query->orderBy('documentstatus.name', $direction);
         }
 
         if ($attributes->categoryId) {
@@ -202,9 +202,9 @@ class ArchiveDocumentRepository extends BaseRepository implements ArchiveDocumen
             $metaTags = $attributes->metaTags;
             $query = $query->whereExists(function ($query) use ($metaTags) {
                 $query->select(DB::raw(1))
-                    ->from('documentMetaDatas')
-                    ->whereRaw('documentMetaDatas.documentId = documents.id')
-                    ->where('documentMetaDatas.metatag', 'like', '%' . $metaTags . '%');
+                    ->from('documentmetadatas')
+                    ->whereRaw('documentmetadatas.documentId = documents.id')
+                    ->where('documentmetadatas.metatag', 'like', '%' . $metaTags . '%');
             });
         }
 
@@ -247,10 +247,10 @@ class ArchiveDocumentRepository extends BaseRepository implements ArchiveDocumen
             $document = Documents::withoutGlobalScope('isDeleted')->withTrashed()->findOrFail($id);
             $medatDatas = DocumentMetaDatas::where('documentId', $id)->get();
             $comments = DocumentComments::where('documentId', $id)->get();
-            $userNotifications = UserNotifications::where('documentId', $id)->get();
+            $usernotifications = UserNotifications::where('documentId', $id)->get();
             $reminders = Reminders::withoutGlobalScope('isDeleted')->where('documentId', $id)->get();
-            $reminderSchedulers = ReminderSchedulers::where('documentId', $id)->get();
-            $documentVersions = DocumentVersions::withoutGlobalScope('isDeleted')->where('documentId', $id)->get();
+            $reminderschedulers = ReminderSchedulers::where('documentId', $id)->get();
+            $documentversions = DocumentVersions::withoutGlobalScope('isDeleted')->where('documentId', $id)->get();
             $userPermissions = DocumentUserPermissions::where('documentId', $id)->get();
             $rolePermissions = DocumentRolePermissions::where('documentId', $id)->get();
             $sendEmail = SendEmails::withoutGlobalScope('isDeleted')->where('documentId', $id)->get();
@@ -263,7 +263,7 @@ class ArchiveDocumentRepository extends BaseRepository implements ArchiveDocumen
                 $comment->forceDelete();
             }
 
-            foreach ($userNotifications as $userNotification) {
+            foreach ($usernotifications as $userNotification) {
                 $userNotification->forceDelete();
             }
 
@@ -271,11 +271,11 @@ class ArchiveDocumentRepository extends BaseRepository implements ArchiveDocumen
                 $reminder->forceDelete();
             }
 
-            foreach ($reminderSchedulers as $reminderScheduler) {
+            foreach ($reminderschedulers as $reminderScheduler) {
                 $reminderScheduler->forceDelete();
             }
 
-            foreach ($documentVersions as $documentVersion) {
+            foreach ($documentversions as $documentVersion) {
                 $documentVersion->forceDelete();
             }
 
@@ -318,7 +318,7 @@ class ArchiveDocumentRepository extends BaseRepository implements ArchiveDocumen
             } catch (\Throwable $th) {
             }
 
-            foreach ($documentVersions as $documentVersion) {
+            foreach ($documentversions as $documentVersion) {
 
                 $versionUrl = $documentVersion->url;
                 $versionLocation = $documentVersion->location;
@@ -351,9 +351,9 @@ class ArchiveDocumentRepository extends BaseRepository implements ArchiveDocumen
             ], 409);
         }
 
-        $companyProfile = CompanyProfiles::first();
-        if ($companyProfile  && $companyProfile->archiveDocumentRetensionPeriod > 0) {
-            $retentionDate = Carbon::now()->subDays($companyProfile->archiveDocumentRetensionPeriod);
+        $companyprofile = CompanyProfiles::first();
+        if ($companyprofile  && $companyprofile->archiveDocumentRetensionPeriod > 0) {
+            $retentionDate = Carbon::now()->subDays($companyprofile->archiveDocumentRetensionPeriod);
             $documents = Documents::withoutGlobalScope('isDeleted')
                 ->onlyTrashed()
                 ->where('documents.isDeleted', 1)

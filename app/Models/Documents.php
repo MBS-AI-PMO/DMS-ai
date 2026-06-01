@@ -6,12 +6,12 @@ use Ramsey\Uuid\Uuid;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+
 use Illuminate\Notifications\Notifiable;
 use App\Traits\Uuids;
 use Illuminate\Database\Eloquent\Builder;
 
-class Documents extends Model
+class Documents extends BaseModel
 {
     use HasFactory, SoftDeletes;
     use Notifiable, Uuids;
@@ -33,7 +33,7 @@ class Documents extends Model
         'isPermanentDelete',
         'clientId',
         'statusId',
-        'documentWorkflowId',
+        'documentworkflowId',
         'currentWorkflowStepId',
         'retentionPeriod',
         'retentionAction',
@@ -78,22 +78,22 @@ class Documents extends Model
         return $this->belongsTo(Users::class, 'signById', 'id');
     }
 
-    public function documentMetaDatas()
+    public function documentmetadatas()
     {
         return $this->hasMany(DocumentMetaDatas::class, 'documentId');
     }
 
-    public function documentComments()
+    public function documentcomments()
     {
         return $this->hasMany(DocumentComments::class, 'documentId');
     }
 
-    public function userNotifications()
+    public function usernotifications()
     {
         return $this->hasMany(UserNotifications::class, 'documentId');
     }
 
-    public function reminderSchedulers()
+    public function reminderschedulers()
     {
         return $this->hasMany(ReminderSchedulers::class, 'documentId');
     }
@@ -103,29 +103,29 @@ class Documents extends Model
         return $this->hasMany(Reminders::class, 'documentId');
     }
 
-    public function documentVersions()
+    public function documentversions()
     {
         return $this->hasMany(DocumentVersions::class, 'documentId');
     }
 
-    public function documentUserPermissions()
+    public function documentuserpermissions()
     {
         return $this->hasMany(DocumentUserPermissions::class, 'documentId');
     }
 
-    public function documentRolePermissions()
+    public function documentrolepermissions()
     {
         return $this->hasMany(DocumentRolePermissions::class, 'documentId');
     }
 
-    public function documentAuditTrails()
+    public function documentaudittrails()
     {
         return $this->hasMany(DocumentAuditTrails::class, 'documentId');
     }
 
-    public function documentWorkflow()
+    public function documentworkflow()
     {
-        return $this->belongsTo(DocumentWorkflow::class, 'documentWorkflowId', 'id');
+        return $this->belongsTo(DocumentWorkflow::class, 'documentworkflowId', 'id');
     }
 
     protected static function boot()

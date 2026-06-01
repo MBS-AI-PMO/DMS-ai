@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('companyProfile', function (Blueprint $table) {
+        Schema::table('companyprofile', function (Blueprint $table) {
             $table->string('licenseKey')->nullable();
             $table->string('purchaseCode')->nullable();
         });
@@ -22,7 +22,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('companyProfile', function (Blueprint $table) {
+        Schema::table('companyprofile', function (Blueprint $table) {
             $table->dropColumn('licenseKey');
             $table->dropColumn('purchaseCode');
         });

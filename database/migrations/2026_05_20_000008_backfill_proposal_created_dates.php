@@ -7,16 +7,16 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        if (Schema::hasTable('proposalPosts') && Schema::hasColumn('proposalPosts', 'createdDate')) {
-            DB::table('proposalPosts')
+        if (Schema::hasTable('proposalposts') && Schema::hasColumn('proposalposts', 'createdDate')) {
+            DB::table('proposalposts')
                 ->whereNull('createdDate')
                 ->update([
                     'createdDate' => DB::raw('COALESCE(modifiedDate, NOW())'),
                 ]);
         }
 
-        if (Schema::hasTable('proposalCandidates') && Schema::hasColumn('proposalCandidates', 'createdDate')) {
-            DB::table('proposalCandidates')
+        if (Schema::hasTable('proposalcandidates') && Schema::hasColumn('proposalcandidates', 'createdDate')) {
+            DB::table('proposalcandidates')
                 ->whereNull('createdDate')
                 ->update([
                     'createdDate' => DB::raw('COALESCE(modifiedDate, NOW())'),

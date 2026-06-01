@@ -6,18 +6,18 @@ namespace App\Models;
 use Ramsey\Uuid\Uuid;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
 use App\Traits\Uuids;
 
-class CompanyProfiles extends Model
+class CompanyProfiles extends BaseModel
 {
     use HasFactory, SoftDeletes;
     use Notifiable, Uuids;
 
     protected $primaryKey = "id";
-    protected  $table = 'companyProfile';
+    protected $table = 'companyprofile';
 
     const CREATED_AT = 'createdDate';
     const UPDATED_AT = 'modifiedDate';

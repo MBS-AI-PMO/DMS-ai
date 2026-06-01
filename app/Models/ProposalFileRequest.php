@@ -5,15 +5,15 @@ namespace App\Models;
 use App\Traits\Uuids;
 use App\Models\FileRequests;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class ProposalFileRequest extends Model
+class ProposalFileRequest extends BaseModel
 {
     use HasFactory, Uuids;
 
     public $timestamps = false;
-    protected $table = 'proposalFileRequests';
+    protected $table = 'proposalfilerequests';
     protected $primaryKey = 'id';
 
     protected $fillable = [

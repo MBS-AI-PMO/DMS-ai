@@ -27,7 +27,7 @@ class EmailSMTPSettingController extends Controller
     public function create(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'userName' => "required|unique:emailSMTPSettings,userName,NULL,id,deleted_at,NULL",
+            'userName' => "required|unique:emailsmtpsettings,userName,NULL,id,deleted_at,NULL",
         ]);
 
         if ($validator->fails()) {
@@ -45,7 +45,7 @@ class EmailSMTPSettingController extends Controller
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'userName' => "required|unique:emailSMTPSettings,userName,$id,id,deleted_at,NULL",
+            'userName' => "required|unique:emailsmtpsettings,userName,$id,id,deleted_at,NULL",
         ]);
 
         if ($validator->fails()) {

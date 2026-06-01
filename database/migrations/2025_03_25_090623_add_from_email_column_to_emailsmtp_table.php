@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('emailSMTPSettings', function (Blueprint $table) {
+        Schema::table('emailsmtpsettings', function (Blueprint $table) {
             $table->string('fromEmail')->nullable();
         });
     }
@@ -21,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('emailSMTPSettings', function (Blueprint $table) {
+        Schema::table('emailsmtpsettings', function (Blueprint $table) {
             $table->dropColumn('fromEmail');
         });
     }

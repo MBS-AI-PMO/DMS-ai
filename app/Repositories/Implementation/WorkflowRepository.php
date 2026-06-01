@@ -34,7 +34,7 @@ class WorkflowRepository extends BaseRepository implements WorkflowRepositoryInt
 
     public function getWorkflows()
     {
-        $workflows = $this->model->with(['workflowSteps', 'transitions'])
+        $workflows = $this->model->with(['workflowsteps', 'transitions'])
             ->orderBy('createdDate', 'desc')
             ->get();
         return $workflows;
@@ -43,12 +43,12 @@ class WorkflowRepository extends BaseRepository implements WorkflowRepositoryInt
     public function getWorkflow($id)
     {
         $workflow = $this->model->with([
-            'workflowSteps',
+            'workflowsteps',
             'transitions' => function ($query) {
                 $query->orderBy('orderNo');
             },
-            'transitions.workflowTransitionRoles',
-            'transitions.workflowTransitionUsers',
+            'transitions.workflowtransitionroles',
+            'transitions.workflowtransitionusers',
         ])->findOrFail($id);
         return $workflow;
     }
@@ -71,7 +71,7 @@ class WorkflowRepository extends BaseRepository implements WorkflowRepositoryInt
             $result = $this->parseResult($model);
 
             $result->id = (string)$result->id;
-            $result['workflowSteps'] = [];
+            $result['workflowsteps'] = [];
             $result['transitions'] = [];
             return $result;
         } catch (\Throwable $th) {
@@ -128,16 +128,16 @@ class WorkflowRepository extends BaseRepository implements WorkflowRepositoryInt
     public function visualWorkflow($id)
     {
         $workflow = $this->model->with([
-            'workflowSteps',
+            'workflowsteps',
             'transitions' => function ($query) {
                 $query->orderBy('orderNo');
             },
-            'transitions.workflowTransitionRoles',
-            'transitions.workflowTransitionUsers',
+            'transitions.workflowtransitionroles',
+            'transitions.workflowtransitionusers',
             'createdByUser'
         ])->findOrFail($id);
 
-        $stepNames = $workflow->workflowSteps->pluck('name', 'id')->toArray();
+        $stepNames = $workflow->workflowsteps->pluck('name', 'id')->toArray();
 
         $pendingTransitions = $workflow->transitions->map(function ($transition) use ($stepNames) {
             return [
@@ -147,8 +147,8 @@ class WorkflowRepository extends BaseRepository implements WorkflowRepositoryInt
                 'fromStepName' => $stepNames[$transition->fromStepId],
                 'toStepId' => $transition->toStepId,
                 'toStepName' => $stepNames[$transition->toStepId],
-                'assignRoles' => $transition->workflowTransitionRoles->pluck('role.name')->implode(', '),
-                'assignUsers' => $transition->workflowTransitionUsers->map(function ($userTransition) {
+                'assignRoles' => $transition->workflowtransitionroles->pluck('role.name')->implode(', '),
+                'assignUsers' => $transition->workflowtransitionusers->map(function ($userTransition) {
                     return $userTransition->user->firstName . ' ' . $userTransition->user->lastName;
                 })->implode(', '),
                 'status' => 'InProgress',
@@ -156,7 +156,7 @@ class WorkflowRepository extends BaseRepository implements WorkflowRepositoryInt
             ];
         });
 
-        $nodes = $workflow->workflowSteps->map(function ($step) use ($stepNames) {
+        $nodes = $workflow->workflowsteps->map(function ($step) use ($stepNames) {
             return [
                 'id' => $step->id,
                 'label' => $step->name,
@@ -197,12 +197,12 @@ class WorkflowRepository extends BaseRepository implements WorkflowRepositoryInt
     public function getMyWorkflow()
     {
         $userId = Auth::parseToken()->getPayload()->get('userId');
-        $roleIds = DB::table('userRoles')
+        $roleIds = DB::table('userroles')
             ->where('userId', $userId)
             ->pluck('roleId')
             ->toArray();
 
-        $rows = DB::table('documentWorkflow as dw')
+        $rows = DB::table('documentworkflow as dw')
             ->select([
                 'dw.*',
                 'wf.name as workflowName',
@@ -220,23 +220,23 @@ class WorkflowRepository extends BaseRepository implements WorkflowRepositoryInt
             ])
             ->join('workflows as wf', 'wf.id', '=', 'dw.workflowId')
             ->join('documents as d', 'd.id', '=', 'dw.documentId')
-            ->join('workflowSteps as ws', 'ws.id', '=', 'dw.currentStepId')
+            ->join('workflowsteps as ws', 'ws.id', '=', 'dw.currentStepId')
             ->join('users as u', 'u.id', 'dw.createdBy')
-            ->join('workflowTransitions as wt', 'wt.fromStepId', '=', 'dw.currentStepId')
-            ->leftJoin('workflowSteps as ws_to', 'ws_to.id', '=', 'wt.toStepId')
+            ->join('workflowtransitions as wt', 'wt.fromStepId', '=', 'dw.currentStepId')
+            ->leftJoin('workflowsteps as ws_to', 'ws_to.id', '=', 'wt.toStepId')
             ->where('dw.status', '!=', 'Completed')
             ->where('dw.status', '!=', 'Cancelled')
             ->where(function ($query) use ($userId, $roleIds) {
                 $query->whereExists(function ($query) use ($userId) {
                     $query->select(DB::raw(1))
-                        ->from('workflowTransitionUsers')
-                        ->whereRaw('workflowTransitionUsers.transitionId = wt.id')
-                        ->where('workflowTransitionUsers.userId', '=', $userId);
+                        ->from('workflowtransitionusers')
+                        ->whereRaw('workflowtransitionusers.transitionId = wt.id')
+                        ->where('workflowtransitionusers.userId', '=', $userId);
                 })->orWhereExists(function ($query) use ($roleIds) {
                     $query->select(DB::raw(1))
-                        ->from('workflowTransitionRoles')
-                        ->whereRaw('workflowTransitionRoles.transitionId = wt.id')
-                        ->whereIn('workflowTransitionRoles.roleId', $roleIds);
+                        ->from('workflowtransitionroles')
+                        ->whereRaw('workflowtransitionroles.transitionId = wt.id')
+                        ->whereIn('workflowtransitionroles.roleId', $roleIds);
                 });
             })
             ->orderBy('dw.modifiedDate', 'desc')
@@ -247,7 +247,7 @@ class WorkflowRepository extends BaseRepository implements WorkflowRepositoryInt
 
             return [
                 'documentId' => $first->documentId,
-                'documentWorkflowId' => $first->id,
+                'documentworkflowId' => $first->id,
                 'workflowId' => $first->workflowId,
                 'workflowName' => $first->workflowName,
                 'documentName' => $first->documentName,

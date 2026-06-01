@@ -5,13 +5,13 @@ namespace App\Models;
 use App\Traits\Uuids;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Auth;
 use Ramsey\Uuid\Uuid;
 
-class WorkflowLog extends Model
+class WorkflowLog extends BaseModel
 {
     use HasFactory, SoftDeletes;
     use Notifiable, Uuids;
@@ -19,15 +19,15 @@ class WorkflowLog extends Model
     const CREATED_AT = 'createdDate';
     const UPDATED_AT = null;
 
-    protected $table = 'workflowLogs'; // Table name
-    protected $fillable = ['documentWorkflowId', 'transitionId', 'type', 'createdBy', 'createdDate', 'comment'];
+    protected $table = 'workflowlogs'; // Table name
+    protected $fillable = ['documentworkflowId', 'transitionId', 'type', 'createdBy', 'createdDate', 'comment'];
 
     /**
      * Get the document this log belongs to.
      */
-    public function documentWorkflow()
+    public function documentworkflow()
     {
-        return $this->belongsTo(DocumentWorkflow::class, 'documentWorkflowId');
+        return $this->belongsTo(DocumentWorkflow::class, 'documentworkflowId');
     }
 
     /**
@@ -56,8 +56,8 @@ class WorkflowLog extends Model
             $model->setAttribute($model->getKeyName(), Uuid::uuid4());
         });
 
-        static::addGlobalScope('workflowLogs.isDeleted', function (Builder $builder) {
-            $builder->where('workflowLogs.isDeleted', '=', 0);
+        static::addGlobalScope('workflowlogs.isDeleted', function (Builder $builder) {
+            $builder->where('workflowlogs.isDeleted', '=', 0);
         });
     }
 }

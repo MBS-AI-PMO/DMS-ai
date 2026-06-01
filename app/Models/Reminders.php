@@ -6,12 +6,12 @@ use Ramsey\Uuid\Uuid;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+
 use Illuminate\Notifications\Notifiable;
 use App\Traits\Uuids;
 use Illuminate\Database\Eloquent\Builder;
 
-class Reminders extends Model
+class Reminders extends BaseModel
 {
     use HasFactory, SoftDeletes;
     use Notifiable, Uuids;
@@ -47,12 +47,12 @@ class Reminders extends Model
         return $this->belongsTo(Documents::class, 'documentId');
     }
 
-    public function reminderUsers()
+    public function reminderusers()
     {
         return $this->hasMany(ReminderUsers::class, 'reminderId', 'id');
     }
 
-    public function dailyReminders()
+    public function dailyreminders()
     {
         return $this->hasMany(DailyReminders::class, 'reminderId');
     }
@@ -62,11 +62,11 @@ class Reminders extends Model
         return $this->hasMany(ReminderNotifications::class, 'reminderId');
     }
 
-    public function halfYearlyReminders()
+    public function halfyearlyreminders()
     {
         return $this->hasMany(HalfYearlyReminders::class, 'reminderId');
     }
-    public function quarterlyReminders()
+    public function quarterlyreminders()
     {
         return $this->hasMany(QuarterlyReminders::class, 'reminderId');
     }
@@ -93,11 +93,11 @@ class Reminders extends Model
         });
 
         static::deleting(function (Reminders $reminder) {
-            $reminder->reminderUsers()->delete();
-            $reminder->dailyReminders()->delete();
+            $reminder->reminderusers()->delete();
+            $reminder->dailyreminders()->delete();
             $reminder->remindernotifications()->delete();
-            $reminder->halfYearlyReminders()->delete();
-            $reminder->quarterlyReminders()->delete();
+            $reminder->halfyearlyreminders()->delete();
+            $reminder->quarterlyreminders()->delete();
         });
     }
 }

@@ -44,8 +44,8 @@ class DocumentWorkflowRepository extends BaseRepository implements DocumentWorkf
 
             $firstTransaction = WorkflowTransition::where('workflowId', $request->workflowId)
                 ->where('isFirstTransaction', 1)
-                ->with('workflowTransitionRoles')
-                ->with('workflowTransitionUsers')
+                ->with('workflowtransitionroles')
+                ->with('workflowtransitionusers')
                 ->first();
 
             if (!$firstTransaction) {
@@ -66,31 +66,31 @@ class DocumentWorkflowRepository extends BaseRepository implements DocumentWorkf
             $this->resetModel();
             $result = $this->parseResult($model);
 
-            $document['documentWorkflowId'] = $result->id;
+            $document['documentworkflowId'] = $result->id;
             $document->save();
 
             $workflowLog = WorkflowLog::create([
-                'documentWorkflowId' => $result->id,
+                'documentworkflowId' => $result->id,
                 'type' => 'Initiated',
             ]);
 
             $workflowLog->save();
 
-            $roleIds = $firstTransaction->workflowTransitionRoles->pluck('roleId')->unique()->toArray();
+            $roleIds = $firstTransaction->workflowtransitionroles->pluck('roleId')->unique()->toArray();
 
             $userIdsFromRole = UserRoles::whereIn('roleId', $roleIds)
                 ->pluck('userId')
                 ->unique()
                 ->toArray();
 
-            $userIds = collect($firstTransaction->workflowTransitionUsers->pluck('userId')->toArray())
+            $userIds = collect($firstTransaction->workflowtransitionusers->pluck('userId')->toArray())
                 ->merge($userIdsFromRole)
                 ->unique()
                 ->toArray();
 
             foreach ($userIds as $userId) {
                 UserNotifications::create([
-                    'documentWorkflowId' => $result->id,
+                    'documentworkflowId' => $result->id,
                     'userId' =>  $userId,
                     'notificationType' => UserNotificationTypeEnum::WORKFLOW->value
                 ]);
@@ -106,23 +106,23 @@ class DocumentWorkflowRepository extends BaseRepository implements DocumentWorkf
 
     public function visualWorkflow($id)
     {
-        $documentWorkflow = $this->model->with('createdByUser')->findOrFail($id);
+        $documentworkflow = $this->model->with('createdByUser')->findOrFail($id);
 
         $workflow = Workflow::with([
-            'workflowSteps',
+            'workflowsteps',
             'transitions' => function ($query) {
                 $query->orderBy('orderNo');
             },
-            'transitions.workflowTransitionRoles',
-            'transitions.workflowTransitionUsers',
+            'transitions.workflowtransitionroles',
+            'transitions.workflowtransitionusers',
             'createdByUser'
-        ])->findOrFail($documentWorkflow->workflowId);
+        ])->findOrFail($documentworkflow->workflowId);
 
-        $stepNames = $workflow->workflowSteps->pluck('name', 'id')->toArray();
+        $stepNames = $workflow->workflowsteps->pluck('name', 'id')->toArray();
 
         $completedTransiations = WorkflowLog::with('transition', 'createdByUser')
             ->orderBy('createdDate', 'desc')
-            ->where('documentWorkflowId', $id)
+            ->where('documentworkflowId', $id)
             ->whereNotNull('transitionId')
             ->get();
 
@@ -140,8 +140,8 @@ class DocumentWorkflowRepository extends BaseRepository implements DocumentWorkf
                     'fromStepName' => $stepNames[$transition->fromStepId],
                     'toStepId' => $transition->toStepId,
                     'toStepName' => $stepNames[$transition->toStepId],
-                    'assignRoles' => $transition->workflowTransitionRoles->pluck('role.name')->implode(', '),
-                    'assignUsers' => $transition->workflowTransitionUsers->map(function ($userTransition) {
+                    'assignRoles' => $transition->workflowtransitionroles->pluck('role.name')->implode(', '),
+                    'assignUsers' => $transition->workflowtransitionusers->map(function ($userTransition) {
                         return $userTransition->user->firstName . ' ' . $userTransition->user->lastName;
                     })->implode(', '),
                     'status' => 'InProgress',
@@ -164,7 +164,7 @@ class DocumentWorkflowRepository extends BaseRepository implements DocumentWorkf
                 ];
             });
 
-        $nodes = $workflow->workflowSteps->map(function ($step) use ($stepNames) {
+        $nodes = $workflow->workflowsteps->map(function ($step) use ($stepNames) {
             return [
                 'id' => $step->id,
                 'label' => $step->name,
@@ -190,15 +190,15 @@ class DocumentWorkflowRepository extends BaseRepository implements DocumentWorkf
             'workflowId' => $workflow->id,
             'workflowName' => $workflow->name,
             'workflowDescription' => $workflow->description,
-            'pendingWorkflowTransitions' => $documentWorkflow->status == 'Cancelled' ?  [] : $pendingTransitions,
+            'pendingWorkflowTransitions' => $documentworkflow->status == 'Cancelled' ?  [] : $pendingTransitions,
             'completedWorkflowTransitions' => $completedTransiations,
             'nodes' => $nodes,
             'links' => $links,
             'customColors' => $customColors,
             'createdDate' => $workflow->createdDate,
-            'initiatedDate' => $documentWorkflow->createdDate,
+            'initiatedDate' => $documentworkflow->createdDate,
             'createdBy' => optional($workflow->createdByUser)->firstName . ' ' . optional($workflow->createdByUser)->lastName,
-            'initiatedBy' => optional($documentWorkflow->createdByUser)->firstName . ' ' . optional($documentWorkflow->createdByUser)->lastName
+            'initiatedBy' => optional($documentworkflow->createdByUser)->firstName . ' ' . optional($documentworkflow->createdByUser)->lastName
         ];
 
         return response($visualWorkflow, 200);
@@ -210,11 +210,11 @@ class DocumentWorkflowRepository extends BaseRepository implements DocumentWorkf
         try {
             DB::beginTransaction();
 
-            $documentWorkflow = DocumentWorkflow::where('id', $request->documentWorkflowId)
+            $documentworkflow = DocumentWorkflow::where('id', $request->documentworkflowId)
                 ->where('documentId', $request->documentId)
                 ->first();
 
-            if (!$documentWorkflow) {
+            if (!$documentworkflow) {
                 return response()->json(['Message' => 'Document workflow not found.'], 404);
             }
 
@@ -224,34 +224,34 @@ class DocumentWorkflowRepository extends BaseRepository implements DocumentWorkf
                 return response()->json(['Message' => 'Transition not found.'], 404);
             }
 
-            $currentStep = WorkflowStep::find($documentWorkflow->currentStepId);
+            $currentStep = WorkflowStep::find($documentworkflow->currentStepId);
 
             if (!$currentStep || $currentStep->id !== $transition->fromStepId) {
                 return response()->json(['Message' => 'Invalid transition for the current step.'], 422);
             }
 
             // Update the document workflow with the new step
-            $documentWorkflow->currentStepId = $transition->toStepId;
+            $documentworkflow->currentStepId = $transition->toStepId;
 
-            $nextTransations = WorkflowTransition::where('workflowId', $documentWorkflow->workflowId)
+            $nextTransations = WorkflowTransition::where('workflowId', $documentworkflow->workflowId)
                 ->where('fromStepId', $transition->toStepId)
-                ->with('workflowTransitionRoles')
-                ->with('workflowTransitionUsers')
+                ->with('workflowtransitionroles')
+                ->with('workflowtransitionusers')
                 ->get();
 
-            $documentWorkflow->status = $nextTransations->isNotEmpty() ? 'InProgress' : 'Completed';
-            $documentWorkflow->save();
+            $documentworkflow->status = $nextTransations->isNotEmpty() ? 'InProgress' : 'Completed';
+            $documentworkflow->save();
 
             // Log the transition
             WorkflowLog::create([
-                'documentWorkflowId' => $documentWorkflow->id,
+                'documentworkflowId' => $documentworkflow->id,
                 'transitionId' => $transition->id,
                 'comment' => $request->comment ?? ''
             ]);
 
             // Collect all roleIds and userIds from all next transitions
             $roleIds = $nextTransations->flatMap(function ($t) {
-                return $t->workflowTransitionRoles->pluck('roleId');
+                return $t->workflowtransitionroles->pluck('roleId');
             })->unique()->toArray();
 
             $userIdsFromRole = UserRoles::whereIn('roleId', $roleIds)
@@ -260,7 +260,7 @@ class DocumentWorkflowRepository extends BaseRepository implements DocumentWorkf
                 ->toArray();
 
             $userIds = $nextTransations->flatMap(function ($t) {
-                return $t->workflowTransitionUsers->pluck('userId');
+                return $t->workflowtransitionusers->pluck('userId');
             })
                 ->merge($userIdsFromRole)
                 ->unique()
@@ -268,7 +268,7 @@ class DocumentWorkflowRepository extends BaseRepository implements DocumentWorkf
 
             foreach ($userIds as $userId) {
                 UserNotifications::create([
-                    'documentWorkflowId' => $request->documentWorkflowId,
+                    'documentworkflowId' => $request->documentworkflowId,
                     'userId' =>  $userId,
                     'notificationType' => UserNotificationTypeEnum::WORKFLOW->value
                 ]);
@@ -288,18 +288,18 @@ class DocumentWorkflowRepository extends BaseRepository implements DocumentWorkf
         try {
             DB::beginTransaction();
 
-            $documentWorkflow = DocumentWorkflow::findOrFail($id);
+            $documentworkflow = DocumentWorkflow::findOrFail($id);
 
-            if (!$documentWorkflow) {
+            if (!$documentworkflow) {
                 return response()->json(['Message' => 'Document workflow not found.'], 404);
             }
 
-            $documentWorkflow->status = 'Cancelled';
-            $documentWorkflow->save();
+            $documentworkflow->status = 'Cancelled';
+            $documentworkflow->save();
 
             // Log the transition
             WorkflowLog::create([
-                'documentWorkflowId' => $id,
+                'documentworkflowId' => $id,
                 'comment' => $request->comment ?? '',
                 'type' => 'Cancelled',
             ]);
@@ -316,15 +316,15 @@ class DocumentWorkflowRepository extends BaseRepository implements DocumentWorkf
     public function getDocumentWorkflows($attributes)
     {
         $query = DocumentWorkflow::select([
-            'documentWorkflow.id',
+            'documentworkflow.id',
             'documents.name as documentName',
             'workflows.name as workflowName',
-            'documentWorkflow.status',
-            'documentWorkflow.createdDate',
-            'documentWorkflow.createdBy',
-            'documentWorkflow.modifiedDate',
-            'documentWorkflow.documentId',
-            'documentWorkflow.currentStepId',
+            'documentworkflow.status',
+            'documentworkflow.createdDate',
+            'documentworkflow.createdBy',
+            'documentworkflow.modifiedDate',
+            'documentworkflow.documentId',
+            'documentworkflow.currentStepId',
             DB::raw("CONCAT(modifiedUser.firstName,' ', modifiedUser.lastName) as modifiedUserName"),
             DB::raw("CONCAT(users.firstName,' ', users.lastName) as createdByName"),
 
@@ -346,16 +346,16 @@ class DocumentWorkflowRepository extends BaseRepository implements DocumentWorkf
             'next_fromStep.name as nextFromStepName',
             'next_toStep.name as nextToStepName'
         ])
-            ->join('documents', 'documents.id', '=', 'documentWorkflow.documentId')
-            ->join('users', 'documentWorkflow.createdBy', '=', 'users.id')
-            ->leftJoin('users as modifiedUser', 'documentWorkflow.modifiedBy', '=', 'modifiedUser.id')
-            ->leftJoin('workflows', 'documentWorkflow.workflowId', '=', 'workflows.id')
+            ->join('documents', 'documents.id', '=', 'documentworkflow.documentId')
+            ->join('users', 'documentworkflow.createdBy', '=', 'users.id')
+            ->leftJoin('users as modifiedUser', 'documentworkflow.modifiedBy', '=', 'modifiedUser.id')
+            ->leftJoin('workflows', 'documentworkflow.workflowId', '=', 'workflows.id')
 
             // Last performed transition (latest by createdDate)
             ->leftJoin(DB::raw('
             (
                 SELECT
-                    wl.documentWorkflowId,
+                    wl.documentworkflowId,
                     wl.transitionId,
                     wt.name as transitionName,
                     wt.fromStepId,
@@ -363,25 +363,25 @@ class DocumentWorkflowRepository extends BaseRepository implements DocumentWorkf
                     wt.toStepId,
                     toStep.name as toStepName,
                     wl.createdDate as performedAt
-                FROM workflowLogs wl
-                LEFT JOIN workflowTransitions wt ON wl.transitionId = wt.id
-                LEFT JOIN workflowSteps fromStep ON wt.fromStepId = fromStep.id
-                LEFT JOIN workflowSteps toStep ON wt.toStepId = toStep.id
+                FROM workflowlogs wl
+                LEFT JOIN workflowtransitions wt ON wl.transitionId = wt.id
+                LEFT JOIN workflowsteps fromStep ON wt.fromStepId = fromStep.id
+                LEFT JOIN workflowsteps toStep ON wt.toStepId = toStep.id
                 WHERE wl.transitionId IS NOT NULL
                   AND wl.createdDate = (
                       SELECT MAX(createdDate)
-                      FROM workflowLogs
-                      WHERE documentWorkflowId = wl.documentWorkflowId
+                      FROM workflowlogs
+                      WHERE documentworkflowId = wl.documentworkflowId
                         AND transitionId IS NOT NULL
                       LIMIT 1
                   )
             ) as last_transition
-        '), 'last_transition.documentWorkflowId', '=', 'documentWorkflow.id')
+        '), 'last_transition.documentworkflowId', '=', 'documentworkflow.id')
 
             // Next transitions based on currentStepId
-            ->leftJoin('workflowTransitions as next_wt', 'next_wt.fromStepId', '=', 'documentWorkflow.currentStepId')
-            ->leftJoin('workflowSteps as next_fromStep', 'next_fromStep.id', '=', 'next_wt.fromStepId')
-            ->leftJoin('workflowSteps as next_toStep', 'next_toStep.id', '=', 'next_wt.toStepId');
+            ->leftJoin('workflowtransitions as next_wt', 'next_wt.fromStepId', '=', 'documentworkflow.currentStepId')
+            ->leftJoin('workflowsteps as next_fromStep', 'next_fromStep.id', '=', 'next_wt.fromStepId')
+            ->leftJoin('workflowsteps as next_toStep', 'next_toStep.id', '=', 'next_wt.toStepId');
 
         // Ordering
         $orderByArray = explode(' ', $attributes->orderBy);
@@ -391,15 +391,15 @@ class DocumentWorkflowRepository extends BaseRepository implements DocumentWorkf
         if ($orderBy == 'workflowName') {
             $query = $query->orderBy('workflows.name', $direction);
         } else if ($orderBy == 'createdDate') {
-            $query = $query->orderBy('documentWorkflow.createdDate', $direction);
+            $query = $query->orderBy('documentworkflow.createdDate', $direction);
         } else if ($orderBy == 'status') {
-            $query = $query->orderBy('documentWorkflow.status', $direction);
+            $query = $query->orderBy('documentworkflow.status', $direction);
         } else if ($orderBy == 'createdByName') {
             $query = $query->orderBy('users.firstName', $direction);
         } else if ($orderBy == 'documentName') {
             $query = $query->orderBy('documents.name', $direction);
         } else if ($orderBy == 'modifiedDate') {
-            $query = $query->orderBy('documentWorkflow.modifiedDate', $direction);
+            $query = $query->orderBy('documentworkflow.modifiedDate', $direction);
         }
 
         // Filters
@@ -408,7 +408,7 @@ class DocumentWorkflowRepository extends BaseRepository implements DocumentWorkf
         }
 
         if ($attributes->status) {
-            $query = $query->where('documentWorkflow.status', $attributes->status);
+            $query = $query->where('documentworkflow.status', $attributes->status);
         }
 
         if ($attributes->documentName) {
@@ -467,16 +467,16 @@ class DocumentWorkflowRepository extends BaseRepository implements DocumentWorkf
     public function getDocumentWorkflowCount($attributes)
     {
         $query = DocumentWorkflow::query()
-            ->join('documents', 'documents.id', '=', 'documentWorkflow.documentId')
-            ->join('users', 'documentWorkflow.createdBy', '=', 'users.id')
-            ->leftJoin('workflows', 'documentWorkflow.workflowId', '=', 'workflows.id');
+            ->join('documents', 'documents.id', '=', 'documentworkflow.documentId')
+            ->join('users', 'documentworkflow.createdBy', '=', 'users.id')
+            ->leftJoin('workflows', 'documentworkflow.workflowId', '=', 'workflows.id');
 
         if ($attributes->workflowName) {
             $query = $query->where('workflows.name', 'like', '%' . $attributes->workflowName . '%');
         }
 
         if ($attributes->status) {
-            $query = $query->where('documentWorkflow.status', $attributes->status);
+            $query = $query->where('documentworkflow.status', $attributes->status);
         }
 
         if ($attributes->documentName) {

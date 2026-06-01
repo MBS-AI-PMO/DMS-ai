@@ -23,7 +23,7 @@ class DeleteLogsCommand extends Command
     /**
      * @var CompanyProfileRepositoryInterface
      */
-    private $companyProfileRepository;
+    private $companyprofileRepository;
     private $cronJobLogRepository;
 
 
@@ -31,11 +31,11 @@ class DeleteLogsCommand extends Command
      * @param CompanyProfileRepositoryInterface $link
      */
     public function __construct(
-        CompanyProfileRepositoryInterface $companyProfileRepository,
+        CompanyProfileRepositoryInterface $companyprofileRepository,
         CronJobLogRepositoryInterface $cronJobLogRepository
     ) {
         parent::__construct();
-        $this->companyProfileRepository = $companyProfileRepository;
+        $this->companyprofileRepository = $companyprofileRepository;
         $this->cronJobLogRepository = $cronJobLogRepository;
     }
 
@@ -47,7 +47,7 @@ class DeleteLogsCommand extends Command
         ];
 
         try {
-            $this->companyProfileRepository->deleteLogs();
+            $this->companyprofileRepository->deleteLogs();
             $this->info('Delete Email, Audit and Cron Job Logs...');
             $cronJobLog['status'] = 'success';
         } catch (\Exception $e) {

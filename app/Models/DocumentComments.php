@@ -4,17 +4,17 @@ namespace App\Models;
 use Ramsey\Uuid\Uuid;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+
 use Illuminate\Notifications\Notifiable;
 use App\Traits\Uuids;
 use Illuminate\Database\Eloquent\Builder;
 
-class DocumentComments extends Model
+class DocumentComments extends BaseModel
 {
     use HasFactory;
     use Notifiable, Uuids;
     protected $primaryKey = "id";
-    protected  $table = 'documentComments';
+    protected $table = 'documentcomments';
     public $incrementing = false;
 
     const CREATED_AT = 'createdDate';
@@ -51,7 +51,7 @@ class DocumentComments extends Model
         });
 
         static::addGlobalScope('isDeleted', function (Builder $builder) {
-            $builder->where('documentComments.isDeleted', '=', 0);
+            $builder->where('documentcomments.isDeleted', '=', 0);
         });
     }
 }

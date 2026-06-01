@@ -4,18 +4,18 @@ namespace App\Models;
 
 use Ramsey\Uuid\Uuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
 use App\Traits\Uuids;
 
-class DocumentAuditTrails extends Model
+class DocumentAuditTrails extends BaseModel
 {
     use HasFactory, SoftDeletes;
     use Notifiable, Uuids;
     protected $primaryKey = "id";
-    protected  $table = 'documentAuditTrails';
+    protected $table = 'documentaudittrails';
     public $incrementing = false;
 
     const CREATED_AT = 'createdDate';

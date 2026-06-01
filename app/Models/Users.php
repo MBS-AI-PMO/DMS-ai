@@ -10,12 +10,15 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
 use App\Traits\Uuids;
+use App\Traits\ResolvesTableName;
 use Illuminate\Database\Eloquent\Builder;
 
 class Users extends Authenticatable implements JWTSubject
 {
     use HasFactory;
-    use Notifiable, Uuids;
+    use Notifiable, Uuids, ResolvesTableName;
+
+    protected $table = 'users';
     protected $primaryKey = "id";
     public $timestamps = false;
 
@@ -56,12 +59,12 @@ class Users extends Authenticatable implements JWTSubject
         return $this->hasMany(UserClaims::class, 'userId', 'id');
     }
 
-    public function documentUserPermissions()
+    public function documentuserpermissions()
     {
         return $this->hasMany(DocumentUserPermissions::class, 'userId', 'id');
     }
 
-    public function userNotifications()
+    public function usernotifications()
     {
         return $this->hasMany(UserNotifications::class, 'userId', 'id');
     }
@@ -90,7 +93,10 @@ class Users extends Authenticatable implements JWTSubject
         });
 
         static::addGlobalScope('isSystemUser', function (Builder $builder) {
-            $builder->where('isSystemUser', '=', 0);
+            $builder->where(function (Builder $query) {
+                $query->where('isSystemUser', '=', 0)
+                    ->orWhereNull('isSystemUser');
+            });
         });
     }
 }

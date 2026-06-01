@@ -7,30 +7,30 @@ use App\Repositories\Contracts\PageHelperRepositoryInterface;
 
 class PageHelperController extends Controller
 {
-    private $pageHelperRepository;
+    private $pagehelperRepository;
 
-    public function __construct(PageHelperRepositoryInterface $pageHelperRepository)
+    public function __construct(PageHelperRepositoryInterface $pagehelperRepository)
     {
-        $this->pageHelperRepository = $pageHelperRepository;
+        $this->pagehelperRepository = $pagehelperRepository;
     }
 
     public function getAll()
     {
-        return  response($this->pageHelperRepository->all(), 200);
+        return  response($this->pagehelperRepository->all(), 200);
     }
 
     public function getByCode($code)
     {
-        return response($this->pageHelperRepository->getByCode($code), 200);
+        return response($this->pagehelperRepository->getByCode($code), 200);
     }
 
     public function update(Request $request, $id)
     {
-        return  response()->json($this->pageHelperRepository->update($request->all(), $id), 200);
+        return  response()->json($this->pagehelperRepository->update($request->all(), $id), 200);
     }
 
     public function getById($id)
     {
-        return response($this->pageHelperRepository->find($id), 200);
+        return response($this->pagehelperRepository->find($id), 200);
     }
 }

@@ -31,13 +31,13 @@ class RoleUsersRepository extends BaseRepository implements RoleUsersRepositoryI
 
     public function getRoleUsers($id)
     {
-        $query = UserRoles::select(['users.firstName', 'users.lastName', 'users.userName', 'userRoles.userId', 'userRoles.roleId'])
+        $query = UserRoles::select(['users.firstName', 'users.lastName', 'users.userName', 'userroles.userId', 'userroles.roleId'])
             ->join('users', function ($join) {
-                $join->on('users.id', '=', 'userRoles.userId')
+                $join->on('users.id', '=', 'userroles.userId')
                     ->where('users.isDeleted', 0);
             })
             ->join('roles', function ($join) {
-                $join->on('roles.id', '=', 'userRoles.roleId')
+                $join->on('roles.id', '=', 'userroles.roleId')
                     ->where('roles.isDeleted', 0);
             });
 
@@ -49,8 +49,8 @@ class RoleUsersRepository extends BaseRepository implements RoleUsersRepositoryI
     {
         try {
 
-            $userRoles = UserRoles::where('roleId', '=', $roleId)->get();
-            UserRoles::destroy($userRoles);
+            $userroles = UserRoles::where('roleId', '=', $roleId)->get();
+            UserRoles::destroy($userroles);
             if ($request['userRoles']) {
                 DB::beginTransaction();
                 foreach ($request['userRoles'] as $userRole) {

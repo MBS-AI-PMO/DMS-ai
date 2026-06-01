@@ -25,7 +25,7 @@ class DocumentController extends Controller
     private $documenTokenRepository;
     private $userNotificationRepository;
     private $archiveDocumentRepository;
-    private $documentShareableLinkRepository;
+    private $documentshareablelinkRepository;
     protected $queryString;
 
     public function __construct(
@@ -34,14 +34,14 @@ class DocumentController extends Controller
         UserNotificationRepositoryInterface $userNotificationRepository,
         DocumentTokenRepositoryInterface $documenTokenRepository,
         ArchiveDocumentRepositoryInterface $archiveDocumentRepository,
-        DocumentShareableLinkRepositoryInterface $documentShareableLinkRepository
+        DocumentShareableLinkRepositoryInterface $documentshareablelinkRepository
     ) {
         $this->documentRepository = $documentRepository;
         $this->documentMetaDataRepository = $documentMetaDataRepository;
         $this->userNotificationRepository = $userNotificationRepository;
         $this->documenTokenRepository = $documenTokenRepository;
         $this->archiveDocumentRepository = $archiveDocumentRepository;
-        $this->documentShareableLinkRepository = $documentShareableLinkRepository;
+        $this->documentshareablelinkRepository = $documentshareablelinkRepository;
     }
 
     public function getDocuments(Request $request)
@@ -82,7 +82,7 @@ class DocumentController extends Controller
         if ($request->has('password')) {
             $password = $request->input('password');
         }
-        $documentSharableLink = $this->documentShareableLinkRepository->getByCode($id);
+        $documentSharableLink = $this->documentshareablelinkRepository->getByCode($id);
         if ($documentSharableLink == null) {
             return response()->json(['error' => ['message' => 'Link Expired.']], 404);
         }
@@ -134,7 +134,7 @@ class DocumentController extends Controller
 
     public function readSharedTextDocument(Request $request, $id)
     {
-        $documentSharableLink = $this->documentShareableLinkRepository->getByCode($id);
+        $documentSharableLink = $this->documentshareablelinkRepository->getByCode($id);
         if ($documentSharableLink == null) {
             return response()->json(['error' => ['message' => 'Link Expired.']], 404);
         }

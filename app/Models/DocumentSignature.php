@@ -3,14 +3,14 @@
 namespace App\Models;
 use Ramsey\Uuid\Uuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+
 use App\Traits\Uuids;
 
-class DocumentSignature extends Model
+class DocumentSignature extends BaseModel
 {
     use HasFactory, Uuids;
     protected $primaryKey = "id";
-    public $table = 'documentSignatures';
+    protected $table = 'documentsignatures';
     public $timestamps = false;
 
     protected $fillable = [

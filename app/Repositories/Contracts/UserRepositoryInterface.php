@@ -8,7 +8,7 @@ interface UserRepositoryInterface extends BaseRepositoryInterface
 {
     public function createUser(array $attributes);
     public function findUser($id);
-    public function updateUser($model, $id, $userRoles);
+    public function updateUser($model, $id, $userroles);
     public function updateUserProfile($request);
     public function getUsersForDropdown();
     public function  forgotPassword($request);

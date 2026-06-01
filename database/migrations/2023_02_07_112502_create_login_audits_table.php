@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('loginAudits', function (Blueprint $table) {
+        Schema::create('loginaudits', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('userName')->nullable();
             $table->string('loginTime');
@@ -32,6 +32,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('loginAudits');
+        Schema::dropIfExists('loginaudits');
     }
 };

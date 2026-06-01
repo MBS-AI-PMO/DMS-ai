@@ -6,17 +6,17 @@ use Ramsey\Uuid\Uuid;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+
 use Illuminate\Notifications\Notifiable;
 use App\Traits\Uuids;
 use Illuminate\Database\Eloquent\Builder;
 
-class EmailSMTPSettings extends Model
+class EmailSMTPSettings extends BaseModel
 {
     use HasFactory, SoftDeletes;
     use Notifiable, Uuids;
     protected $primaryKey = "id";
-    protected  $table = 'emailSMTPSettings';
+    protected $table = 'emailsmtpsettings';
 
     const CREATED_AT = 'createdDate';
     const UPDATED_AT = 'modifiedDate';
@@ -54,7 +54,7 @@ class EmailSMTPSettings extends Model
             $model->modifiedBy = $userId;
         });
         static::addGlobalScope('isDeleted', function (Builder $builder) {
-            $builder->where('emailSMTPSettings.isDeleted', '=', 0);
+            $builder->where('emailsmtpsettings.isDeleted', '=', 0);
         });
     }
 }

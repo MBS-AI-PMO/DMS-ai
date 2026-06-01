@@ -40,7 +40,7 @@ class ExpireDocumentRepository extends BaseRepository implements ExpireDocumentR
             $query = Documents::withoutGlobalScope('isExpired')
                 ->where('documents.isExpired', '=', 1)
                 ->join('categories', 'documents.categoryId', '=', 'categories.id')
-                ->leftJoin('documentStatus', 'documents.statusId', '=', 'documentStatus.id');
+                ->leftJoin('documentstatus', 'documents.statusId', '=', 'documentstatus.id');
 
             $orderByArray =  explode(' ', $attributes->orderBy);
             $orderBy = $orderByArray[0];
@@ -53,7 +53,7 @@ class ExpireDocumentRepository extends BaseRepository implements ExpireDocumentR
             } else if ($orderBy == 'location') {
                 $query = $query->orderBy('documents.location', $direction);
             } else if ($orderBy == 'statusName') {
-                $query = $query->orderBy('documentStatus.name', $direction);
+                $query = $query->orderBy('documentstatus.name', $direction);
             }
 
             if ($attributes->categoryId) {
@@ -84,9 +84,9 @@ class ExpireDocumentRepository extends BaseRepository implements ExpireDocumentR
                 $metaTags = $attributes->metaTags;
                 $query = $query->whereExists(function ($query) use ($metaTags) {
                     $query->select(DB::raw(1))
-                        ->from('documentMetaDatas')
-                        ->whereRaw('documentMetaDatas.documentId = documents.id')
-                        ->where('documentMetaDatas.metatag', 'like', '%' . $metaTags . '%');
+                        ->from('documentmetadatas')
+                        ->whereRaw('documentmetadatas.documentId = documents.id')
+                        ->where('documentmetadatas.metatag', 'like', '%' . $metaTags . '%');
                 });
             }
 
@@ -99,7 +99,7 @@ class ExpireDocumentRepository extends BaseRepository implements ExpireDocumentR
                 'documents.expiredDate',
                 'categories.id as categoryId',
                 'categories.name as categoryName',
-                'documentStatus.name as statusName',
+                'documentstatus.name as statusName',
             ]);
 
             return $results;
@@ -113,7 +113,7 @@ class ExpireDocumentRepository extends BaseRepository implements ExpireDocumentR
         $query = Documents::withoutGlobalScope('isExpired')
             ->where('documents.isExpired', '=', 1)
             ->join('categories', 'documents.categoryId', '=', 'categories.id')
-            ->leftJoin('documentStatus', 'documents.statusId', '=', 'documentStatus.id');
+            ->leftJoin('documentstatus', 'documents.statusId', '=', 'documentstatus.id');
 
         $orderByArray =  explode(' ', $attributes->orderBy);
         $orderBy = $orderByArray[0];
@@ -126,7 +126,7 @@ class ExpireDocumentRepository extends BaseRepository implements ExpireDocumentR
         } else if ($orderBy == 'location') {
             $query = $query->orderBy('documents.location', $direction);
         } else if ($orderBy == 'statusName') {
-            $query = $query->orderBy('documentStatus.name', $direction);
+            $query = $query->orderBy('documentstatus.name', $direction);
         }
 
         if ($attributes->categoryId) {
@@ -156,9 +156,9 @@ class ExpireDocumentRepository extends BaseRepository implements ExpireDocumentR
             $metaTags = $attributes->metaTags;
             $query = $query->whereExists(function ($query) use ($metaTags) {
                 $query->select(DB::raw(1))
-                    ->from('documentMetaDatas')
-                    ->whereRaw('documentMetaDatas.documentId = documents.id')
-                    ->where('documentMetaDatas.metatag', 'like', '%' . $metaTags . '%');
+                    ->from('documentmetadatas')
+                    ->whereRaw('documentmetadatas.documentId = documents.id')
+                    ->where('documentmetadatas.metatag', 'like', '%' . $metaTags . '%');
             });
         }
 

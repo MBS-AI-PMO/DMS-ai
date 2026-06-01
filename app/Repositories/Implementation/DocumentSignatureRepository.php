@@ -34,13 +34,13 @@ class DocumentSignatureRepository extends BaseRepository implements DocumentSign
     {
         try {
             $signatures = DocumentSignature::select([
-                'documentSignatures.createdDate',
-                'documentSignatures.signatureUrl',
+                'documentsignatures.createdDate',
+                'documentsignatures.signatureUrl',
                 DB::raw("CONCAT(users.firstName, ' ', users.lastName) as signatureBy")
             ])
-                ->join('users', 'documentSignatures.createdBy', '=', 'users.id')
+                ->join('users', 'documentsignatures.createdBy', '=', 'users.id')
                 ->where('documentId', $id)
-                ->orderBy('documentSignatures.createdDate', 'desc')
+                ->orderBy('documentsignatures.createdDate', 'desc')
                 ->get();
 
             if ($signatures->isEmpty()) {

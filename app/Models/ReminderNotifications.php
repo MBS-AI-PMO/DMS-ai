@@ -7,16 +7,16 @@ use Illuminate\Notifications\Notifiable;
 use App\Traits\Uuids;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 
-class ReminderNotifications extends Model
+
+class ReminderNotifications extends BaseModel
 {
     use HasFactory;
     use Notifiable, Uuids;
     protected $primaryKey = "id";
     protected $keyType = 'string';
     public $incrementing = false;
-    public $table = 'reminderNotifications';
+    protected $table = 'remindernotifications';
     public $timestamps = false;
 
     protected $fillable =  [

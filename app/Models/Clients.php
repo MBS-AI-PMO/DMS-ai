@@ -4,19 +4,19 @@ namespace App\Models;
 
 use Ramsey\Uuid\Uuid;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 use App\Traits\Uuids;
 use Illuminate\Database\Eloquent\Builder;
 
-class Clients extends Model
+class Clients extends BaseModel
 {
     use HasFactory, SoftDeletes;
     use Notifiable, Uuids;
     protected $primaryKey = "id";
-    public $table = 'clients';
+    protected $table = 'clients';
     const CREATED_AT = 'createdDate';
     const UPDATED_AT = 'modifiedDate';
 
@@ -34,6 +34,8 @@ class Clients extends Model
             $userId = Auth::parseToken()->getPayload()->get('userId');
             $model->createdBy = $userId;
             $model->modifiedBy = $userId;
+            $model->deletedBy = '';
+            $model->isDeleted = 0;
             $model->setAttribute($model->getKeyName(), Uuid::uuid4());
         });
 

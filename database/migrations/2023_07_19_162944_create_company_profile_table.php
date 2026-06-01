@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('companyProfile', function (Blueprint $table) {
+        Schema::create('companyprofile', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('title');
             $table->string('logoUrl')->nullable();
@@ -36,6 +36,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('companyProfile');
+        Schema::dropIfExists('companyprofile');
     }
 };

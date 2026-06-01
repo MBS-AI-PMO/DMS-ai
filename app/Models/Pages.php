@@ -5,15 +5,17 @@ namespace App\Models;
 use Ramsey\Uuid\Uuid;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
 use App\Traits\Uuids;
 
-class Pages extends Model
+class Pages extends BaseModel
 {
     use HasFactory, SoftDeletes;
     use Notifiable, Uuids;
+
+    protected $table = 'pages';
     protected $primaryKey = "id";
 
     const CREATED_AT = 'createdDate';

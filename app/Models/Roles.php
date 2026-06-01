@@ -7,15 +7,17 @@ use App\Models\UserRoles;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+
 use Illuminate\Notifications\Notifiable;
 use App\Traits\Uuids;
 use Illuminate\Database\Eloquent\Builder;
 
-class Roles extends Model
+class Roles extends BaseModel
 {
     use HasFactory, SoftDeletes;
     use Notifiable, Uuids;
+
+    protected $table = 'roles';
     protected $primaryKey = "id";
 
     const CREATED_AT = 'createdDate';
@@ -36,12 +38,12 @@ class Roles extends Model
         return $this->hasMany(RoleClaims::class, 'roleId', 'id');
     }
 
-    public function documentRolePermissions()
+    public function documentrolepermissions()
     {
         return $this->hasMany(DocumentRolePermissions::class, 'roleId', 'id');
     }
 
-    public function documentAuditTrails()
+    public function documentaudittrails()
     {
         return $this->hasMany(DocumentAuditTrails::class, 'assignToRoleId', 'id');
     }

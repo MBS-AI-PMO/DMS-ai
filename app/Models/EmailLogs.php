@@ -4,15 +4,15 @@ namespace App\Models;
 
 use App\Traits\Uuids;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Model;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Ramsey\Uuid\Uuid;
 
-class EmailLogs extends Model
+class EmailLogs extends BaseModel
 {
     use HasFactory, Uuids;
     protected $primaryKey = "id";
-    public $table = 'emailLogs';
+    protected $table = 'emaillogs';
     public $timestamps = false;
 
     protected $fillable = [
@@ -29,7 +29,7 @@ class EmailLogs extends Model
         'sentAt' => 'datetime'
     ];
 
-    public function emailLogAttachments()
+    public function emaillogattachments()
     {
         return $this->hasMany(EmailLogAttachments::class, 'emailLogId', 'id');
     }

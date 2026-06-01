@@ -5,17 +5,17 @@ namespace App\Models;
 use Ramsey\Uuid\Uuid;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+
 use Illuminate\Notifications\Notifiable;
 use App\Traits\Uuids;
 
-class OpenAIDocuments extends Model
+class OpenAIDocuments extends BaseModel
 {
     use HasFactory;
     use Notifiable, Uuids;
 
     protected $primaryKey = "id";
-    public $table = 'openaiDocuments';
+    protected $table = 'openaidocuments';
     
     protected $fillable = [
         'id',
