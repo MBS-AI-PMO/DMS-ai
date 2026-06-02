@@ -226,7 +226,7 @@ const routes: Routes = [
           },
           {
             path: 'post-management',
-            data: { claimType: 'FILE_REQUEST_VIEW_FILE_REQUEST' },
+            data: { claimType: 'POST_MANAGEMENT_VIEW' },
             canActivate: [AuthGuard],
             loadComponent: () =>
               import('./post-management/post-management.component').then(
@@ -235,7 +235,7 @@ const routes: Routes = [
           },
           {
             path: 'post-management/:id/candidates',
-            data: { claimType: 'FILE_REQUEST_VIEW_FILE_REQUEST' },
+            data: { claimType: 'POST_MANAGEMENT_VIEW' },
             canActivate: [AuthGuard],
             loadComponent: () =>
               import('./post-management/post-candidates.component').then(
@@ -244,11 +244,20 @@ const routes: Routes = [
           },
           {
             path: 'post-management/:id/candidates/:candidateId/history',
-            data: { claimType: 'FILE_REQUEST_VIEW_FILE_REQUEST' },
+            data: { claimType: 'POST_MANAGEMENT_VIEW' },
             canActivate: [AuthGuard],
             loadComponent: () =>
               import('./post-management/post-candidate-history.component').then(
                 (m) => m.PostCandidateHistoryComponent
+              ),
+          },
+          {
+            path: 'assigned-interviews',
+            data: { claimType: 'INTERVIEWS_VIEW_ASSIGNED' },
+            canActivate: [AuthGuard],
+            loadComponent: () =>
+              import('./interviews/assigned-interviews.component').then(
+                (m) => m.AssignedInterviewsComponent
               ),
           },
           {

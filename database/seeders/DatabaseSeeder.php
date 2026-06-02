@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
             PermissionSeederV51::class,
             PermissionSeederV52::class,
             PermissionSeederV53::class,
+            PermissionSeederV54::class,
         ]);
     }
 }

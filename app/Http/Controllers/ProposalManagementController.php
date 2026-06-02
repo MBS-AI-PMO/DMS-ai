@@ -142,6 +142,92 @@ class ProposalManagementController extends Controller
         ]);
     }
 
+    public function assignedInterviews()
+    {
+        $userId = $this->getUserId();
+
+        $candidates = ProposalCandidate::with('post')
+            ->where('interviewerUserId', $userId)
+            ->orderByDesc('interviewDate')
+            ->orderByDesc('createdDate')
+            ->get()
+            ->map(function (ProposalCandidate $candidate) {
+                return [
+                    'id' => $candidate->id,
+                    'postId' => $candidate->postId,
+                    'postTitle' => $candidate->post?->title ?? '',
+                    'candidateName' => $candidate->candidateName,
+                    'candidateCode' => $candidate->candidateCode,
+                    'phone' => $candidate->phone,
+                    'email' => $candidate->email,
+                    'stage' => $candidate->stage,
+                    'interviewLevel' => $candidate->interviewLevel,
+                    'interviewDate' => $this->formatApiDateTime($candidate->interviewDate),
+                    'analysisNotes' => $candidate->analysisNotes,
+                    'rejectionReason' => $candidate->rejectionReason,
+                    'createdDate' => $this->formatApiDateTime($candidate->createdDate, $candidate->modifiedDate),
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'candidates' => $candidates,
+        ]);
+    }
+
+    public function updateAssignedInterview(Request $request, string $id)
+    {
+        $validated = $request->validate([
+            'stage' => 'nullable|string|in:interview_scheduled,approved,rejected,selected',
+            'analysisNotes' => 'nullable|string',
+            'rejectionReason' => 'required_if:stage,rejected|nullable|string|max:5000',
+        ]);
+
+        $userId = $this->getUserId();
+        $candidate = ProposalCandidate::with('post')->where('id', $id)->firstOrFail();
+
+        if (empty($candidate->interviewerUserId) || $candidate->interviewerUserId !== $userId) {
+            return response()->json(['message' => "You don't have right to access this interview."], 403);
+        }
+
+        if (array_key_exists('analysisNotes', $validated)) {
+            $candidate->analysisNotes = $validated['analysisNotes'];
+        }
+
+        if (array_key_exists('stage', $validated) && $validated['stage'] !== null) {
+            $candidate->stage = $validated['stage'];
+
+            if ($validated['stage'] === 'rejected') {
+                $candidate->rejectionReason = isset($validated['rejectionReason'])
+                    ? trim((string) $validated['rejectionReason'])
+                    : null;
+            } elseif (array_key_exists('rejectionReason', $validated)) {
+                $candidate->rejectionReason = $validated['rejectionReason'] !== null
+                    ? trim((string) $validated['rejectionReason'])
+                    : null;
+            }
+        }
+
+        $candidate->modifiedDate = Carbon::now();
+        $candidate->save();
+
+        return response()->json([
+            'id' => $candidate->id,
+            'postId' => $candidate->postId,
+            'postTitle' => $candidate->post?->title ?? '',
+            'candidateName' => $candidate->candidateName,
+            'candidateCode' => $candidate->candidateCode,
+            'phone' => $candidate->phone,
+            'email' => $candidate->email,
+            'stage' => $candidate->stage,
+            'interviewLevel' => $candidate->interviewLevel,
+            'interviewDate' => $this->formatApiDateTime($candidate->interviewDate),
+            'analysisNotes' => $candidate->analysisNotes,
+            'rejectionReason' => $candidate->rejectionReason,
+            'createdDate' => $this->formatApiDateTime($candidate->createdDate, $candidate->modifiedDate),
+        ]);
+    }
+
     public function createCategory(Request $request)
     {
         $validated = $request->validate([
