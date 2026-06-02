@@ -115,7 +115,16 @@ export const ROUTES: RouteInfo[] = [
     icon: 'briefcase',
     class: '',
     groupTitle: false,
-    claims: ['FILE_REQUEST_VIEW_FILE_REQUEST'],
+    claims: ['POST_MANAGEMENT_VIEW'],
+    submenu: [],
+  },
+  {
+    path: 'assigned-interviews',
+    title: 'ASSIGNED_INTERVIEWS',
+    icon: 'calendar',
+    class: '',
+    groupTitle: false,
+    claims: ['INTERVIEWS_VIEW_ASSIGNED'],
     submenu: [],
   },
   {
