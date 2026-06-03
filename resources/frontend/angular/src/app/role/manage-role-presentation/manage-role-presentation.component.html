@@ -39,7 +39,7 @@
                     </mat-checkbox>
                   </div>
                   <div class="row m-l-15">
-                    <div class="col-sm-3 row" *ngFor='let action of page.pageActions'>
+                    <div class="col-sm-3 row" *ngFor='let action of page.pageActions ?? []'>
                       <mat-checkbox color="primary" [checked]="checkPermission(action.id)"
                         (change)="onPermissionChange($any($event),page,action)">
                         {{action.name.replaceAll(' ', '_').toUpperCase() | translate}}

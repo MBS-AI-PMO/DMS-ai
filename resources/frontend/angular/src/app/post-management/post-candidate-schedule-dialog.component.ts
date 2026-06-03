@@ -14,7 +14,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { User } from '@core/domain-classes/user';
 import { CommonService } from '@core/services/common.service';
-import { NgSelectModule } from '@ng-select/ng-select';
 import { ToastrService } from 'ngx-toastr';
 import { BaseComponent } from '../base.component';
 
@@ -50,7 +49,6 @@ export interface PostCandidateScheduleDialogResult {
     MatSelectModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    NgSelectModule,
   ],
   template: `
     <h2 mat-dialog-title>{{ data.isReschedule ? 'Reschedule interview' : 'Approval form' }}</h2>
@@ -105,20 +103,20 @@ export interface PostCandidateScheduleDialogResult {
         Selected time: <strong>{{ formatTimeDisplay() }}</strong>
       </p>
 
-      <div class="mb-3">
-        <label class="small text-muted d-block mb-1">Interviewer</label>
-        <ng-select
+      <mat-form-field appearance="outline" class="w-100 mb-3">
+        <mat-label>Interviewer</mat-label>
+        <mat-select
           [(ngModel)]="interviewerUserId"
-          [items]="users"
-          bindLabel="displayName"
-          bindValue="id"
-          [searchable]="true"
-          [clearable]="false"
-          placeholder="Search and select user"
-          notFoundText="No users found"
-          appendTo="body">
-        </ng-select>
-      </div>
+          required
+          panelClass="pm-schedule-select-panel"
+          placeholder="Select user">
+          <mat-option *ngIf="usersLoading" disabled>Loading users…</mat-option>
+          <mat-option *ngIf="!usersLoading && users.length === 0" disabled>No users found</mat-option>
+          <mat-option *ngFor="let user of users" [value]="user.id">
+            {{ user.displayName }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
 
       <div class="mb-2">
         <div class="small text-muted mb-1">Interview kit level</div>
@@ -164,6 +162,7 @@ export class PostCandidateScheduleDialogComponent extends BaseComponent implemen
   interviewPeriod: InterviewPeriod = 'AM';
   interviewerUserId: string | null = null;
   users: (User & { displayName: string })[] = [];
+  usersLoading = true;
   interviewLevel: InterviewLevel;
 
   constructor(
@@ -191,15 +190,20 @@ export class PostCandidateScheduleDialogComponent extends BaseComponent implemen
   ngOnInit(): void {
     this.sub$.sink = this.commonService.getUsersForDropdown().subscribe({
       next: (users) => {
+        this.usersLoading = false;
         if (!Array.isArray(users)) {
+          this.users = [];
           return;
         }
-        this.users = users.map((user) => ({
-          ...user,
-          displayName: this.formatUserLabel(user),
-        }));
+        this.users = users
+          .filter((user) => !!user.id)
+          .map((user) => ({
+            ...user,
+            displayName: this.formatUserLabel(user),
+          }));
       },
       error: () => {
+        this.usersLoading = false;
         this.toastr.error('Could not load user list.');
       },
     });

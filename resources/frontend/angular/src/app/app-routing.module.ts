@@ -261,6 +261,15 @@ const routes: Routes = [
               ),
           },
           {
+            path: 'assigned-interviews/:candidateId/history',
+            data: { claimType: 'INTERVIEWS_VIEW_ASSIGNED' },
+            canActivate: [AuthGuard],
+            loadComponent: () =>
+              import('./interviews/assigned-interview-history.component').then(
+                (m) => m.AssignedInterviewHistoryComponent
+              ),
+          },
+          {
             path: 'languages',
             loadChildren: () =>
               import('./languages/languages.module').then(

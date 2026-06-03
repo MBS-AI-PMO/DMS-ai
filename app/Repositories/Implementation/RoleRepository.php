@@ -38,9 +38,14 @@ class RoleRepository extends BaseRepository implements RoleRepositoryInterface
 
     public function findRole($id)
     {
-        $model = $this->model->with('roleclaims')->findOrFail($id);
+        $model = $this->model->with('roleClaims')->findOrFail($id);
         $this->resetModel();
-        return $this->parseResult($model);
+        $result = $this->parseResult($model);
+        if ($result instanceof Roles) {
+            $result->setRelation('roleClaims', $model->roleClaims);
+        }
+
+        return $result;
     }
 
     public function createRole(array $attributes)

@@ -209,8 +209,8 @@ export class PostCandidatesComponent extends BaseComponent implements OnInit {
     const isReschedule = this.canRescheduleInterview(candidate);
     const ref = this.dialog.open(PostCandidateScheduleDialogComponent, {
       width: isReschedule ? '520px' : '480px',
-      autoFocus: true,
-      restoreFocus: true,
+      autoFocus: false,
+      restoreFocus: false,
       data: {
         candidateName: candidate.candidateName,
         defaultInterviewLevel: this.getAutoInterviewLevel(candidate),

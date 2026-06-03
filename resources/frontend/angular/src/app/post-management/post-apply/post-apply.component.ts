@@ -7,19 +7,16 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { BaseComponent } from '../../base.component';
-
-type WorkMode = 'remote' | 'physical';
 
 interface PublicPost {
   id: string;
   title: string;
   department?: string;
   experienceYears?: number;
-  workMode?: WorkMode;
+  workMode?: string;
   address?: string;
   description?: string;
 }
@@ -35,7 +32,6 @@ interface PublicPost {
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
-    MatSelectModule,
   ],
   templateUrl: './post-apply.component.html',
   styleUrl: './post-apply.component.scss',
@@ -52,11 +48,10 @@ export class PostApplyComponent extends BaseComponent implements OnInit {
   phone = '';
   email = '';
   experienceYears: number | null = null;
-  workMode: WorkMode = 'physical';
-  address = '';
   cv: File | null = null;
   submitted = false;
   loading = false;
+  loadError = '';
   cnicTouched = false;
 
   ngOnInit(): void {
@@ -66,10 +61,12 @@ export class PostApplyComponent extends BaseComponent implements OnInit {
 
   loadPost(): void {
     if (!this.postId) {
+      this.loadError = 'Invalid application link.';
       return;
     }
 
     this.loading = true;
+    this.loadError = '';
     this.sub$.sink = this.httpClient
       .get<PublicPost>(`proposal-management/posts/${this.postId}/apply`)
       .subscribe({
@@ -77,8 +74,10 @@ export class PostApplyComponent extends BaseComponent implements OnInit {
           this.post = post;
           this.loading = false;
         },
-        error: () => {
+        error: (err: { error?: { message?: string } }) => {
           this.loading = false;
+          this.loadError =
+            err?.error?.message || 'This job post is not available or the link has expired.';
         },
       });
   }
@@ -145,8 +144,6 @@ export class PostApplyComponent extends BaseComponent implements OnInit {
     formData.append('phone', this.phone.trim());
     formData.append('email', this.email.trim());
     formData.append('experienceYears', String(this.experienceYears));
-    formData.append('workMode', this.workMode);
-    formData.append('address', this.workMode === 'physical' ? this.address.trim() : '');
     formData.append('cv', this.cv as File);
 
     this.sub$.sink = this.httpClient
@@ -177,8 +174,6 @@ export class PostApplyComponent extends BaseComponent implements OnInit {
       || this.experienceYears === null
       || this.experienceYears === undefined
       || this.experienceYears < 0
-      || !this.workMode
-      || (this.workMode === 'physical' && !this.address.trim())
       || !this.cv
     );
   }

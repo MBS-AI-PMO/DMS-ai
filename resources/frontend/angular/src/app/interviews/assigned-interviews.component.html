@@ -1,0 +1,254 @@
+<section class="content pm-module">
+
+  <div class="content-block">
+
+    <div class="pm-page-header">
+
+      <div>
+
+        <span class="page-title">{{ 'ASSIGNED_INTERVIEWS' | translate }}</span>
+
+        <p class="pm-page-subtitle">
+
+          Interviews assigned to you as interviewer (from Post Management → Schedule interview).
+
+        </p>
+
+      </div>
+
+      <button mat-stroked-button class="pm-btn-primary-outline" type="button" (click)="load()" [disabled]="loading">
+
+        <mat-icon>refresh</mat-icon> Refresh
+
+      </button>
+
+    </div>
+
+
+
+    <mat-card class="pm-card mat-elevation-z0">
+
+      <div class="pm-card-toolbar">
+
+        <h6 class="pm-card-title">
+
+          <mat-icon>event</mat-icon> My interviews
+
+        </h6>
+
+        <span class="pm-badge-count" *ngIf="!loading">{{ filtered.length }}</span>
+
+      </div>
+
+
+
+      <div class="pm-card-body">
+
+        <div class="pm-toolbar-row">
+
+          <mat-form-field appearance="outline" class="pm-search-field" subscriptSizing="dynamic">
+
+            <mat-label>Search</mat-label>
+
+            <input
+
+              matInput
+
+              [(ngModel)]="search"
+
+              (ngModelChange)="onSearchChange()"
+
+              placeholder="Candidate, post, or CNIC"
+
+            />
+
+          </mat-form-field>
+
+        </div>
+
+
+
+        <div *ngIf="loading" class="pm-loading">
+
+          <mat-spinner diameter="36"></mat-spinner>
+
+        </div>
+
+
+
+        <div class="pm-table-wrap" *ngIf="!loading && filtered.length > 0">
+
+          <table class="table pm-table ai-table">
+
+            <thead>
+
+              <tr>
+
+                <th>Candidate</th>
+
+                <th>Post / Interview</th>
+
+                <th>Status</th>
+
+                <th class="text-end">Actions</th>
+
+              </tr>
+
+            </thead>
+
+            <tbody>
+
+              <tr *ngFor="let row of paginatedRows" [class.opacity-50]="savingId === row.id">
+
+                <td>
+
+                  <div class="pm-candidate-name">{{ row.candidateName }}</div>
+
+                  <div class="pm-post-desc">{{ row.candidateCode || '—' }}</div>
+
+                  <div class="pm-post-desc" *ngIf="row.phone || row.email">
+
+                    {{ row.phone || '' }}{{ row.email ? ' · ' + row.email : '' }}
+
+                  </div>
+
+                </td>
+
+                <td>
+
+                  <div class="pm-post-title">{{ row.postTitle || '—' }}</div>
+
+                  <div class="pm-post-desc">{{ formatDisplayDate(row.interviewDate) }}</div>
+
+                  <span class="pm-chip" *ngIf="row.interviewLevel">{{ row.interviewLevel }}</span>
+
+                </td>
+
+                <td>
+
+                  <select
+
+                    class="form-select form-select-sm pm-inline-select"
+
+                    [ngModel]="row.stage"
+
+                    (ngModelChange)="onStageChange(row, $event)"
+
+                    [disabled]="savingId === row.id"
+
+                  >
+
+                    <option value="interview_scheduled">Scheduled</option>
+
+                    <option value="approved">Approved</option>
+
+                    <option value="rejected">Rejected</option>
+
+                    <option value="selected">Selected</option>
+
+                  </select>
+
+                </td>
+
+                <td class="text-end">
+
+                  <div class="pm-actions justify-content-end">
+
+                    <button
+
+                      mat-icon-button
+
+                      class="pm-icon-btn"
+
+                      type="button"
+
+                      matTooltip="Interview details"
+
+                      (click)="openDetails(row)"
+
+                      [disabled]="savingId === row.id"
+
+                    >
+
+                      <mat-icon>visibility</mat-icon>
+
+                    </button>
+
+                    <button
+
+                      mat-icon-button
+
+                      class="pm-icon-btn"
+
+                      type="button"
+
+                      matTooltip="Candidate history"
+
+                      (click)="openHistory(row)"
+
+                    >
+
+                      <mat-icon>history</mat-icon>
+
+                    </button>
+
+                  </div>
+
+                </td>
+
+              </tr>
+
+            </tbody>
+
+          </table>
+
+
+
+          <mat-paginator
+
+            class="pm-paginator"
+
+            [length]="filtered.length"
+
+            [pageIndex]="pageIndex"
+
+            [pageSize]="pageSize"
+
+            [pageSizeOptions]="pageSizeOptions"
+
+            (page)="onPage($event)"
+
+            showFirstLastButtons
+
+            aria-label="Assigned interviews pagination"
+
+          ></mat-paginator>
+
+        </div>
+
+
+
+        <div *ngIf="!loading && filtered.length === 0" class="pm-empty-state">
+
+          <mat-icon class="pm-empty-icon">event_busy</mat-icon>
+
+          <p class="pm-empty-title">No assigned interviews</p>
+
+          <p class="pm-empty-hint">
+
+            Admin opens <strong>Post Management</strong>, schedules a candidate, and selects
+
+            <strong>you</strong> as interviewer. Then refresh this page.
+
+          </p>
+
+        </div>
+
+      </div>
+
+    </mat-card>
+
+  </div>
+
+</section>
+

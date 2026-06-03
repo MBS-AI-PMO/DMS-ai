@@ -4,7 +4,21 @@
       <ng-scrollbar [style.height]="listMaxHeight + 'px'" visibility="hover">
         <ul id="sidebarnav" class="list">
           <ng-container *ngFor="let sidebarItem of sidebarItems">
-            <ng-container *ngIf="sidebarItem.claims.length === 0">
+            <ng-container *ngIf="sidebarItem.roles?.length">
+              <li *hasRole="sidebarItem.roles" [routerLinkActiveOptions]="{exact: true}"
+                [routerLinkActive]="sidebarItem.submenu.length !== 0 ? 'active' : 'active-top'">
+                <div class="header" *ngIf="sidebarItem.groupTitle === true">{{sidebarItem.title | translate}}</div>
+                <a [routerLink]="sidebarItem.class === '' ? [sidebarItem.path] : null" *ngIf="!sidebarItem.groupTitle;"
+                  [ngClass]="[sidebarItem.class]" class="menu-top"
+                  (click)="callToggleMenu($event, sidebarItem.submenu.length)">
+                  <i-feather [name]="sidebarItem.icon" class="sidebarIcon"></i-feather>
+                  <span class="hide-menu">{{sidebarItem.title | translate}}
+                  </span>
+                </a>
+              </li>
+            </ng-container>
+
+            <ng-container *ngIf="!sidebarItem.roles?.length && sidebarItem.claims.length === 0">
               <li [routerLinkActiveOptions]="{exact: true}"
                 [routerLinkActive]="sidebarItem.submenu.length !== 0 ? 'active' : 'active-top'">
                 <div class="header" *ngIf="sidebarItem.groupTitle === true">{{sidebarItem.title | translate}}</div>
@@ -18,7 +32,7 @@
               </li>
             </ng-container>
 
-            <ng-container *ngIf="sidebarItem.claims.length > 0">
+            <ng-container *ngIf="!sidebarItem.roles?.length && sidebarItem.claims.length > 0">
               <li *hasClaim="sidebarItem.claims" [routerLinkActiveOptions]="{exact: true}"
                 [routerLinkActive]="sidebarItem.submenu.length !== 0 ? 'active' : 'active-top'">
                 <div class="header" *ngIf="sidebarItem.groupTitle === true">{{sidebarItem.title | translate}}</div>

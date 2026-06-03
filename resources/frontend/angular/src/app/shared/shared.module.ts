@@ -6,6 +6,7 @@ import { OverlayModule } from '@angular/cdk/overlay';
 import { NgxExtendedPdfViewerModule } from 'ngx-extended-pdf-viewer';
 import { BasePreviewComponent } from './base-preview/base-preview.component';
 import { HasClaimDirective } from './has-claim.directive';
+import { HasRoleDirective } from './has-role.directive';
 import { PipesModule } from './pipes/pipes.module';
 import { ImagePreviewComponent } from './image-preview/image-preview.component';
 import { OfficeViewerComponent } from './office-viewer/office-viewer.component';
@@ -29,6 +30,7 @@ import { MatButtonModule } from '@angular/material/button';
 @NgModule({
   declarations: [
     HasClaimDirective,
+    HasRoleDirective,
     ImagePreviewComponent,
     BasePreviewComponent,
     PdfViewerComponent,
@@ -65,6 +67,7 @@ import { MatButtonModule } from '@angular/material/button';
     MaterialModule,
     FeatherIconsModule,
     HasClaimDirective,
+    HasRoleDirective,
     OverlayModule,
     ImagePreviewComponent,
     BasePreviewComponent,

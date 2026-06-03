@@ -7,7 +7,7 @@ import {
 } from '@angular/router';
 import { CompanyProfile } from '@core/domain-classes/company-profile';
 import { Observable, of } from 'rxjs';
-import { take, mergeMap } from 'rxjs/operators';
+import { catchError, mergeMap, take } from 'rxjs/operators';
 import { CompanyProfileService } from './company-profile.service';
 import { environment } from '@environments/environment';
 import { SecurityService } from '@core/security/security.service';
@@ -24,7 +24,9 @@ export class CompanyProfileResolver implements Resolve<CompanyProfile> {
   resolve(
     route: ActivatedRouteSnapshot,
     state: RouterStateSnapshot
-  ): Observable<CompanyProfile> | null {
+  ): Observable<CompanyProfile> {
+    const isPublicApply = state.url.includes('/post-apply');
+
     return this.companyProfileService.getCompanyProfile().pipe(
       take(1),
       mergeMap((companyProfile: CompanyProfile) => {
@@ -45,11 +47,24 @@ export class CompanyProfileResolver implements Resolve<CompanyProfile> {
             });
           }
           return of(companyProfile);
-        } else {
-          this.router.navigate(['/dashboard']);
-          return null;
         }
-      })
+
+        if (!isPublicApply) {
+          this.router.navigate(['/dashboard']);
+        }
+        return of(this.fallbackProfile());
+      }),
+      catchError(() => of(this.fallbackProfile()))
     );
+  }
+
+  private fallbackProfile(): CompanyProfile {
+    return {
+      title: 'Document Management',
+      location: 'local',
+      isS3Supported: false,
+      allowPdfSignature: true,
+      languages: [],
+    };
   }
 }

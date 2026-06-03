@@ -54,7 +54,14 @@ class RoleController extends Controller
      */
     public function edit($id)
     {
-        return response()->json($this->roleRepository->findRole($id));
+        $role = $this->roleRepository->findRole($id);
+
+        return response()->json([
+            'id' => $role->id,
+            'name' => $role->name,
+            'roleClaims' => $role->roleClaims ?? [],
+            'userRoles' => $role->userRoles ?? [],
+        ]);
     }
 
     /**

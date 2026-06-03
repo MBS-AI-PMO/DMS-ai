@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { Action } from '@core/domain-classes/action';
 import { Page } from '@core/domain-classes/page';
 import { Role } from '@core/domain-classes/role';
+import { RoleClaim } from '@core/domain-classes/role-claim';
 import { BaseComponent } from 'src/app/base.component';
 import { TranslationService } from '@core/services/translation.service';
 import { MatCheckboxChange } from '@angular/material/checkbox';
@@ -22,10 +23,11 @@ export class ManageRolePresentationComponent extends BaseComponent {
   }
 
   onPageSelect(event: MatCheckboxChange, page: Page) {
+    const claims = this.ensureRoleClaims();
     if (event.checked) {
-      page.pageActions.forEach((action) => {
+      (page.pageActions ?? []).forEach((action) => {
         if (!this.checkPermission(action.id)) {
-          this.role.roleClaims.push({
+          claims.push({
             roleId: this.role.id,
             claimType: action.code,
             claimValue: '',
@@ -34,19 +36,20 @@ export class ManageRolePresentationComponent extends BaseComponent {
         }
       });
     } else {
-      const actions = page.pageActions?.map((c) => c.id);
-      this.role.roleClaims = this.role.roleClaims.filter(
+      const actions = (page.pageActions ?? []).map((c) => c.id);
+      this.role.roleClaims = claims.filter(
         (c) => actions.indexOf(c.actionId) < 0
       );
     }
   }
 
   selecetAll(event: MatCheckboxChange) {
+    const claims = this.ensureRoleClaims();
     if (event.checked) {
       this.pages.forEach((page) => {
-        page.pageActions.forEach((action) => {
+        (page.pageActions ?? []).forEach((action) => {
           if (!this.checkPermission(action.id)) {
-            this.role.roleClaims.push({
+            claims.push({
               roleId: this.role.id,
               claimType: action.code,
               claimValue: '',
@@ -60,8 +63,18 @@ export class ManageRolePresentationComponent extends BaseComponent {
     }
   }
 
+  private ensureRoleClaims(): RoleClaim[] {
+    if (!this.role) {
+      return [];
+    }
+    if (!this.role.roleClaims) {
+      this.role.roleClaims = [];
+    }
+    return this.role.roleClaims;
+  }
+
   checkPermission(actionId: string): boolean {
-    const pageAction = this.role.roleClaims.find(
+    const pageAction = this.ensureRoleClaims().find(
       (c) => c.actionId === actionId
     );
     if (pageAction) {
@@ -72,20 +85,19 @@ export class ManageRolePresentationComponent extends BaseComponent {
   }
 
   onPermissionChange(flag: MatSlideToggleChange, page: Page, action: Action) {
+    const claims = this.ensureRoleClaims();
     if (flag.checked) {
-      this.role.roleClaims.push({
+      claims.push({
         roleId: this.role.id,
         claimType: action.code,
         claimValue: '',
         actionId: action.id,
       });
     } else {
-      const roleClaimToRemove = this.role.roleClaims.find(
-        (c) => c.actionId === action.id
-      );
-      const index = this.role.roleClaims.indexOf(roleClaimToRemove, 0);
+      const roleClaimToRemove = claims.find((c) => c.actionId === action.id);
+      const index = claims.indexOf(roleClaimToRemove, 0);
       if (index > -1) {
-        this.role.roleClaims.splice(index, 1);
+        claims.splice(index, 1);
       }
     }
   }

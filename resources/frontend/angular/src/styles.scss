@@ -6,4 +6,10 @@
   @import "assets/scss/variables.scss";
   @import "app/post-management/post-management-shared.scss";
 
+// Standalone routes: ensure content clears fixed sidebar (same as general.scss section.content)
+app-assigned-interviews,
+app-assigned-interview-history {
+  display: block;
+}
+
   

@@ -68,6 +68,20 @@ Import once: `database/sql/proposal_categories_departments.sql`
 
 Creates `proposalcategories`, `proposaldepartments`, adds `departmentId` on `proposalposts`.
 
+### Assigned Interviews (interviewer sidebar tab)
+
+No extra permissions SQL. Sidebar uses **user role name** from `roles` table:
+
+- **Super Admin** → Post Management tab
+- **Employee** → Assigned Interviews tab
+
+1. Upload backend: `AuthController.php`, `ProposalManagementController.php`, `routes/api.php`.
+2. Build + upload Angular (see above).
+3. Interviewer user must have **Employee** role in `userroles` (Roles → assign user).
+4. **Logout + login** once (so `roleNames` is stored in browser).
+
+Direct URL: `https://your-domain/assigned-interviews` (Employee role only).
+
 ### After upload — browser
 
 Hard refresh: **Ctrl + F5** (or clear cache). Old `main-XXXX.js` is cached easily.

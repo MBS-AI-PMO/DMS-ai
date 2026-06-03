@@ -1,0 +1,103 @@
+// Match main layout offset (sidebar is fixed ~260px; header ~70px)
+:host {
+  display: block;
+  width: 100%;
+}
+
+:host section.content {
+  box-sizing: border-box;
+  margin: 70px 15px 0 276px;
+  min-height: calc(100vh - 76px);
+  transition: margin 0.5s;
+}
+
+:host-context(body.ls-closed) section.content {
+  margin-left: 15px;
+}
+
+:host-context(body.side-closed.submenu-closed) section.content {
+  margin-left: 75px;
+}
+
+:host-context(body.side-closed.side-closed-hover) section.content {
+  margin-left: 276px;
+}
+
+@media (min-width: 768px) and (max-width: 1169px) {
+  :host section.content {
+    margin: 65px 15px 0 276px;
+  }
+}
+
+@media (max-width: 767px) {
+  :host section.content {
+    margin: 65px 10px 0 10px;
+  }
+}
+
+.pm-card-body {
+  padding: 16px 20px 20px;
+}
+
+.pm-toolbar-row {
+  margin-bottom: 16px;
+}
+
+.pm-search-field {
+  width: 100%;
+  max-width: 420px;
+}
+
+.pm-loading {
+  display: flex;
+  justify-content: center;
+  padding: 48px 0;
+}
+
+.pm-inline-select {
+  max-width: 160px;
+  min-width: 140px;
+}
+
+.pm-paginator {
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.pm-empty-state {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.pm-empty-icon {
+  color: #94a3b8;
+  font-size: 48px;
+  height: 48px;
+  width: 48px;
+  margin-bottom: 12px;
+}
+
+.pm-empty-title {
+  color: #0f172a;
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+
+.pm-empty-hint {
+  color: #64748b;
+  font-size: 0.875rem;
+  margin: 0;
+  max-width: 480px;
+}
+
+.pm-btn-primary-outline mat-icon {
+  font-size: 18px;
+  height: 18px;
+  width: 18px;
+  margin-right: 4px;
+  vertical-align: middle;
+}

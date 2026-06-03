@@ -10,10 +10,8 @@ import {
   HostListener,
   OnDestroy,
 } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { ROUTES } from './sidebar-items';
 import { RouteInfo } from './sidebar.metadata';
-import { SecurityService } from '@core/security/security.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -32,9 +30,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     @Inject(DOCUMENT) private document: Document,
     private renderer: Renderer2,
     public elementRef: ElementRef,
-    private router: Router,
-    private securityService: SecurityService,
-    private httpClient: HttpClient
+    private router: Router
   ) {
     this.routerObj = this.router.events.subscribe((event) => {
       if (event instanceof NavigationEnd) {
@@ -57,34 +53,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.sidebarItems = ROUTES;
-    this.filterAssignedInterviewsMenu();
     this.initLeftSidebar();
     this.bodyTag = this.document.body;
-  }
-
-  private filterAssignedInterviewsMenu(): void {
-    if (!this.securityService.hasClaim('INTERVIEWS_VIEW_ASSIGNED')) {
-      return;
-    }
-
-    this.httpClient
-      .get<{ candidates?: unknown[] }>('proposal-management/assigned-interviews')
-      .subscribe({
-        next: (resp) => {
-          const hasAssignments = (resp?.candidates?.length ?? 0) > 0;
-          if (hasAssignments) {
-            return;
-          }
-          this.sidebarItems = this.sidebarItems.filter(
-            (item) => item.path !== 'assigned-interviews'
-          );
-        },
-        error: () => {
-          this.sidebarItems = this.sidebarItems.filter(
-            (item) => item.path !== 'assigned-interviews'
-          );
-        },
-      });
   }
   ngOnDestroy() {
     this.routerObj.unsubscribe();
