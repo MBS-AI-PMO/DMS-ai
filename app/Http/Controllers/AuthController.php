@@ -116,6 +116,7 @@ class AuthController extends Controller
         }
 
         $user->claims = $userclaims;
+        $userRoles = $this->resolveUserRoles($user->id);
 
         return response()->json([
             'status' => 'success',
@@ -126,7 +127,9 @@ class AuthController extends Controller
                 'lastName' => $user->lastName,
                 'email' => $user->email,
                 'userName' => $user->userName,
-                'phoneNumber' => $user->phoneNumber
+                'phoneNumber' => $user->phoneNumber,
+                'roleIds' => $userRoles['roleIds'],
+                'roleNames' => $userRoles['roleNames'],
             ],
             'authorisation' => [
                 'token' => $token,
@@ -188,6 +191,27 @@ class AuthController extends Controller
         sort($userclaims);
 
         return $userclaims;
+    }
+
+    private function resolveUserRoles(string $userId): array
+    {
+        $userrolesTable = TableName::resolve('userRoles') ?? 'userroles';
+        $rolesTable = TableName::resolve('roles') ?? 'roles';
+
+        if (!TableName::has('userRoles') || !TableName::has('roles')) {
+            return ['roleIds' => [], 'roleNames' => []];
+        }
+
+        $rows = DB::table($userrolesTable)
+            ->join($rolesTable, $rolesTable . '.id', '=', $userrolesTable . '.roleId')
+            ->where($userrolesTable . '.userId', '=', $userId)
+            ->select($rolesTable . '.id as id', $rolesTable . '.name as name')
+            ->get();
+
+        return [
+            'roleIds' => $rows->pluck('id')->values()->all(),
+            'roleNames' => $rows->pluck('name')->values()->all(),
+        ];
     }
 
     private function resetLoginDebug(): void
@@ -408,6 +432,7 @@ class AuthController extends Controller
         $user = $this->userRepository->findUser($userId);
         $license = $this->getLicenseFromCompanyProfile();
         $userclaims = $this->resolveUserClaims($user->id);
+        $userRoles = $this->resolveUserRoles($user->id);
         $user->claims = $userclaims;
 
         $token = Auth::claims(array_merge([
@@ -425,7 +450,9 @@ class AuthController extends Controller
                 'lastName' => $user->lastName,
                 'email' => $user->email,
                 'userName' => $user->userName,
-                'phoneNumber' => $user->phoneNumber
+                'phoneNumber' => $user->phoneNumber,
+                'roleIds' => $userRoles['roleIds'],
+                'roleNames' => $userRoles['roleNames'],
             ],
             'authorisation' => [
                 'token' => $token,

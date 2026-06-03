@@ -18,7 +18,14 @@ export class AuthGuard {
     state: RouterStateSnapshot
   ): Observable<boolean> | Promise<boolean> | boolean {
     if (this.securityService.isLogin()) {
-      const claimType: string = next.data["claimType"];
+      const roleNames = next.data['roleNames'] as string | string[] | undefined;
+      if (roleNames && !this.securityService.hasRole(roleNames)) {
+        this.toastr.error(`You don't have right to access this page`);
+        this.router.navigate(['/']);
+        return false;
+      }
+
+      const claimType: string = next.data['claimType'];
       if (claimType) {
         if (!this.securityService.hasClaim(claimType)) {
           this.toastr.error(`You don't have right to access this page`);

@@ -6,7 +6,7 @@ use Ramsey\Uuid\Uuid;
 use App\Models\Roles;
 use App\Models\Users;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 use App\Traits\Uuids;
 
@@ -37,7 +37,9 @@ class UserRoles extends BaseModel
         parent::boot();
 
         static::creating(function (Model $model) {
-            $model->setAttribute($model->getKeyName(), Uuid::uuid4());
+            if (empty($model->getKey())) {
+                $model->setAttribute($model->getKeyName(), Uuid::uuid4()->toString());
+            }
         });
     }
 }

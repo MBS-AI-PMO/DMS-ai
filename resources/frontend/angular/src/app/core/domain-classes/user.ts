@@ -12,4 +12,5 @@ export interface User {
   userRoles?: UserRoles[];
   userClaims?: UserClaim[];
   roleIds?: string[];
+  roleNames?: string[];
 }

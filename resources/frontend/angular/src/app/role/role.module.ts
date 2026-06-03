@@ -14,6 +14,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 import { NgSelectModule } from '@ng-select/ng-select';
 
@@ -35,6 +36,7 @@ import { NgSelectModule } from '@ng-select/ng-select';
     SharedModule,
     MatExpansionModule,
     MatCheckboxModule,
+    MatProgressSpinnerModule,
     NgSelectModule
   ],
   providers: [RoleDetailResolverService],

@@ -413,13 +413,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/proposal-management/candidates/{id}/cv', [ProposalManagementController::class, 'openCandidateCv']);
     });
 
-    Route::group(['middleware' => ['hasToken:INTERVIEWS_VIEW_ASSIGNED']], function () {
-        Route::get('/proposal-management/assigned-interviews', [ProposalManagementController::class, 'assignedInterviews']);
-    });
-
-    Route::group(['middleware' => ['hasToken:INTERVIEWS_UPDATE_ASSIGNED']], function () {
-        Route::put('/proposal-management/assigned-interviews/{id}', [ProposalManagementController::class, 'updateAssignedInterview']);
-    });
+    // Assigned interviews: auth only (access enforced by interviewerUserId in controller).
+    Route::get('/proposal-management/assigned-interviews', [ProposalManagementController::class, 'assignedInterviews']);
+    Route::get('/proposal-management/assigned-interviews/{id}/history', [ProposalManagementController::class, 'assignedInterviewHistory']);
+    Route::put('/proposal-management/assigned-interviews/{id}', [ProposalManagementController::class, 'updateAssignedInterview']);
 
     Route::group(['middleware' => ['hasToken:FILE_REQUEST_UPDATE_FILE_REQUEST,FILE_REQUEST_VIEW_FILE_REQUEST']], function () {
         Route::get('/file-request/{id}', [FileRequestController::class, 'get']);

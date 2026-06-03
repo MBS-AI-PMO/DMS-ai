@@ -16,8 +16,9 @@ import { Page } from '@core/domain-classes/page';
   styleUrls: ['./manage-role.component.css'],
 })
 export class ManageRoleComponent extends BaseComponent implements OnInit {
-  pages: Page[];
+  pages: Page[] = [];
   role: Role;
+  loading = true;
 
   constructor(
     private activeRoute: ActivatedRoute,
@@ -33,27 +34,39 @@ export class ManageRoleComponent extends BaseComponent implements OnInit {
 
   ngOnInit(): void {
     this.sub$.sink = this.activeRoute.data.subscribe((data: { role: Role }) => {
-      if (data.role) {
-        this.role = data.role;
-      } else {
-        this.role = {
-          roleClaims: [],
-          userRoles: [],
-        };
-      }
+      this.role = data.role ? this.normalizeRole(data.role) : this.emptyRole();
     });
     const getActionRequest = this.actionService.getAll();
     const getPageRequest = this.pageService.getAll();
-    forkJoin({ getActionRequest, getPageRequest }).subscribe((response) => {
-      this.pages = response.getPageRequest;
-      this.pages = this.pages.map((p: Page) => {
-        const pageActions = response.getActionRequest.filter(
-          (c) => c.pageId == p.id
-        );
-        const result = Object.assign({}, p, { pageActions: pageActions });
-        return result;
-      });
+    this.sub$.sink = forkJoin({ getActionRequest, getPageRequest }).subscribe({
+      next: (response) => {
+        const actions = response.getActionRequest ?? [];
+        this.pages = (response.getPageRequest ?? []).map((p: Page) => ({
+          ...p,
+          pageActions: actions.filter((c) => c.pageId == p.id),
+        }));
+        this.loading = false;
+      },
+      error: () => {
+        this.loading = false;
+      },
     });
+  }
+
+  private emptyRole(): Role {
+    return { roleClaims: [], userRoles: [] };
+  }
+
+  private normalizeRole(role: Role): Role {
+    const raw = role as Role & {
+      role_claims?: Role['roleClaims'];
+      roleclaims?: Role['roleClaims'];
+    };
+    return {
+      ...role,
+      roleClaims: raw.roleClaims ?? raw.role_claims ?? raw.roleclaims ?? [],
+      userRoles: role.userRoles ?? [],
+    };
   }
   manageRole(role: Role): void {
     if (!role.name) {

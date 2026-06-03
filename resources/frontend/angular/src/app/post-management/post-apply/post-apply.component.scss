@@ -71,6 +71,15 @@
   padding: 8px 12px;
 }
 
+.apply-loading,
+.apply-error {
+  mat-icon {
+    font-size: 48px;
+    height: 48px;
+    width: 48px;
+  }
+}
+
 .submitted-state {
   color: #334155;
   padding: 44px 16px;

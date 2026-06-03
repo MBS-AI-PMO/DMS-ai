@@ -195,6 +195,29 @@ export class SecurityService {
     return ret;
   }
 
+  private static readonly ROLE_NAME_TO_ID: Record<string, string> = {
+    'super admin': 'f8b6ace9-a625-4397-bdf8-f34060dbd8e4',
+    employee: 'ff635a8f-4bb3-4d70-a3ed-c7749030696c',
+  };
+
+  hasRole(roleNames: string | string[]): boolean {
+    const user = this.getUserDetail();
+    if (!user) {
+      return false;
+    }
+    const names = (user.roleNames ?? []).map((n) => n.toLowerCase());
+    const ids = user.roleIds ?? [];
+    const required = typeof roleNames === 'string' ? [roleNames] : roleNames;
+    return required.some((r) => {
+      const key = r.toLowerCase();
+      if (names.includes(key)) {
+        return true;
+      }
+      const roleId = SecurityService.ROLE_NAME_TO_ID[key];
+      return roleId ? ids.includes(roleId) : false;
+    });
+  }
+
   getUserDetail(): User {
     const userJson = this.licenseValidatorService.getAuthObject();
     return userJson;

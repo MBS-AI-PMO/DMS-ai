@@ -175,6 +175,27 @@ class ProposalManagementController extends Controller
         ]);
     }
 
+    public function assignedInterviewHistory(string $id)
+    {
+        $userId = $this->getUserId();
+        $candidate = ProposalCandidate::with('post')->where('id', $id)->firstOrFail();
+
+        if (empty($candidate->interviewerUserId) || $candidate->interviewerUserId !== $userId) {
+            return response()->json(['message' => "You don't have right to access this interview."], 403);
+        }
+
+        return response()->json([
+            'candidateName' => $candidate->candidateName,
+            'candidateCode' => $candidate->candidateCode,
+            'phone' => $candidate->phone,
+            'email' => $candidate->email,
+            'postTitle' => $candidate->post?->title ?? '',
+            'stage' => $candidate->stage,
+            'createdDate' => $this->formatApiDateTime($candidate->createdDate, $candidate->modifiedDate),
+            'history' => $this->buildCandidateHistory($candidate),
+        ]);
+    }
+
     public function updateAssignedInterview(Request $request, string $id)
     {
         $validated = $request->validate([
@@ -528,8 +549,8 @@ class ProposalManagementController extends Controller
             'phone' => 'required|string|max:50',
             'email' => 'required|email|max:255',
             'experienceYears' => 'required|integer|min:0|max:60',
-            'workMode' => 'required|string|in:remote,physical',
-            'address' => 'nullable|string|max:500|required_if:workMode,physical',
+            'workMode' => 'nullable|string|in:remote,physical',
+            'address' => 'nullable|string|max:500',
             'cv' => 'required|file',
         ]);
 
@@ -632,6 +653,7 @@ class ProposalManagementController extends Controller
             $candidate->interviewer = trim(
                 ($interviewerUser->firstName ?? '') . ' ' . ($interviewerUser->lastName ?? '')
             ) ?: $interviewerUser->userName;
+
         } elseif (array_key_exists('rejectionReason', $validated) && $validated['rejectionReason'] !== null) {
             $candidate->rejectionReason = trim((string) $validated['rejectionReason']);
         }
@@ -985,27 +1007,6 @@ class ProposalManagementController extends Controller
 
     private function mapCandidate(ProposalCandidate $candidate): array
     {
-        $historyQuery = ProposalCandidate::with('post')
-            ->where('createdBy', $candidate->createdBy)
-            ->where('id', '!=', $candidate->id);
-
-        $this->applyCandidateHistoryMatch($historyQuery, $candidate);
-
-        $history = $historyQuery
-            ->orderByDesc('createdDate')
-            ->limit(10)
-            ->get()
-            ->map(function (ProposalCandidate $historyCandidate) {
-                return [
-                    'postTitle' => $historyCandidate->post ? $historyCandidate->post->title : '',
-                    'stage' => $historyCandidate->stage,
-                    'createdDate' => $this->formatApiDateTime($historyCandidate->createdDate, $historyCandidate->modifiedDate),
-                    'interviewDate' => $this->formatApiDateTime($historyCandidate->interviewDate),
-                    'interviewer' => $historyCandidate->interviewer ?? null,
-                ];
-            })
-            ->values();
-
         return [
             'id' => $candidate->id,
             'postId' => $candidate->postId,
@@ -1027,8 +1028,33 @@ class ProposalManagementController extends Controller
             'analysisNotes' => $candidate->analysisNotes,
             'rejectionReason' => $candidate->rejectionReason ?? null,
             'createdDate' => $this->formatApiDateTime($candidate->createdDate, $candidate->modifiedDate),
-            'history' => $history,
+            'history' => $this->buildCandidateHistory($candidate),
         ];
+    }
+
+    private function buildCandidateHistory(ProposalCandidate $candidate): array
+    {
+        $historyQuery = ProposalCandidate::with('post')
+            ->where('createdBy', $candidate->createdBy)
+            ->where('id', '!=', $candidate->id);
+
+        $this->applyCandidateHistoryMatch($historyQuery, $candidate);
+
+        return $historyQuery
+            ->orderByDesc('createdDate')
+            ->limit(10)
+            ->get()
+            ->map(function (ProposalCandidate $historyCandidate) {
+                return [
+                    'postTitle' => $historyCandidate->post ? $historyCandidate->post->title : '',
+                    'stage' => $historyCandidate->stage,
+                    'createdDate' => $this->formatApiDateTime($historyCandidate->createdDate, $historyCandidate->modifiedDate),
+                    'interviewDate' => $this->formatApiDateTime($historyCandidate->interviewDate),
+                    'interviewer' => $historyCandidate->interviewer ?? null,
+                ];
+            })
+            ->values()
+            ->all();
     }
 
     private function getUserId(): string

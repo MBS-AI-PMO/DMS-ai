@@ -131,20 +131,6 @@ class PermissionSeederV54 extends BaseSeeder
                 [
                     'id' => Str::uuid(36),
                     'actionId' => 'b2a1c3d4-5e6f-4a7b-8c9d-0e1f2a3b4c5d',
-                    'roleId' => $superAdminRoleId,
-                    'claimType' => 'INTERVIEWS_VIEW_ASSIGNED',
-                    'claimValue' => '',
-                ],
-                [
-                    'id' => Str::uuid(36),
-                    'actionId' => 'c3d4e5f6-7a8b-4c9d-0e1f-2a3b4c5d6e7f',
-                    'roleId' => $superAdminRoleId,
-                    'claimType' => 'INTERVIEWS_UPDATE_ASSIGNED',
-                    'claimValue' => '',
-                ],
-                [
-                    'id' => Str::uuid(36),
-                    'actionId' => 'b2a1c3d4-5e6f-4a7b-8c9d-0e1f2a3b4c5d',
                     'roleId' => $employeeRoleId,
                     'claimType' => 'INTERVIEWS_VIEW_ASSIGNED',
                     'claimValue' => '',

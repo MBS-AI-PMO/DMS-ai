@@ -1,0 +1,78 @@
+<section class="content pm-module">
+  <div class="content-block">
+    <div class="pm-page-header">
+      <div>
+        <span class="page-title">Candidate history</span>
+        <p class="pm-page-subtitle" *ngIf="data">
+          Other applications for <strong>{{ data.candidateName }}</strong>
+        </p>
+      </div>
+      <button mat-stroked-button class="pm-btn-primary-outline" type="button" (click)="goBack()">
+        <mat-icon>arrow_back</mat-icon> Back to My interviews
+      </button>
+    </div>
+
+    <div *ngIf="loading" class="pm-loading">
+      <mat-spinner diameter="36"></mat-spinner>
+    </div>
+
+    <mat-card class="history-page-card mat-elevation-z0" *ngIf="!loading && data">
+      <mat-card-content>
+        <div class="mb-3">
+          <h5 class="mb-1">{{ data.candidateName }}</h5>
+          <div class="text-muted small">
+            CNIC: {{ data.candidateCode || '—' }} · Phone: {{ data.phone || '—' }}
+          </div>
+          <div class="text-muted small" *ngIf="data.email">{{ data.email }}</div>
+          <div class="text-muted small mt-1">
+            Current post: <strong>{{ data.postTitle || '—' }}</strong>
+            · Applied: {{ formatDisplayDate(data.createdDate) }}
+            · Status:
+            <span class="badge rounded-pill ms-1" [ngClass]="getStageBadgeClass(data.stage)">
+              {{ getStageLabel(data.stage) }}
+            </span>
+          </div>
+        </div>
+
+        <div class="fw-semibold mb-2">Applications on other posts</div>
+        <div class="table-responsive history-table-wrap">
+          <table class="table table-sm table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Post</th>
+                <th>Applied on</th>
+                <th>Status</th>
+                <th>Interview</th>
+                <th>Interviewer</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of data.history">
+                <td>{{ row.postTitle || '—' }}</td>
+                <td>{{ formatDisplayDate(row.createdDate) }}</td>
+                <td>
+                  <span class="badge rounded-pill" [ngClass]="getStageBadgeClass(row.stage)">
+                    {{ getStageLabel(row.stage) }}
+                  </span>
+                </td>
+                <td>{{ formatDisplayDate(row.interviewDate) }}</td>
+                <td>{{ row.interviewer || '—' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="history-page-card mat-elevation-z0" *ngIf="!loading && !data">
+      <mat-card-content>
+        <div class="empty-state">
+          <p class="mb-2">Candidate history could not be loaded.</p>
+          <button mat-stroked-button color="primary" type="button" (click)="goBack()">
+            <mat-icon>arrow_back</mat-icon> Back to My interviews
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</section>

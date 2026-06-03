@@ -32,7 +32,9 @@ export class AppComponent {
   ) {
     this.setProfile();
     this.companyProfileSubscription();
-    this.getAllAllowFileExtension();
+    if (!this.isPublicApplyRoute(this._router.url)) {
+      this.getAllAllowFileExtension();
+    }
     translate.addLangs(['en']);
     translate.setDefaultLang('en');
 
@@ -69,6 +71,10 @@ export class AppComponent {
 
   getAllAllowFileExtension() {
     this.commonService.getAllowFileExtensions().subscribe();
+  }
+
+  private isPublicApplyRoute(url: string): boolean {
+    return url.includes('/post-apply');
   }
 
   setLanguage() {

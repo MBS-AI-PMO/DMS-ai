@@ -6,5 +6,7 @@ export interface RouteInfo {
   class: string;
   groupTitle: boolean;
   claims: string[];
+  /** Role names from `roles` table, e.g. `Super Admin`, `Employee` */
+  roles?: string[];
   submenu: RouteInfo[];
 }
