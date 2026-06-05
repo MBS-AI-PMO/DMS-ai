@@ -1,0 +1,132 @@
+<section class="content pm-module">
+  <div class="content-block">
+    <div class="pm-page-header">
+      <div>
+        <button mat-icon-button type="button" routerLink="/post-management" matTooltip="Back to job posts" class="pm-back-btn">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <span class="page-title">Manage Categories</span>
+        <p class="pm-page-subtitle">Add a category and its departments together in one form.</p>
+      </div>
+      <div class="pm-page-header-actions">
+        <button mat-flat-button color="primary" type="button" (click)="openAddCategory()">
+          <mat-icon>add</mat-icon> Add Category
+        </button>
+      </div>
+    </div>
+
+    <div class="pm-tab-body">
+      <mat-card class="pm-card mat-elevation-z0 mb-3" *ngIf="showCategoryForm">
+        <mat-card-content class="p-4">
+          <h6 class="section-title mb-3">{{ editingCategoryId ? 'Edit Category' : 'New Category' }}</h6>
+
+          <mat-form-field appearance="outline" class="w-100 mb-3">
+            <mat-label>Category name</mat-label>
+            <input matInput [(ngModel)]="categoryName" placeholder="IT, HR, Sales">
+          </mat-form-field>
+
+          <div class="pm-dept-section">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="fw-semibold">Departments</span>
+              <button mat-stroked-button type="button" (click)="addDepartmentRow()">
+                <mat-icon>add</mat-icon> Add department
+              </button>
+            </div>
+            <p class="text-muted small mb-3">Add one or more departments under this category (e.g. HR, Frontend).</p>
+
+            <div class="pm-dept-row" *ngFor="let row of departmentRows; let i = index; trackBy: trackByIndex">
+              <mat-form-field appearance="outline" class="flex-grow-1 mb-0">
+                <mat-label>Department {{ i + 1 }}</mat-label>
+                <input matInput [(ngModel)]="departmentRows[i].name" placeholder="Department name">
+              </mat-form-field>
+              <button
+                mat-icon-button
+                color="warn"
+                type="button"
+                matTooltip="Remove"
+                (click)="removeDepartmentRow(i)"
+                [disabled]="departmentRows.length === 1 && !row.name"
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </div>
+
+          <div class="text-end mt-3">
+            <button mat-button type="button" (click)="resetCategoryForm()">Cancel</button>
+            <button mat-flat-button color="primary" type="button" (click)="saveCategory()">Save</button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="pm-card pm-data-card mat-elevation-z0">
+        <div class="pm-card-toolbar">
+          <div class="pm-card-title">
+            <mat-icon>category</mat-icon>
+            <span>All Categories</span>
+            <span class="pm-badge-count">{{ filteredCategories.length }}</span>
+          </div>
+          <mat-form-field appearance="outline" class="pm-search-field" subscriptSizing="dynamic">
+            <mat-label>Search</mat-label>
+            <mat-icon matPrefix>search</mat-icon>
+            <input
+              matInput
+              [(ngModel)]="categorySearch"
+              (ngModelChange)="onCategorySearchChange()"
+              placeholder="Filter by name"
+            />
+          </mat-form-field>
+        </div>
+
+        <div class="pm-table-wrap" *ngIf="filteredCategories.length">
+          <table class="table pm-table pm-table-hover">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Category</th>
+                <th>Departments</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let cat of paginatedCategories; let i = index">
+                <td class="pm-row-num">{{ categoryPageIndex * categoryPageSize + i + 1 }}</td>
+                <td><span class="pm-cell-name">{{ cat.name }}</span></td>
+                <td class="pm-dept-cell">{{ getDepartmentLabels(cat.id) }}</td>
+                <td class="text-end pm-actions">
+                  <button mat-icon-button class="pm-icon-btn pm-icon-btn-primary" type="button" matTooltip="Edit" (click)="editCategory(cat)">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button mat-icon-button class="pm-icon-btn" color="warn" type="button" matTooltip="Delete" (click)="deleteCategory(cat)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <mat-paginator
+          *ngIf="filteredCategories.length"
+          class="pm-paginator"
+          [length]="filteredCategories.length"
+          [pageIndex]="categoryPageIndex"
+          [pageSize]="categoryPageSize"
+          [pageSizeOptions]="pageSizeOptions"
+          (page)="onCategoryPage($event)"
+          showFirstLastButtons
+          aria-label="Categories pagination"
+        ></mat-paginator>
+
+        <div class="pm-empty" *ngIf="!categories.length">
+          <mat-icon>folder_open</mat-icon>
+          <p>No categories yet. Click <strong>Add Category</strong> above.</p>
+        </div>
+        <div class="pm-empty" *ngIf="categories.length && !filteredCategories.length">
+          <mat-icon>search_off</mat-icon>
+          <p>No categories match your search.</p>
+        </div>
+      </mat-card>
+    </div>
+  </div>
+</section>

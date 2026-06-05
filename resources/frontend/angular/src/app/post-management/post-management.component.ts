@@ -9,53 +9,30 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
+import { forkJoin, of, switchMap } from 'rxjs';
 import { BaseComponent } from '../base.component';
+import {
+  PostBoardData,
+  ProposalCategory,
+  ProposalDepartment,
+  ProposalPost,
+  WorkMode,
+} from './post-management.types';
+import {
+  clampPageIndex,
+  filterBySearch,
+  formatDisplayDate,
+  getDefaultQuestions,
+  serializeQuestions,
+  slicePage,
+} from './post-management.utils';
 
-type WorkMode = 'remote' | 'physical';
-type QuestionLevel = 'basic' | 'intermediate' | 'expert';
-
-interface ProposalCandidate {
-  id: string;
-}
-
-interface ProposalCategory {
-  id: string;
+interface PostInlineDeptRow {
   name: string;
-}
-
-interface ProposalDepartment {
-  id: string;
-  categoryId: string;
-  categoryName?: string;
-  name: string;
-  basicQuestions?: string;
-  intermediateQuestions?: string;
-  expertQuestions?: string;
-}
-
-interface ProposalPost {
-  id: string;
-  title: string;
-  departmentId?: string;
-  department?: string;
-  category?: string;
-  experienceYears?: number;
-  workMode?: WorkMode;
-  address?: string;
-  description?: string;
-  createdDate: string;
-  candidates: ProposalCandidate[];
-}
-
-interface PostBoardData {
-  categories: ProposalCategory[];
-  departments: ProposalDepartment[];
-  posts: ProposalPost[];
 }
 
 @Component({
@@ -64,6 +41,7 @@ interface PostBoardData {
   imports: [
     CommonModule,
     FormsModule,
+    RouterLink,
     TranslateModule,
     MatButtonModule,
     MatCardModule,
@@ -71,7 +49,6 @@ interface PostBoardData {
     MatIconModule,
     MatInputModule,
     MatSelectModule,
-    MatTabsModule,
     MatTooltipModule,
     MatPaginatorModule,
   ],
@@ -88,23 +65,21 @@ export class PostManagementComponent extends BaseComponent implements OnInit {
   departments: ProposalDepartment[] = [];
   posts: ProposalPost[] = [];
 
-  showCategoryForm = false;
-  editingCategoryId = '';
-  categoryName = '';
-
-  showDepartmentForm = false;
-  editingDepartmentId = '';
-  departmentCategoryId = '';
-  departmentName = '';
-  deptBasicQuestions: string[] = [];
-  deptIntermediateQuestions: string[] = [];
-  deptExpertQuestions: string[] = [];
+  readonly addCategoryOption = '__add_category__';
+  readonly addDepartmentOption = '__add_department__';
 
   showPostForm = false;
   editingPostId = '';
   newPostTitle = '';
   newPostCategoryId = '';
   newPostDepartmentId = '';
+
+  showPostInlineCategory = false;
+  showPostInlineDepartment = false;
+  postInlineCategoryName = '';
+  postInlineDepartmentName = '';
+  postInlineDeptRows: PostInlineDeptRow[] = [];
+
   newPostExperienceYears: number | null = null;
   newPostWorkMode: WorkMode = 'physical';
   newPostAddress = '';
@@ -112,15 +87,9 @@ export class PostManagementComponent extends BaseComponent implements OnInit {
 
   readonly pageSizeOptions = [5, 10, 25, 50];
 
-  categorySearch = '';
-  categoryPageIndex = 0;
-  categoryPageSize = 10;
-
-  departmentSearch = '';
-  departmentPageIndex = 0;
-  departmentPageSize = 10;
-
   postSearch = '';
+  postFilterCategoryId = '';
+  postFilterDepartmentId = '';
   postPageIndex = 0;
   postPageSize = 10;
 
@@ -135,50 +104,38 @@ export class PostManagementComponent extends BaseComponent implements OnInit {
         this.categories = response.categories || [];
         this.departments = response.departments || [];
         this.posts = response.posts || [];
-        this.clampAllPages();
+        this.clampPostPage();
       });
   }
 
-  get filteredCategories(): ProposalCategory[] {
-    return this.filterBySearch(this.categories, this.categorySearch, (c) => c.name);
+  get listFilterDepartments(): ProposalDepartment[] {
+    if (!this.postFilterCategoryId) {
+      return this.departments;
+    }
+    return this.departments.filter((d) => d.categoryId === this.postFilterCategoryId);
   }
 
-  get paginatedCategories(): ProposalCategory[] {
-    return this.slicePage(this.filteredCategories, this.categoryPageIndex, this.categoryPageSize);
-  }
-
-  get filteredDepartments(): ProposalDepartment[] {
-    return this.filterBySearch(
-      this.departments,
-      this.departmentSearch,
-      (d) => `${d.name} ${d.categoryName || ''}`
-    );
-  }
-
-  get paginatedDepartments(): ProposalDepartment[] {
-    return this.slicePage(this.filteredDepartments, this.departmentPageIndex, this.departmentPageSize);
+  get hasActivePostFilters(): boolean {
+    return !!(this.postFilterCategoryId || this.postFilterDepartmentId || this.postSearch.trim());
   }
 
   get filteredPosts(): ProposalPost[] {
-    return this.filterBySearch(
-      this.posts,
+    let items = this.posts;
+    if (this.postFilterCategoryId) {
+      items = items.filter((p) => this.postMatchesCategory(p, this.postFilterCategoryId));
+    }
+    if (this.postFilterDepartmentId) {
+      items = items.filter((p) => this.postMatchesDepartment(p, this.postFilterDepartmentId));
+    }
+    return filterBySearch(
+      items,
       this.postSearch,
       (p) => `${p.title} ${p.department || ''} ${p.category || ''}`
     );
   }
 
   get paginatedPosts(): ProposalPost[] {
-    return this.slicePage(this.filteredPosts, this.postPageIndex, this.postPageSize);
-  }
-
-  onCategoryPage(event: PageEvent): void {
-    this.categoryPageIndex = event.pageIndex;
-    this.categoryPageSize = event.pageSize;
-  }
-
-  onDepartmentPage(event: PageEvent): void {
-    this.departmentPageIndex = event.pageIndex;
-    this.departmentPageSize = event.pageSize;
+    return slicePage(this.filteredPosts, this.postPageIndex, this.postPageSize);
   }
 
   onPostPage(event: PageEvent): void {
@@ -186,19 +143,55 @@ export class PostManagementComponent extends BaseComponent implements OnInit {
     this.postPageSize = event.pageSize;
   }
 
-  onCategorySearchChange(): void {
-    this.categoryPageIndex = 0;
-    this.clampCategoryPage();
-  }
-
-  onDepartmentSearchChange(): void {
-    this.departmentPageIndex = 0;
-    this.clampDepartmentPage();
-  }
-
   onPostSearchChange(): void {
     this.postPageIndex = 0;
     this.clampPostPage();
+  }
+
+  onPostFilterCategoryChange(): void {
+    if (this.postFilterDepartmentId) {
+      const dept = this.departments.find((d) => d.id === this.postFilterDepartmentId);
+      if (dept && this.postFilterCategoryId && dept.categoryId !== this.postFilterCategoryId) {
+        this.postFilterDepartmentId = '';
+      }
+    }
+    this.postPageIndex = 0;
+    this.clampPostPage();
+  }
+
+  onPostFilterDepartmentChange(): void {
+    this.postPageIndex = 0;
+    this.clampPostPage();
+  }
+
+  clearPostFilters(): void {
+    this.postSearch = '';
+    this.postFilterCategoryId = '';
+    this.postFilterDepartmentId = '';
+    this.postPageIndex = 0;
+    this.clampPostPage();
+  }
+
+  private postMatchesCategory(post: ProposalPost, categoryId: string): boolean {
+    const cat = this.categories.find((c) => c.id === categoryId);
+    if (!cat) {
+      return true;
+    }
+    if (post.category === cat.name) {
+      return true;
+    }
+    const dept = this.departments.find(
+      (d) => d.id === post.departmentId || d.name === post.department
+    );
+    return dept?.categoryId === categoryId;
+  }
+
+  private postMatchesDepartment(post: ProposalPost, departmentId: string): boolean {
+    if (post.departmentId === departmentId) {
+      return true;
+    }
+    const dept = this.departments.find((d) => d.id === departmentId);
+    return dept ? post.department === dept.name : false;
   }
 
   get postFormDepartments(): ProposalDepartment[] {
@@ -219,113 +212,150 @@ export class PostManagementComponent extends BaseComponent implements OnInit {
     }
   }
 
-  // —— Categories ——
-  saveCategory(): void {
-    if (!this.categoryName.trim()) {
+  onPostCategorySelect(value: string): void {
+    if (value === this.addCategoryOption) {
+      this.newPostCategoryId = '';
+      this.newPostDepartmentId = '';
+      this.openPostInlineCategory();
       return;
     }
-    const body = { name: this.categoryName.trim() };
-    const req = this.editingCategoryId
-      ? this.httpClient.put(`proposal-management/categories/${this.editingCategoryId}`, body)
-      : this.httpClient.post('proposal-management/categories', body);
-    this.sub$.sink = req.subscribe(() => {
-      this.toastrService.success(this.editingCategoryId ? 'Category updated' : 'Category created');
-      this.resetCategoryForm();
-      this.loadData();
-    });
+    this.showPostInlineCategory = false;
+    this.onPostCategoryChange();
   }
 
-  editCategory(cat: ProposalCategory): void {
-    this.editingCategoryId = cat.id;
-    this.categoryName = cat.name;
-    this.showCategoryForm = true;
+  onPostDepartmentSelect(value: string): void {
+    if (value === this.addDepartmentOption) {
+      this.newPostDepartmentId = '';
+      this.openPostInlineDepartment();
+      return;
+    }
+    this.showPostInlineDepartment = false;
   }
 
-  deleteCategory(cat: ProposalCategory): void {
-    if (!window.confirm(`Delete category "${cat.name}"?`)) {
+  openPostInlineCategory(): void {
+    this.showPostInlineCategory = true;
+    this.showPostInlineDepartment = false;
+    this.postInlineCategoryName = '';
+    this.postInlineDeptRows = [{ name: '' }];
+  }
+
+  cancelPostInlineCategory(): void {
+    this.showPostInlineCategory = false;
+    this.postInlineCategoryName = '';
+    this.postInlineDeptRows = [];
+  }
+
+  addPostInlineDeptRow(): void {
+    this.postInlineDeptRows.push({ name: '' });
+  }
+
+  removePostInlineDeptRow(index: number): void {
+    if (this.postInlineDeptRows.length === 1) {
+      this.postInlineDeptRows[0].name = '';
+      return;
+    }
+    this.postInlineDeptRows.splice(index, 1);
+  }
+
+  trackByIndex(index: number): number {
+    return index;
+  }
+
+  openPostInlineDepartment(): void {
+    if (!this.newPostCategoryId) {
+      this.toastrService.warning('Select a category first, or add a new one below');
+      this.openPostInlineCategory();
+      return;
+    }
+    this.showPostInlineDepartment = true;
+    this.showPostInlineCategory = false;
+    this.postInlineDepartmentName = '';
+  }
+
+  cancelPostInlineDepartment(): void {
+    this.showPostInlineDepartment = false;
+    this.postInlineDepartmentName = '';
+  }
+
+  savePostInlineCategory(): void {
+    const name = this.postInlineCategoryName.trim();
+    if (!name) {
+      this.toastrService.warning('Enter a category name');
       return;
     }
     this.sub$.sink = this.httpClient
-      .delete(`proposal-management/categories/${cat.id}`)
-      .subscribe({
-        next: () => {
-          this.toastrService.success('Category deleted');
-          this.loadData();
-        },
-        error: (err) => this.toastrService.error(err?.error?.message || 'Could not delete category'),
+      .post<ProposalCategory>('proposal-management/categories', { name })
+      .pipe(
+        switchMap((category) => {
+          const deptNames = this.postInlineDeptRows.map((r) => r.name.trim()).filter((n) => n.length > 0);
+          if (!deptNames.length) {
+            return of({ categoryId: category.id, departmentId: null as string | null });
+          }
+          const requests = deptNames.map((deptName) =>
+            this.httpClient.post<ProposalDepartment>('proposal-management/departments', {
+              categoryId: category.id,
+              name: deptName,
+              basicQuestions: serializeQuestions(getDefaultQuestions('basic')),
+              intermediateQuestions: serializeQuestions(getDefaultQuestions('intermediate')),
+              expertQuestions: serializeQuestions(getDefaultQuestions('expert')),
+            })
+          );
+          return forkJoin(requests).pipe(
+            switchMap((depts) =>
+              of({ categoryId: category.id, departmentId: depts[depts.length - 1]?.id ?? null })
+            )
+          );
+        })
+      )
+      .subscribe(({ categoryId, departmentId }) => {
+        this.finishCategoryInlineSave(categoryId, departmentId);
       });
   }
 
-  resetCategoryForm(): void {
-    this.showCategoryForm = false;
-    this.editingCategoryId = '';
-    this.categoryName = '';
+  private finishCategoryInlineSave(categoryId: string, departmentId: string | null): void {
+    this.toastrService.success('Category added');
+    this.cancelPostInlineCategory();
+    this.sub$.sink = this.httpClient.get<PostBoardData>('proposal-management/post-board').subscribe((response) => {
+      this.categories = response.categories || [];
+      this.departments = response.departments || [];
+      this.newPostCategoryId = categoryId;
+      this.onPostCategoryChange();
+      if (departmentId) {
+        this.newPostDepartmentId = departmentId;
+      }
+    });
   }
 
-  // —— Departments ——
-  saveDepartment(): void {
-    if (!this.departmentName.trim() || !this.departmentCategoryId) {
+  savePostInlineDepartment(): void {
+    const name = this.postInlineDepartmentName.trim();
+    if (!name) {
+      this.toastrService.warning('Enter a department name');
+      return;
+    }
+    if (!this.newPostCategoryId) {
+      this.toastrService.warning('Select a category first');
       return;
     }
     const body = {
-      categoryId: this.departmentCategoryId,
-      name: this.departmentName.trim(),
-      basicQuestions: this.serializeQuestions(this.deptBasicQuestions),
-      intermediateQuestions: this.serializeQuestions(this.deptIntermediateQuestions),
-      expertQuestions: this.serializeQuestions(this.deptExpertQuestions),
+      categoryId: this.newPostCategoryId,
+      name,
+      basicQuestions: serializeQuestions(getDefaultQuestions('basic')),
+      intermediateQuestions: serializeQuestions(getDefaultQuestions('intermediate')),
+      expertQuestions: serializeQuestions(getDefaultQuestions('expert')),
     };
-    const req = this.editingDepartmentId
-      ? this.httpClient.put(`proposal-management/departments/${this.editingDepartmentId}`, body)
-      : this.httpClient.post('proposal-management/departments', body);
-    this.sub$.sink = req.subscribe(() => {
-      this.toastrService.success(this.editingDepartmentId ? 'Department updated' : 'Department created');
-      this.resetDepartmentForm();
-      this.loadData();
-    });
-  }
-
-  editDepartment(dept: ProposalDepartment): void {
-    this.editingDepartmentId = dept.id;
-    this.departmentCategoryId = dept.categoryId;
-    this.departmentName = dept.name;
-    this.deptBasicQuestions = this.parseQuestions(dept.basicQuestions, 'basic');
-    this.deptIntermediateQuestions = this.parseQuestions(dept.intermediateQuestions, 'intermediate');
-    this.deptExpertQuestions = this.parseQuestions(dept.expertQuestions, 'expert');
-    this.showDepartmentForm = true;
-  }
-
-  deleteDepartment(dept: ProposalDepartment): void {
-    if (!window.confirm(`Delete department "${dept.name}"?`)) {
-      return;
-    }
     this.sub$.sink = this.httpClient
-      .delete(`proposal-management/departments/${dept.id}`)
-      .subscribe({
-        next: () => {
-          this.toastrService.success('Department deleted');
-          this.loadData();
-        },
-        error: (err) => this.toastrService.error(err?.error?.message || 'Could not delete department'),
+      .post<ProposalDepartment>('proposal-management/departments', body)
+      .subscribe((department) => {
+        this.toastrService.success('Department added');
+        this.cancelPostInlineDepartment();
+        this.sub$.sink = this.httpClient.get<PostBoardData>('proposal-management/post-board').subscribe((response) => {
+          this.categories = response.categories || [];
+          this.departments = response.departments || [];
+          this.newPostDepartmentId = department.id;
+        });
       });
   }
 
-  resetDepartmentForm(): void {
-    this.showDepartmentForm = false;
-    this.editingDepartmentId = '';
-    this.departmentCategoryId = this.categories[0]?.id || '';
-    this.departmentName = '';
-    this.deptBasicQuestions = this.getDefaultQuestions('basic');
-    this.deptIntermediateQuestions = this.getDefaultQuestions('intermediate');
-    this.deptExpertQuestions = this.getDefaultQuestions('expert');
-  }
-
-  openNewDepartmentForm(): void {
-    this.resetDepartmentForm();
-    this.departmentCategoryId = this.categories[0]?.id || '';
-    this.showDepartmentForm = true;
-  }
-
-  // —— Posts ——
   createPost(): void {
     if (!this.newPostCategoryId) {
       this.toastrService.warning('Select a category');
@@ -404,23 +434,6 @@ export class PostManagementComponent extends BaseComponent implements OnInit {
     this.toastrService.success('Apply link copied');
   }
 
-  addDeptQuestion(level: QuestionLevel): void {
-    this.getDeptQuestions(level).push('');
-  }
-
-  removeDeptQuestion(level: QuestionLevel, index: number): void {
-    const questions = this.getDeptQuestions(level);
-    if (questions.length === 1) {
-      questions[0] = '';
-      return;
-    }
-    questions.splice(index, 1);
-  }
-
-  trackByIndex(index: number): number {
-    return index;
-  }
-
   resetPostForm(): void {
     this.editingPostId = '';
     this.newPostTitle = '';
@@ -431,6 +444,8 @@ export class PostManagementComponent extends BaseComponent implements OnInit {
     this.newPostAddress = '';
     this.newPostDescription = '';
     this.showPostForm = false;
+    this.cancelPostInlineCategory();
+    this.cancelPostInlineDepartment();
   }
 
   openNewPostForm(): void {
@@ -438,96 +453,13 @@ export class PostManagementComponent extends BaseComponent implements OnInit {
     this.showPostForm = true;
   }
 
-  private getDeptQuestions(level: QuestionLevel): string[] {
-    if (level === 'basic') {
-      return this.deptBasicQuestions;
-    }
-    if (level === 'intermediate') {
-      return this.deptIntermediateQuestions;
-    }
-    return this.deptExpertQuestions;
-  }
-
-  private getDefaultQuestions(level: QuestionLevel): string[] {
-    const defaults: Record<QuestionLevel, string[]> = {
-      basic: ['Tell us about yourself.', 'Why this role?', 'Relevant skills?', 'Describe a task you completed.'],
-      intermediate: ['Challenging project?', 'Prioritize tasks?', 'Problem you solved?', 'Communication style?'],
-      expert: ['Complex problem end-to-end?', 'Mentoring experience?', 'Trade-offs decision?', 'Improve workflow?'],
-    };
-    return [...defaults[level]];
-  }
-
-  private parseQuestions(value: string | undefined, level: QuestionLevel): string[] {
-    const questions = (value || '')
-      .split(/\r?\n/)
-      .map((q) => q.trim())
-      .filter((q) => q.length > 0);
-    return questions.length ? questions : this.getDefaultQuestions(level);
-  }
-
-  private serializeQuestions(questions: string[]): string {
-    return questions.map((q) => q.trim()).filter((q) => q.length > 0).join('\n');
-  }
-
-  formatDisplayDate(value?: string | null): string {
-    if (value == null || value === '' || value === 'null') {
-      return '—';
-    }
-    const parsed = new Date(value);
-    if (isNaN(parsed.getTime())) {
-      return '—';
-    }
-    return parsed.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-  }
-
-  private filterBySearch<T>(items: T[], query: string, getText: (item: T) => string): T[] {
-    const term = query.trim().toLowerCase();
-    if (!term) {
-      return items;
-    }
-    return items.filter((item) => getText(item).toLowerCase().includes(term));
-  }
-
-  private slicePage<T>(items: T[], pageIndex: number, pageSize: number): T[] {
-    const start = pageIndex * pageSize;
-    return items.slice(start, start + pageSize);
-  }
-
-  private clampAllPages(): void {
-    this.clampCategoryPage();
-    this.clampDepartmentPage();
-    this.clampPostPage();
-  }
-
-  private clampCategoryPage(): void {
-    this.categoryPageIndex = this.clampPageIndex(
-      this.filteredCategories.length,
-      this.categoryPageIndex,
-      this.categoryPageSize
-    );
-  }
-
-  private clampDepartmentPage(): void {
-    this.departmentPageIndex = this.clampPageIndex(
-      this.filteredDepartments.length,
-      this.departmentPageIndex,
-      this.departmentPageSize
-    );
-  }
+  formatDisplayDate = formatDisplayDate;
 
   private clampPostPage(): void {
-    this.postPageIndex = this.clampPageIndex(
+    this.postPageIndex = clampPageIndex(
       this.filteredPosts.length,
       this.postPageIndex,
       this.postPageSize
     );
-  }
-
-  private clampPageIndex(total: number, pageIndex: number, pageSize: number): number {
-    if (total === 0) {
-      return 0;
-    }
-    const maxPage = Math.max(0, Math.ceil(total / pageSize) - 1);
-    return Math.min(pageIndex, maxPage);
   }
 }

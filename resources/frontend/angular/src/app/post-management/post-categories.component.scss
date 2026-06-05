@@ -1,0 +1,28 @@
+.pm-back-btn {
+  margin: -4px 4px 0 -8px;
+  vertical-align: middle;
+}
+
+.pm-dept-section {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.pm-dept-row {
+  align-items: flex-start;
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.pm-dept-cell {
+  color: #64748b;
+  font-size: 0.875rem;
+  max-width: 320px;
+}

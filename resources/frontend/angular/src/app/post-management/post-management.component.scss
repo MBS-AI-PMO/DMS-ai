@@ -76,8 +76,63 @@ $pm-muted: #64748b;
   }
 }
 
-.pm-tabs {
-  margin-top: 0.5rem;
+.pm-page-header-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.pm-inline-add-form {
+  background: $pm-primary-soft;
+  border: 1px solid rgba(79, 70, 229, 0.15);
+  border-radius: 10px;
+  margin: 0 0 0.75rem;
+  padding: 12px 14px 10px;
+
+  .pm-inline-add-title {
+    color: $pm-primary;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+
+  .pm-inline-add-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 8px;
+  }
+}
+
+.pm-inline-dept-block {
+  margin-bottom: 8px;
+}
+
+.pm-inline-dept-row {
+  align-items: flex-start;
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+::ng-deep .pm-add-option {
+  .mdc-list-item__primary-text {
+    align-items: center;
+    color: $pm-primary;
+    display: flex;
+    font-weight: 600;
+    gap: 8px;
+  }
+
+  mat-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+  }
 }
 
 .pm-tab-body {
@@ -87,14 +142,45 @@ $pm-muted: #64748b;
 .pm-data-card {
   overflow: hidden;
 
+  .pm-card-toolbar-stacked {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .pm-list-filters {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-end;
+    width: 100%;
+  }
+
+  .pm-filter-field,
   .pm-search-field {
     margin: 0;
-    max-width: 280px;
     width: 100%;
 
     .mat-mdc-form-field-subscript-wrapper {
       display: none;
     }
+  }
+
+  .pm-filter-field {
+    max-width: 200px;
+    min-width: 160px;
+  }
+
+  .pm-search-field {
+    flex: 1 1 200px;
+    max-width: 280px;
+    min-width: 180px;
+  }
+
+  .pm-clear-filters-btn {
+    flex-shrink: 0;
+    margin-bottom: 4px;
   }
 
   .pm-paginator {

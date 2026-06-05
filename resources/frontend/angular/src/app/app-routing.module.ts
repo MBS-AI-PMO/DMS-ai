@@ -234,6 +234,24 @@ const routes: Routes = [
               ),
           },
           {
+            path: 'post-management/categories',
+            data: { claimType: 'POST_MANAGEMENT_VIEW' },
+            canActivate: [AuthGuard],
+            loadComponent: () =>
+              import('./post-management/post-categories.component').then(
+                (m) => m.PostCategoriesComponent
+              ),
+          },
+          {
+            path: 'post-management/departments',
+            data: { claimType: 'POST_MANAGEMENT_VIEW' },
+            canActivate: [AuthGuard],
+            loadComponent: () =>
+              import('./post-management/post-departments.component').then(
+                (m) => m.PostDepartmentsComponent
+              ),
+          },
+          {
             path: 'post-management/:id/candidates',
             data: { claimType: 'POST_MANAGEMENT_VIEW' },
             canActivate: [AuthGuard],

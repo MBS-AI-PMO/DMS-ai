@@ -11,7 +11,7 @@
   },
   "private": true,
   "dependencies": {
-    "@angular-architects/ngrx-toolkit": "^19.1.0",
+    "@angular-architects/ngrx-toolkit": "^18.1.1",
     "@angular-eslint/schematics": "^19.3.0",
     "@angular/animations": "^18.2.2",
     "@angular/cdk": "^18.2.2",
@@ -34,7 +34,7 @@
     "@ngrx/effects": "^18.0.2",
     "@ngrx/entity": "^18.0.2",
     "@ngrx/operators": "^18.0.0",
-    "@ngrx/signals": "^19.0.1",
+    "@ngrx/signals": "^18.1.1",
     "@ngrx/store": "^18.0.2",
     "@ngrx/store-devtools": "^18.0.2",
     "@ngx-translate/core": "^15.0.0",
