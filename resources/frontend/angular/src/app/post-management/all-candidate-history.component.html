@@ -73,6 +73,15 @@
                   <span class="pm-status" [ngClass]="'pm-status-' + app.stage">
                     {{ getStageLabel(app.stage) }}
                   </span>
+                  <button
+                    *ngIf="hasRejectionReason(app.stage)"
+                    mat-button
+                    color="warn"
+                    type="button"
+                    class="reject-reason-link px-0"
+                    (click)="showRejectionReason(app)">
+                    View rejection reason
+                  </button>
                 </td>
                 <td class="text-nowrap">{{ formatDisplayDateTime(app.interviewDate) }}</td>
                 <td>{{ app.interviewer || '—' }}</td>

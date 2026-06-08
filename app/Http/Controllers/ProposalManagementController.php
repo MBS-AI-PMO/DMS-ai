@@ -563,6 +563,9 @@ class ProposalManagementController extends Controller
                     'latestPostTitle' => $latest['postTitle'] ?? '',
                     'latestStage' => $latest['stage'] ?? 'cv_received',
                     'latestAppliedDate' => $latest['createdDate'] ?? null,
+                    'latestRejectionReason' => ($latest['stage'] ?? '') === 'rejected'
+                        ? ($latest['rejectionReason'] ?? null)
+                        : null,
                     'hasCv' => $latest['hasCv'] ?? false,
                     'cvOriginalName' => $latest['cvOriginalName'] ?? null,
                     'applications' => $group['applications'],
@@ -621,6 +624,7 @@ class ProposalManagementController extends Controller
             'interviewer' => $candidate->interviewer ?? null,
             'hasCv' => !empty($candidate->cvPath),
             'cvOriginalName' => $candidate->cvOriginalName,
+            'rejectionReason' => $candidate->rejectionReason ?? null,
         ];
     }
 

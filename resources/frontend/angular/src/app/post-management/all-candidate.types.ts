@@ -10,6 +10,7 @@ export interface CandidateApplication {
   interviewer?: string | null;
   hasCv: boolean;
   cvOriginalName?: string;
+  rejectionReason?: string | null;
 }
 
 export interface GroupedCandidate {
@@ -25,6 +26,7 @@ export interface GroupedCandidate {
   latestPostTitle: string;
   latestStage: CandidateStage;
   latestAppliedDate?: string;
+  latestRejectionReason?: string | null;
   hasCv: boolean;
   cvOriginalName?: string;
   applications: CandidateApplication[];

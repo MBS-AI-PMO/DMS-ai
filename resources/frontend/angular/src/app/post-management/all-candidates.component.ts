@@ -7,9 +7,11 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatDialog } from '@angular/material/dialog';
 import { Router, RouterModule } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { BaseComponent } from '../base.component';
+import { openRejectionReasonDialog } from './all-candidate-status.util';
 import {
   AllCandidatesResponse,
   CANDIDATE_STAGE_LABELS,
@@ -38,6 +40,7 @@ import { filterBySearch, formatDisplayDate } from './post-management.utils';
 export class AllCandidatesComponent extends BaseComponent implements OnInit {
   private readonly httpClient = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly dialog = inject(MatDialog);
 
   candidates: GroupedCandidate[] = [];
   searchQuery = '';
@@ -82,6 +85,18 @@ export class AllCandidatesComponent extends BaseComponent implements OnInit {
       return;
     }
     void this.router.navigate(['/all-candidates', candidateId, 'history']);
+  }
+
+  showRejectionReason(candidate: GroupedCandidate): void {
+    openRejectionReasonDialog(this.dialog, {
+      candidateName: candidate.candidateName,
+      postTitle: candidate.latestPostTitle,
+      rejectionReason: candidate.latestRejectionReason || '',
+    });
+  }
+
+  hasRejectionReason(stage: CandidateStage): boolean {
+    return stage === 'rejected';
   }
 
   getStageLabel(stage: CandidateStage): string {

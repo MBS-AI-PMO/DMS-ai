@@ -63,6 +63,15 @@
                 <span class="pm-status pm-status-sm" [ngClass]="'pm-status-' + candidate.latestStage">
                   {{ getStageLabel(candidate.latestStage) }}
                 </span>
+                <button
+                  *ngIf="hasRejectionReason(candidate.latestStage)"
+                  mat-button
+                  color="warn"
+                  type="button"
+                  class="reject-reason-link px-0"
+                  (click)="showRejectionReason(candidate)">
+                  View rejection reason
+                </button>
               </td>
               <td class="text-end">
                 <button

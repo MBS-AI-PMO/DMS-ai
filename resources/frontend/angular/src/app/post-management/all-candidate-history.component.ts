@@ -5,8 +5,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { BaseComponent } from '../base.component';
+import { openRejectionReasonDialog } from './all-candidate-status.util';
 import {
   CANDIDATE_STAGE_LABELS,
   CandidateApplication,
@@ -36,6 +38,7 @@ export class AllCandidateHistoryComponent extends BaseComponent implements OnIni
   private readonly httpClient = inject(HttpClient);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly dialog = inject(MatDialog);
 
   candidateId = '';
   candidate: GroupedCandidate | null = null;
@@ -107,6 +110,18 @@ export class AllCandidateHistoryComponent extends BaseComponent implements OnIni
 
   getStageLabel(stage: CandidateStage): string {
     return CANDIDATE_STAGE_LABELS[stage];
+  }
+
+  hasRejectionReason(stage: CandidateStage): boolean {
+    return stage === 'rejected';
+  }
+
+  showRejectionReason(app: CandidateApplication): void {
+    openRejectionReasonDialog(this.dialog, {
+      candidateName: this.candidate?.candidateName,
+      postTitle: app.postTitle,
+      rejectionReason: app.rejectionReason || '',
+    });
   }
 
   formatDisplayDate = formatDisplayDate;
