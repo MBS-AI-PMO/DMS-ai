@@ -417,6 +417,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::middleware('hasToken:ALL_CANDIDATES_VIEW')->group(function () {
         Route::get('/proposal-management/all-candidates', [ProposalManagementController::class, 'allCandidates']);
+        Route::post('/proposal-management/all-candidates/ai-search', [ProposalManagementController::class, 'aiSearchAllCandidates']);
         Route::get('/proposal-management/all-candidates/{candidateId}/history', [ProposalManagementController::class, 'allCandidateHistory']);
     });
 

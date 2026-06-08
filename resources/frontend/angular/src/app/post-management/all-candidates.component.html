@@ -13,32 +13,62 @@
     <mat-card class="pm-card mat-elevation-z0">
       <div class="pm-card-toolbar d-flex flex-wrap align-items-center justify-content-between gap-2">
         <h6 class="pm-card-title mb-0">
-          <mat-icon>people</mat-icon> Candidates ({{ filteredCandidates.length }})
+          <mat-icon>people</mat-icon> Candidates ({{ candidates.length }})
         </h6>
-        <mat-form-field appearance="outline" class="pm-search-field mb-0">
-          <mat-label>Search</mat-label>
-          <mat-icon matPrefix>search</mat-icon>
-          <input matInput [(ngModel)]="searchQuery" placeholder="Name, CNIC, email, job title…">
-        </mat-form-field>
+        <form class="pm-ai-search input-group" (ngSubmit)="searchCandidates(true)">
+          <span class="pm-ai-search-icon">
+            <mat-icon>auto_awesome</mat-icon>
+          </span>
+          <input
+            class="form-control"
+            [(ngModel)]="searchQuery"
+            name="searchQuery"
+            [placeholder]="'ALL_CANDIDATES_AI_SEARCH_PLACEHOLDER' | translate"
+            type="text"
+            autocomplete="off"
+            [disabled]="searching" />
+          <button mat-flat-button color="primary" type="submit" [disabled]="searching || loading">
+            <mat-icon>{{ searching ? 'hourglass_top' : 'auto_awesome' }}</mat-icon>
+            {{ 'ALL_CANDIDATES_AI_SEARCH' | translate }}
+          </button>
+          <button
+            mat-stroked-button
+            type="button"
+            class="pm-clear-search-btn"
+            *ngIf="hasActiveSearch"
+            [disabled]="searching"
+            (click)="clearSearch()">
+            Clear
+          </button>
+        </form>
       </div>
+      <p class="pm-search-hint text-muted small mb-0 px-3 pb-2">
+        {{ 'ALL_CANDIDATES_AI_SEARCH_NOTE' | translate }}
+      </p>
+      <p class="pm-ai-interpretation small mb-0 px-3 pb-2" *ngIf="aiInterpretation">
+        <mat-icon>tips_and_updates</mat-icon>
+        {{ aiInterpretation }}
+        <span class="text-muted" *ngIf="!usedAiSearch"> (text search)</span>
+      </p>
 
-      <div *ngIf="loading" class="pm-empty">
+      <div *ngIf="loading || searching" class="pm-empty">
         <mat-icon>hourglass_top</mat-icon>
-        <p>Loading candidates…</p>
+        <p>{{ searching ? 'AI is finding matching candidates…' : 'Loading candidates…' }}</p>
       </div>
 
-      <div class="pm-table-wrap" *ngIf="!loading && filteredCandidates.length > 0">
+      <div class="pm-table-wrap" *ngIf="!loading && !searching && candidates.length > 0">
         <table class="table pm-table candidate-table">
           <thead>
             <tr>
               <th>Candidate</th>
               <th>Jobs applied</th>
+              <th *ngIf="hasActiveSearch">Matched in</th>
               <th>Last applied</th>
               <th class="text-end">Action</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let candidate of filteredCandidates">
+            <tr *ngFor="let candidate of candidates">
               <td>
                 <div class="pm-candidate-cell">
                   <div class="pm-avatar">{{ candidate.candidateName.charAt(0) | uppercase }}</div>
@@ -57,6 +87,42 @@
                 <div class="pm-candidate-meta mt-1 latest-job-hint">
                   Latest: {{ candidate.latestPostTitle || '—' }}
                 </div>
+              </td>
+              <td *ngIf="hasActiveSearch" class="search-matches-cell">
+                <div class="search-match-list" *ngIf="candidate.searchMatches?.length; else noMatchDetail">
+                  <div class="search-match-item" *ngFor="let match of candidate.searchMatches">
+                    <div class="search-match-head">
+                      <mat-icon>{{ match.matchType === 'profile' ? 'person' : 'description' }}</mat-icon>
+                      <div>
+                        <div class="search-match-doc">{{ getMatchSourceLabel(match) }}</div>
+                        <div class="search-match-context">{{ getMatchContextLabel(match) }}</div>
+                      </div>
+                      <button
+                        mat-button
+                        color="primary"
+                        type="button"
+                        class="search-match-view px-0"
+                        *ngIf="match.applicationId"
+                        (click)="openMatchCv(match.applicationId)">
+                        View CV
+                      </button>
+                    </div>
+                    <div class="search-match-tags" *ngIf="match.matchTypes?.length">
+                      <span class="search-match-tag" *ngFor="let type of match.matchTypes">
+                        {{ getMatchTypeLabel(type) }}
+                      </span>
+                    </div>
+                    <div class="search-match-terms" *ngIf="match.matchedTerms?.length">
+                      Matched: {{ match.matchedTerms.join(', ') }}
+                    </div>
+                    <div class="search-match-snippet" *ngIf="match.snippet">
+                      "{{ match.snippet }}"
+                    </div>
+                  </div>
+                </div>
+                <ng-template #noMatchDetail>
+                  <span class="text-muted small">Profile / job details</span>
+                </ng-template>
               </td>
               <td class="text-nowrap">
                 <div>{{ formatDisplayDate(candidate.latestAppliedDate) }}</div>
@@ -89,10 +155,10 @@
         </table>
       </div>
 
-      <div class="pm-empty" *ngIf="!loading && filteredCandidates.length === 0">
+      <div class="pm-empty" *ngIf="!loading && !searching && candidates.length === 0">
         <mat-icon>person_search</mat-icon>
-        <p *ngIf="searchQuery.trim()">No candidates match your search.</p>
-        <p *ngIf="!searchQuery.trim()">No applications yet. Share apply links from your job posts.</p>
+        <p *ngIf="hasActiveSearch">{{ 'NO_CANDIDATES_FOUND' | translate }}</p>
+        <p *ngIf="!hasActiveSearch">No applications yet. Share apply links from your job posts.</p>
       </div>
     </mat-card>
   </div>

@@ -57,6 +57,7 @@ interface LookupResponse {
   profile?: CandidateProfile | null;
   cvs: VaultCv[];
   maxCvs: number;
+  cvRetentionDays?: number;
 }
 
 type CvMode = 'existing' | 'new';
@@ -102,6 +103,7 @@ export class PostApplyComponent extends BaseComponent implements OnInit {
   submittedKeptExistingCv = false;
   availableCvs: VaultCv[] = [];
   maxCvs = 5;
+  cvRetentionDays = 365;
   selectedCvId = '';
   cvMode: CvMode = 'new';
 
@@ -210,6 +212,7 @@ export class PostApplyComponent extends BaseComponent implements OnInit {
           this.lookupLoading = false;
           this.availableCvs = response.cvs || [];
           this.maxCvs = response.maxCvs || 5;
+          this.cvRetentionDays = response.cvRetentionDays || 365;
 
           if (response.appliedOnThisPost && response.application) {
             this.applyExistingApplication(response.application);
@@ -370,11 +373,7 @@ export class PostApplyComponent extends BaseComponent implements OnInit {
     }
 
     if (this.isApplicationInvalid()) {
-      if (this.cvMode === 'new' && this.availableCvs.length >= this.maxCvs && !this.cv) {
-        this.toastrService.error(`You can store up to ${this.maxCvs} CVs. Select one or upload a new CV.`);
-      } else {
-        this.toastrService.error('Please select or upload a CV');
-      }
+      this.toastrService.error('Please select or upload a CV');
       return;
     }
 

@@ -1,4 +1,4 @@
--- CV vault for public apply form (max 5 CVs per candidate, FIFO)
+-- CV vault for public apply form (latest 5 visible; 365-day retention, keep newest after expiry)
 CREATE TABLE IF NOT EXISTS `proposalcandidatecvs` (
   `id` char(36) NOT NULL,
   `createdBy` char(36) NOT NULL,

@@ -13,6 +13,19 @@ export interface CandidateApplication {
   rejectionReason?: string | null;
 }
 
+export type CandidateSearchMatchType = 'profile' | 'post_title' | 'cv_filename' | 'cv_content';
+
+export interface CandidateSearchMatch {
+  applicationId?: string;
+  postTitle?: string;
+  cvOriginalName?: string;
+  label?: string;
+  matchType?: CandidateSearchMatchType;
+  matchTypes?: CandidateSearchMatchType[];
+  matchedTerms: string[];
+  snippet?: string | null;
+}
+
 export interface GroupedCandidate {
   groupKey: string;
   candidateName: string;
@@ -30,10 +43,16 @@ export interface GroupedCandidate {
   hasCv: boolean;
   cvOriginalName?: string;
   applications: CandidateApplication[];
+  searchMatches?: CandidateSearchMatch[];
 }
 
 export interface AllCandidatesResponse {
   candidates: GroupedCandidate[];
+}
+
+export interface AllCandidatesAiSearchResponse extends AllCandidatesResponse {
+  interpretation?: string | null;
+  usedAi?: boolean;
 }
 
 export const CANDIDATE_STAGE_LABELS: Record<CandidateStage, string> = {

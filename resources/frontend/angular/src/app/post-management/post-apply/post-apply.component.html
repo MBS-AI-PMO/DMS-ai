@@ -113,7 +113,7 @@
             Your saved CVs ({{ availableCvs.length }}/{{ maxCvs }})
           </div>
           <p class="cv-vault-hint mb-2" *ngIf="availableCvs.length > 0">
-            Select any previous CV for this application. You can store up to {{ maxCvs }} CVs — oldest is removed when you upload a new one after the limit.
+            Select any of your latest {{ maxCvs }} saved CVs. CVs older than {{ cvRetentionDays }} days are removed automatically — your most recent one is always kept.
           </p>
 
           <mat-radio-group
@@ -131,9 +131,6 @@
             </div>
             <div class="cv-radio-item cv-upload-option">
               <mat-radio-button value="new">Upload new CV</mat-radio-button>
-              <span class="text-muted small" *ngIf="availableCvs.length >= maxCvs">
-                Oldest saved CV will be removed (FIFO).
-              </span>
             </div>
           </mat-radio-group>
         </div>

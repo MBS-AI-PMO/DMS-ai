@@ -13,6 +13,8 @@ use App\Models\ProposalDepartment;
 use App\Models\FileRequests;
 use App\Models\FileRequestStatusEnum;
 use App\Models\Users;
+use App\Services\AICandidateSearchService;
+use App\Services\CandidateCvSearchService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,7 +24,18 @@ use Ramsey\Uuid\Uuid;
 
 class ProposalManagementController extends Controller
 {
-    private const CANDIDATE_CV_LIMIT = 5;
+    private const CANDIDATE_CV_DISPLAY_LIMIT = 5;
+
+    private const CANDIDATE_CV_RETENTION_DAYS = 365;
+
+    private const CANDIDATE_STAGE_LABELS = [
+        'cv_received' => 'CV Received',
+        'shortlisted' => 'Shortlisted',
+        'interview_scheduled' => 'Interview Scheduled',
+        'approved' => 'Approved',
+        'rejected' => 'Rejected',
+        'selected' => 'Selected',
+    ];
 
     public function index()
     {
@@ -517,10 +530,54 @@ class ProposalManagementController extends Controller
         return response()->json($this->storeCandidate($request, $post, $userId), 201);
     }
 
-    public function allCandidates()
+    public function allCandidates(Request $request, CandidateCvSearchService $cvSearchService)
     {
-        $userId = $this->getUserId();
+        $searchQuery = trim((string) $request->input('searchQuery', ''));
+        $candidates = $this->buildGroupedCandidates($this->getUserId());
 
+        if ($searchQuery !== '') {
+            $candidates = $cvSearchService->enrichGroups($candidates);
+            $candidates = array_values(array_filter(
+                $candidates,
+                fn (array $group) => $cvSearchService->matchesQuery($group, $searchQuery)
+            ));
+            $candidates = $cvSearchService->attachSearchMatches($candidates, $searchQuery);
+        }
+
+        return response()->json([
+            'candidates' => $cvSearchService->stripInternalFields($candidates),
+        ]);
+    }
+
+    public function aiSearchAllCandidates(
+        Request $request,
+        AICandidateSearchService $aiCandidateSearchService,
+        CandidateCvSearchService $cvSearchService
+    ) {
+        $validated = $request->validate([
+            'query' => 'required|string|max:1000',
+        ]);
+
+        $query = trim($validated['query']);
+        $candidates = $cvSearchService->enrichGroups(
+            $this->buildGroupedCandidates($this->getUserId())
+        );
+        $result = $aiCandidateSearchService->search($query, $candidates);
+        $candidates = $cvSearchService->attachSearchMatches(
+            $result['candidates'],
+            $query,
+            $result['searchTerms'] ?? null
+        );
+
+        return response()->json([
+            'candidates' => $cvSearchService->stripInternalFields($candidates),
+            'interpretation' => $result['interpretation'],
+            'usedAi' => $result['usedAi'],
+        ]);
+    }
+
+    private function buildGroupedCandidates(string $userId): array
+    {
         $records = ProposalCandidate::with('post')
             ->where('createdBy', $userId)
             ->orderByDesc('createdDate')
@@ -545,11 +602,10 @@ class ProposalManagementController extends Controller
             }
 
             $groups[$groupKey]['applications'][] = $this->mapGroupedApplication($candidate);
-
             $groups[$groupKey]['applicationCount']++;
         }
 
-        $candidates = collect($groups)
+        return collect($groups)
             ->map(function (array $group) {
                 $latest = $group['applications'][0] ?? null;
 
@@ -577,8 +633,6 @@ class ProposalManagementController extends Controller
             ->sortByDesc(fn (array $group) => $group['latestAppliedDate'] ?? '')
             ->values()
             ->all();
-
-        return response()->json(['candidates' => $candidates]);
     }
 
     public function allCandidateHistory(string $candidateId)
@@ -627,6 +681,7 @@ class ProposalManagementController extends Controller
             'interviewer' => $candidate->interviewer ?? null,
             'hasCv' => !empty($candidate->cvPath),
             'cvOriginalName' => $candidate->cvOriginalName,
+            'cvPath' => $candidate->cvPath,
             'rejectionReason' => $candidate->rejectionReason ?? null,
         ];
     }
@@ -644,6 +699,11 @@ class ProposalManagementController extends Controller
         }
 
         return 'id:' . $candidate->id;
+    }
+
+    private function candidateStageLabel(string $stage): string
+    {
+        return self::CANDIDATE_STAGE_LABELS[$stage] ?? $stage;
     }
 
     public function getPublicPost(string $postId)
@@ -678,7 +738,8 @@ class ProposalManagementController extends Controller
                 'appliedOnThisPost' => false,
                 'profile' => null,
                 'cvs' => [],
-                'maxCvs' => self::CANDIDATE_CV_LIMIT,
+                'maxCvs' => self::CANDIDATE_CV_DISPLAY_LIMIT,
+                'cvRetentionDays' => self::CANDIDATE_CV_RETENTION_DAYS,
             ]);
         }
 
@@ -708,7 +769,8 @@ class ProposalManagementController extends Controller
                     'createdDate' => $this->formatApiDateTime($existingOnPost->createdDate, $existingOnPost->modifiedDate),
                 ],
                 'cvs' => $cvs,
-                'maxCvs' => self::CANDIDATE_CV_LIMIT,
+                'maxCvs' => self::CANDIDATE_CV_DISPLAY_LIMIT,
+                'cvRetentionDays' => self::CANDIDATE_CV_RETENTION_DAYS,
             ]);
         }
 
@@ -726,7 +788,8 @@ class ProposalManagementController extends Controller
                 'experienceYears' => $profile->experienceYears,
             ] : null,
             'cvs' => $cvs,
-            'maxCvs' => self::CANDIDATE_CV_LIMIT,
+            'maxCvs' => self::CANDIDATE_CV_DISPLAY_LIMIT,
+            'cvRetentionDays' => self::CANDIDATE_CV_RETENTION_DAYS,
         ]);
     }
 
@@ -1670,7 +1733,7 @@ class ProposalManagementController extends Controller
             $existingPaths[] = $application->cvPath;
         }
 
-        $this->enforceCvVaultLimit($createdBy, $cnicDigits, $email);
+        $this->purgeExpiredCandidateCvs($createdBy, $cnicDigits, $email);
     }
 
     private function getCandidateCvVault(string $createdBy, ?string $cnicDigits, ?string $email): array
@@ -1684,7 +1747,7 @@ class ProposalManagementController extends Controller
                 $this->applyVaultLookupMatch($query, $cnicDigits, $email);
             })
             ->orderByDesc('createdDate')
-            ->limit(self::CANDIDATE_CV_LIMIT)
+            ->limit(self::CANDIDATE_CV_DISPLAY_LIMIT)
             ->get()
             ->map(fn (ProposalCandidateCv $cv) => $this->mapVaultCv($cv))
             ->values()
@@ -1744,7 +1807,7 @@ class ProposalManagementController extends Controller
             'modifiedDate' => $now,
         ]);
 
-        $this->enforceCvVaultLimit(
+        $this->purgeExpiredCandidateCvs(
             $createdBy,
             $this->normalizeCnicDigits($candidateCode),
             !empty($email) ? strtolower(trim($email)) : null
@@ -1753,29 +1816,52 @@ class ProposalManagementController extends Controller
         return $vaultCv->fresh();
     }
 
-    private function enforceCvVaultLimit(string $createdBy, ?string $cnicDigits, ?string $email): void
+    private function purgeExpiredCandidateCvs(string $createdBy, ?string $cnicDigits, ?string $email): void
     {
         if (!Schema::hasTable('proposalcandidatecvs') || (!$cnicDigits && !$email)) {
             return;
         }
 
+        $cutoff = Carbon::now()->subDays(self::CANDIDATE_CV_RETENTION_DAYS);
+
         $entries = ProposalCandidateCv::where('createdBy', $createdBy)
             ->where(function ($query) use ($cnicDigits, $email) {
                 $this->applyVaultLookupMatch($query, $cnicDigits, $email);
             })
-            ->orderBy('createdDate')
+            ->orderByDesc('createdDate')
             ->get();
 
-        if ($entries->count() <= self::CANDIDATE_CV_LIMIT) {
+        $expired = $entries->filter(function (ProposalCandidateCv $entry) use ($cutoff) {
+            if (!$entry->createdDate) {
+                return false;
+            }
+
+            return Carbon::parse($entry->createdDate)->lt($cutoff);
+        })->values();
+
+        if ($expired->count() <= 1) {
             return;
         }
 
-        $toDelete = $entries->slice(0, $entries->count() - self::CANDIDATE_CV_LIMIT);
-        foreach ($toDelete as $entry) {
-            if ($entry->cvPath && Storage::disk('local')->exists($entry->cvPath)) {
-                Storage::disk('local')->delete($entry->cvPath);
-            }
-            $entry->delete();
+        foreach ($expired->slice(1) as $entry) {
+            $this->deleteVaultCvEntry($entry);
+        }
+    }
+
+    private function deleteVaultCvEntry(ProposalCandidateCv $entry): void
+    {
+        $cvPath = $entry->cvPath;
+        $entry->delete();
+
+        if (!$cvPath) {
+            return;
+        }
+
+        $stillInVault = ProposalCandidateCv::where('cvPath', $cvPath)->exists();
+        $stillOnApplication = ProposalCandidate::where('cvPath', $cvPath)->exists();
+
+        if (!$stillInVault && !$stillOnApplication && Storage::disk('local')->exists($cvPath)) {
+            Storage::disk('local')->delete($cvPath);
         }
     }
 
