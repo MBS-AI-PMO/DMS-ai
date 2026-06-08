@@ -10,43 +10,13 @@ import { MatInputModule } from '@angular/material/input';
 import { Router, RouterModule } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { BaseComponent } from '../base.component';
+import {
+  AllCandidatesResponse,
+  CANDIDATE_STAGE_LABELS,
+  CandidateStage,
+  GroupedCandidate,
+} from './all-candidate.types';
 import { filterBySearch, formatDisplayDate } from './post-management.utils';
-
-type CandidateStage = 'cv_received' | 'shortlisted' | 'interview_scheduled' | 'approved' | 'rejected' | 'selected';
-
-interface CandidateApplication {
-  id: string;
-  postId: string;
-  postTitle: string;
-  stage: CandidateStage;
-  createdDate: string;
-  interviewDate?: string;
-  interviewer?: string | null;
-  hasCv: boolean;
-  cvOriginalName?: string;
-}
-
-interface GroupedCandidate {
-  groupKey: string;
-  candidateName: string;
-  candidateCode?: string;
-  phone?: string;
-  email?: string;
-  experienceYears?: number;
-  applicationCount: number;
-  latestApplicationId?: string;
-  latestPostId?: string;
-  latestPostTitle: string;
-  latestStage: CandidateStage;
-  latestAppliedDate?: string;
-  hasCv: boolean;
-  cvOriginalName?: string;
-  applications: CandidateApplication[];
-}
-
-interface AllCandidatesResponse {
-  candidates: GroupedCandidate[];
-}
 
 @Component({
   selector: 'app-all-candidates',
@@ -72,7 +42,6 @@ export class AllCandidatesComponent extends BaseComponent implements OnInit {
   candidates: GroupedCandidate[] = [];
   searchQuery = '';
   loading = true;
-  expandedGroupKey = '';
 
   ngOnInit(): void {
     this.loadCandidates();
@@ -107,55 +76,17 @@ export class AllCandidatesComponent extends BaseComponent implements OnInit {
     );
   }
 
-  toggleHistory(candidate: GroupedCandidate): void {
-    this.expandedGroupKey = this.expandedGroupKey === candidate.groupKey ? '' : candidate.groupKey;
-  }
-
-  navigateToPost(postId: string): void {
-    void this.router.navigate(['/post-management', postId, 'candidates']);
-  }
-
-  openApplicationCv(application: CandidateApplication): void {
-    if (!application.hasCv) {
+  viewHistory(candidate: GroupedCandidate): void {
+    const candidateId = candidate.latestApplicationId || candidate.applications[0]?.id;
+    if (!candidateId) {
       return;
     }
-
-    this.sub$.sink = this.httpClient
-      .get(`proposal-management/candidates/${application.id}/cv`, { responseType: 'blob' })
-      .subscribe((blob) => {
-        const url = URL.createObjectURL(blob);
-        window.open(url, '_blank');
-      });
+    void this.router.navigate(['/all-candidates', candidateId, 'history']);
   }
 
   getStageLabel(stage: CandidateStage): string {
-    const stageLabels: Record<CandidateStage, string> = {
-      cv_received: 'CV Received',
-      shortlisted: 'Shortlisted',
-      interview_scheduled: 'Interview Scheduled',
-      approved: 'Approved',
-      rejected: 'Rejected',
-      selected: 'Selected',
-    };
-    return stageLabels[stage];
+    return CANDIDATE_STAGE_LABELS[stage];
   }
 
   formatDisplayDate = formatDisplayDate;
-
-  formatDisplayDateTime(value?: string | null): string {
-    if (value == null || value === '' || value === 'null') {
-      return '—';
-    }
-    const parsed = new Date(value);
-    if (isNaN(parsed.getTime())) {
-      return '—';
-    }
-    return parsed.toLocaleString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-    });
-  }
 }

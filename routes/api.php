@@ -401,6 +401,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/proposal-management/file-requests', [ProposalManagementController::class, 'createFileRequest']);
         Route::get('/proposal-management/post-board', [ProposalManagementController::class, 'postBoard']);
         Route::get('/proposal-management/all-candidates', [ProposalManagementController::class, 'allCandidates']);
+        Route::get('/proposal-management/all-candidates/{candidateId}/history', [ProposalManagementController::class, 'allCandidateHistory']);
         Route::post('/proposal-management/categories', [ProposalManagementController::class, 'createCategory']);
         Route::put('/proposal-management/categories/{id}', [ProposalManagementController::class, 'updateCategory']);
         Route::delete('/proposal-management/categories/{id}', [ProposalManagementController::class, 'deleteCategory']);

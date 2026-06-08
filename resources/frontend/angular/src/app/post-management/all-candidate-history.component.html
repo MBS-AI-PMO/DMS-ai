@@ -1,0 +1,122 @@
+<section class="content pm-module">
+  <div class="content-block">
+    <div class="pm-page-header">
+      <div>
+        <span class="page-title">Candidate history</span>
+        <p class="pm-page-subtitle" *ngIf="candidate">
+          All jobs applied by <strong>{{ candidate.candidateName }}</strong>
+        </p>
+      </div>
+      <button mat-stroked-button class="pm-btn-primary-outline" type="button" (click)="goBack()">
+        <mat-icon>arrow_back</mat-icon> Back to All Candidates
+      </button>
+    </div>
+
+    <div *ngIf="loading" class="pm-empty">
+      <mat-icon>hourglass_top</mat-icon>
+      <p>Loading history…</p>
+    </div>
+
+    <ng-container *ngIf="!loading && candidate">
+      <mat-card class="pm-card mat-elevation-z0 mb-3">
+        <mat-card-content class="candidate-summary">
+          <div class="pm-candidate-cell">
+            <div class="pm-avatar">{{ candidate.candidateName.charAt(0) | uppercase }}</div>
+            <div>
+              <h5 class="mb-1">{{ candidate.candidateName }}</h5>
+              <div class="pm-candidate-meta">CNIC {{ candidate.candidateCode || '—' }}</div>
+              <div class="pm-candidate-meta">{{ candidate.phone || '—' }} · {{ candidate.email || '—' }}</div>
+              <div class="pm-candidate-meta" *ngIf="candidate.experienceYears !== null && candidate.experienceYears !== undefined">
+                {{ candidate.experienceYears }} yrs experience
+              </div>
+            </div>
+          </div>
+          <span class="pm-count-pill">{{ candidate.applicationCount }} job{{ candidate.applicationCount === 1 ? '' : 's' }} applied</span>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="pm-card mat-elevation-z0">
+        <div class="pm-card-toolbar">
+          <h6 class="pm-card-title mb-0">
+            <mat-icon>history</mat-icon> Applied jobs
+          </h6>
+        </div>
+
+        <div class="pm-table-wrap" *ngIf="applications.length > 0">
+          <table class="table pm-table candidate-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Job post</th>
+                <th>Applied on</th>
+                <th>Status</th>
+                <th>Interview</th>
+                <th>Interviewer</th>
+                <th>CV</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let app of pagedApplications; let i = index">
+                <td>{{ pageIndex * currentPageSize + i + 1 }}</td>
+                <td>
+                  <button
+                    mat-button
+                    color="primary"
+                    type="button"
+                    class="pm-post-link px-0"
+                    (click)="navigateToPost(app.postId)">
+                    {{ app.postTitle || 'Untitled post' }}
+                  </button>
+                </td>
+                <td class="text-nowrap">{{ formatDisplayDate(app.createdDate) }}</td>
+                <td>
+                  <span class="pm-status" [ngClass]="'pm-status-' + app.stage">
+                    {{ getStageLabel(app.stage) }}
+                  </span>
+                </td>
+                <td class="text-nowrap">{{ formatDisplayDateTime(app.interviewDate) }}</td>
+                <td>{{ app.interviewer || '—' }}</td>
+                <td>
+                  <button
+                    mat-button
+                    color="primary"
+                    type="button"
+                    class="cv-link-btn px-0"
+                    [disabled]="!app.hasCv"
+                    (click)="openApplicationCv(app)">
+                    {{ app.hasCv ? (app.cvOriginalName || 'View CV') : '—' }}
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <mat-paginator
+          *ngIf="applications.length > 10"
+          class="pm-paginator"
+          [length]="applications.length"
+          [pageIndex]="pageIndex"
+          [pageSize]="currentPageSize"
+          [pageSizeOptions]="pageSizeOptions"
+          (page)="onPageChange($event)"
+          showFirstLastButtons
+          aria-label="Applied jobs pagination">
+        </mat-paginator>
+
+        <div class="pm-empty" *ngIf="applications.length === 0">
+          <mat-icon>work_off</mat-icon>
+          <p>No job applications found for this candidate.</p>
+        </div>
+      </mat-card>
+    </ng-container>
+
+    <mat-card class="pm-card mat-elevation-z0" *ngIf="!loading && !candidate">
+      <div class="pm-empty">
+        <mat-icon>error_outline</mat-icon>
+        <p>Candidate not found.</p>
+        <button mat-stroked-button color="primary" type="button" (click)="goBack()">Back to All Candidates</button>
+      </div>
+    </mat-card>
+  </div>
+</section>

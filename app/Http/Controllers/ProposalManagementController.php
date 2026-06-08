@@ -541,17 +541,7 @@ class ProposalManagementController extends Controller
                 ];
             }
 
-            $groups[$groupKey]['applications'][] = [
-                'id' => $candidate->id,
-                'postId' => $candidate->postId,
-                'postTitle' => $candidate->post ? $candidate->post->title : '',
-                'stage' => $candidate->stage,
-                'createdDate' => $this->formatApiDateTime($candidate->createdDate, $candidate->modifiedDate),
-                'interviewDate' => $this->formatApiDateTime($candidate->interviewDate),
-                'interviewer' => $candidate->interviewer ?? null,
-                'hasCv' => !empty($candidate->cvPath),
-                'cvOriginalName' => $candidate->cvOriginalName,
-            ];
+            $groups[$groupKey]['applications'][] = $this->mapGroupedApplication($candidate);
 
             $groups[$groupKey]['applicationCount']++;
         }
@@ -583,6 +573,55 @@ class ProposalManagementController extends Controller
             ->all();
 
         return response()->json(['candidates' => $candidates]);
+    }
+
+    public function allCandidateHistory(string $candidateId)
+    {
+        $userId = $this->getUserId();
+
+        $anchor = ProposalCandidate::where('id', $candidateId)
+            ->where('createdBy', $userId)
+            ->firstOrFail();
+
+        $historyQuery = ProposalCandidate::with('post')
+            ->where('createdBy', $userId)
+            ->orderByDesc('createdDate');
+
+        $this->applyCandidateHistoryMatch($historyQuery, $anchor);
+
+        $records = $historyQuery->get();
+        $applications = $records
+            ->map(fn (ProposalCandidate $candidate) => $this->mapGroupedApplication($candidate))
+            ->values()
+            ->all();
+
+        return response()->json([
+            'candidate' => [
+                'groupKey' => $this->resolveCandidateGroupKey($anchor),
+                'candidateName' => $anchor->candidateName,
+                'candidateCode' => $anchor->candidateCode,
+                'phone' => $anchor->phone,
+                'email' => $anchor->email,
+                'experienceYears' => $anchor->experienceYears,
+                'applicationCount' => count($applications),
+                'applications' => $applications,
+            ],
+        ]);
+    }
+
+    private function mapGroupedApplication(ProposalCandidate $candidate): array
+    {
+        return [
+            'id' => $candidate->id,
+            'postId' => $candidate->postId,
+            'postTitle' => $candidate->post ? $candidate->post->title : '',
+            'stage' => $candidate->stage,
+            'createdDate' => $this->formatApiDateTime($candidate->createdDate, $candidate->modifiedDate),
+            'interviewDate' => $this->formatApiDateTime($candidate->interviewDate),
+            'interviewer' => $candidate->interviewer ?? null,
+            'hasCv' => !empty($candidate->cvPath),
+            'cvOriginalName' => $candidate->cvOriginalName,
+        ];
     }
 
     private function resolveCandidateGroupKey(ProposalCandidate $candidate): string
