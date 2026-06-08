@@ -119,6 +119,15 @@ export const ROUTES: RouteInfo[] = [
     submenu: [],
   },
   {
+    path: 'all-candidates',
+    title: 'ALL_CANDIDATES',
+    icon: 'users',
+    class: '',
+    groupTitle: false,
+    claims: ['POST_MANAGEMENT_VIEW'],
+    submenu: [],
+  },
+  {
     path: 'assigned-interviews',
     title: 'ASSIGNED_INTERVIEWS',
     icon: 'calendar',

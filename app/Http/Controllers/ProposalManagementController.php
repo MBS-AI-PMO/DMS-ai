@@ -514,6 +514,92 @@ class ProposalManagementController extends Controller
         return response()->json($this->storeCandidate($request, $post, $userId), 201);
     }
 
+    public function allCandidates()
+    {
+        $userId = $this->getUserId();
+
+        $records = ProposalCandidate::with('post')
+            ->where('createdBy', $userId)
+            ->orderByDesc('createdDate')
+            ->get();
+
+        $groups = [];
+
+        foreach ($records as $candidate) {
+            $groupKey = $this->resolveCandidateGroupKey($candidate);
+
+            if (!isset($groups[$groupKey])) {
+                $groups[$groupKey] = [
+                    'groupKey' => $groupKey,
+                    'candidateName' => $candidate->candidateName,
+                    'candidateCode' => $candidate->candidateCode,
+                    'phone' => $candidate->phone,
+                    'email' => $candidate->email,
+                    'experienceYears' => $candidate->experienceYears,
+                    'applicationCount' => 0,
+                    'applications' => [],
+                ];
+            }
+
+            $groups[$groupKey]['applications'][] = [
+                'id' => $candidate->id,
+                'postId' => $candidate->postId,
+                'postTitle' => $candidate->post ? $candidate->post->title : '',
+                'stage' => $candidate->stage,
+                'createdDate' => $this->formatApiDateTime($candidate->createdDate, $candidate->modifiedDate),
+                'interviewDate' => $this->formatApiDateTime($candidate->interviewDate),
+                'interviewer' => $candidate->interviewer ?? null,
+                'hasCv' => !empty($candidate->cvPath),
+                'cvOriginalName' => $candidate->cvOriginalName,
+            ];
+
+            $groups[$groupKey]['applicationCount']++;
+        }
+
+        $candidates = collect($groups)
+            ->map(function (array $group) {
+                $latest = $group['applications'][0] ?? null;
+
+                return [
+                    'groupKey' => $group['groupKey'],
+                    'candidateName' => $group['candidateName'],
+                    'candidateCode' => $group['candidateCode'],
+                    'phone' => $group['phone'],
+                    'email' => $group['email'],
+                    'experienceYears' => $group['experienceYears'],
+                    'applicationCount' => $group['applicationCount'],
+                    'latestApplicationId' => $latest['id'] ?? null,
+                    'latestPostId' => $latest['postId'] ?? null,
+                    'latestPostTitle' => $latest['postTitle'] ?? '',
+                    'latestStage' => $latest['stage'] ?? 'cv_received',
+                    'latestAppliedDate' => $latest['createdDate'] ?? null,
+                    'hasCv' => $latest['hasCv'] ?? false,
+                    'cvOriginalName' => $latest['cvOriginalName'] ?? null,
+                    'applications' => $group['applications'],
+                ];
+            })
+            ->sortByDesc(fn (array $group) => $group['latestAppliedDate'] ?? '')
+            ->values()
+            ->all();
+
+        return response()->json(['candidates' => $candidates]);
+    }
+
+    private function resolveCandidateGroupKey(ProposalCandidate $candidate): string
+    {
+        $cnicDigits = $this->normalizeCnicDigits($candidate->candidateCode);
+        if ($cnicDigits) {
+            return 'cnic:' . $cnicDigits;
+        }
+
+        $email = !empty($candidate->email) ? strtolower(trim($candidate->email)) : null;
+        if ($email) {
+            return 'email:' . $email;
+        }
+
+        return 'id:' . $candidate->id;
+    }
+
     public function getPublicPost(string $postId)
     {
         $post = ProposalPost::where('id', $postId)->firstOrFail();
@@ -530,6 +616,95 @@ class ProposalManagementController extends Controller
         ]);
     }
 
+    public function lookupPublicCandidate(Request $request, string $postId)
+    {
+        $request->validate([
+            'candidateCode' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:255',
+        ]);
+
+        $post = ProposalPost::where('id', $postId)->firstOrFail();
+        $cnicDigits = $this->normalizeCnicDigits($request->input('candidateCode'));
+        $email = !empty($request->email) ? strtolower(trim($request->email)) : null;
+
+        if (!$cnicDigits && !$email) {
+            return response()->json([
+                'appliedOnThisPost' => false,
+                'profile' => null,
+            ]);
+        }
+
+        $onPostQuery = ProposalCandidate::where('postId', $post->id);
+        $this->applyCandidateLookupMatch($onPostQuery, $cnicDigits, $email);
+        $existingOnPost = $onPostQuery->first();
+
+        if ($existingOnPost) {
+            return response()->json([
+                'appliedOnThisPost' => true,
+                'application' => [
+                    'id' => $existingOnPost->id,
+                    'candidateName' => $existingOnPost->candidateName,
+                    'candidateCode' => $existingOnPost->candidateCode,
+                    'phone' => $existingOnPost->phone,
+                    'email' => $existingOnPost->email,
+                    'experienceYears' => $existingOnPost->experienceYears,
+                    'cvOriginalName' => $existingOnPost->cvOriginalName,
+                    'hasCv' => !empty($existingOnPost->cvPath),
+                    'stage' => $existingOnPost->stage,
+                    'createdDate' => $this->formatApiDateTime($existingOnPost->createdDate, $existingOnPost->modifiedDate),
+                ],
+            ]);
+        }
+
+        $profileQuery = ProposalCandidate::where('createdBy', $post->createdBy);
+        $this->applyCandidateLookupMatch($profileQuery, $cnicDigits, $email);
+        $profile = $profileQuery->orderByDesc('createdDate')->first();
+
+        return response()->json([
+            'appliedOnThisPost' => false,
+            'profile' => $profile ? [
+                'candidateName' => $profile->candidateName,
+                'candidateCode' => $profile->candidateCode,
+                'phone' => $profile->phone,
+                'email' => $profile->email,
+                'experienceYears' => $profile->experienceYears,
+                'cvOriginalName' => $profile->cvOriginalName,
+                'hasCv' => !empty($profile->cvPath),
+            ] : null,
+        ]);
+    }
+
+    public function openPublicApplicationCv(Request $request, string $postId)
+    {
+        $request->validate([
+            'candidateCode' => ['required', 'string', 'max:20', function ($attribute, $value, $fail) {
+                if ($this->normalizeCnicDigits($value) === null) {
+                    $fail('CNIC must be 13 digits.');
+                }
+            }],
+        ]);
+
+        $post = ProposalPost::where('id', $postId)->firstOrFail();
+        $cnicDigits = $this->normalizeCnicDigits($request->input('candidateCode'));
+
+        $query = ProposalCandidate::where('postId', $post->id);
+        $this->applyCandidateLookupMatch($query, $cnicDigits, null);
+        $candidate = $query->firstOrFail();
+
+        if (!$candidate->cvPath || !Storage::disk('local')->exists($candidate->cvPath)) {
+            abort(404, 'CV not found.');
+        }
+
+        $path = Storage::disk('local')->path($candidate->cvPath);
+        $mimeType = Storage::disk('local')->mimeType($candidate->cvPath) ?: 'application/octet-stream';
+        $fileName = $candidate->cvOriginalName ?: ($candidate->candidateName . '-cv');
+
+        return response()->file($path, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="' . $fileName . '"',
+        ]);
+    }
+
     public function submitPublicCandidate(Request $request, string $postId)
     {
         $post = ProposalPost::where('id', $postId)->firstOrFail();
@@ -539,6 +714,8 @@ class ProposalManagementController extends Controller
 
     private function storeCandidate(Request $request, ProposalPost $post, string $createdBy): array
     {
+        $isUpdateCvOnly = $request->boolean('updateCvOnly');
+
         $validated = $request->validate([
             'candidateName' => 'required|string|max:255',
             'candidateCode' => ['required', 'string', 'max:20', function ($attribute, $value, $fail) {
@@ -551,8 +728,27 @@ class ProposalManagementController extends Controller
             'experienceYears' => 'required|integer|min:0|max:60',
             'workMode' => 'nullable|string|in:remote,physical',
             'address' => 'nullable|string|max:500',
-            'cv' => 'required|file',
+            'cv' => $isUpdateCvOnly ? 'nullable|file' : 'required|file',
+            'updateCvOnly' => 'sometimes|boolean',
         ]);
+
+        $existing = $this->findCandidateOnPost(
+            $post->id,
+            $validated['candidateCode'],
+            $validated['email']
+        );
+
+        if ($existing) {
+            if ($isUpdateCvOnly) {
+                return $this->updateCandidateCv($existing, $request);
+            }
+
+            abort(422, 'You have already applied for this job. You can update your CV only.');
+        }
+
+        if ($isUpdateCvOnly) {
+            abort(422, 'No existing application found for this job.');
+        }
 
         $cvPath = null;
         $cvOriginalName = null;
@@ -596,6 +792,41 @@ class ProposalManagementController extends Controller
         $candidate = ProposalCandidate::create($candidatePayload);
 
         return $this->mapCandidate($candidate);
+    }
+
+    private function findCandidateOnPost(string $postId, string $candidateCode, string $email): ?ProposalCandidate
+    {
+        $query = ProposalCandidate::where('postId', $postId);
+        $this->applyCandidateLookupMatch(
+            $query,
+            $this->normalizeCnicDigits($candidateCode),
+            strtolower(trim($email))
+        );
+
+        return $query->first();
+    }
+
+    private function updateCandidateCv(ProposalCandidate $candidate, Request $request): array
+    {
+        if (!$request->hasFile('cv')) {
+            return $this->mapCandidate($candidate);
+        }
+
+        if ($candidate->cvPath && Storage::disk('local')->exists($candidate->cvPath)) {
+            Storage::disk('local')->delete($candidate->cvPath);
+        }
+
+        $uploadedFile = $request->file('cv');
+        $candidate->cvOriginalName = $uploadedFile->getClientOriginalName();
+        $candidate->cvPath = $uploadedFile->storeAs(
+            'proposal-candidates',
+            Uuid::uuid4() . '.' . $uploadedFile->getClientOriginalExtension(),
+            'local'
+        );
+        $candidate->modifiedDate = Carbon::now();
+        $candidate->save();
+
+        return $this->mapCandidate($candidate->fresh());
     }
 
     public function updateCandidate(Request $request, string $id)
@@ -1283,7 +1514,11 @@ class ProposalManagementController extends Controller
     {
         $cnicDigits = $this->normalizeCnicDigits($candidate->candidateCode);
         $email = !empty($candidate->email) ? strtolower(trim($candidate->email)) : null;
+        $this->applyCandidateLookupMatch($query, $cnicDigits, $email);
+    }
 
+    private function applyCandidateLookupMatch($query, ?string $cnicDigits, ?string $email): void
+    {
         if (!$cnicDigits && !$email) {
             $query->whereRaw('0 = 1');
 

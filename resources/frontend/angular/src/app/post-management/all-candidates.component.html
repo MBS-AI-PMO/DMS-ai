@@ -1,0 +1,154 @@
+<section class="content pm-module">
+  <div class="content-block">
+    <div class="pm-page-header">
+      <div>
+        <span class="page-title">{{ "ALL_CANDIDATES" | translate }}</span>
+        <p class="pm-page-subtitle">Each candidate appears once. Open history to see every job they applied for.</p>
+      </div>
+      <button mat-stroked-button class="pm-btn-primary-outline" type="button" routerLink="/post-management">
+        <mat-icon>arrow_back</mat-icon> Back to Posts
+      </button>
+    </div>
+
+    <mat-card class="pm-card mat-elevation-z0">
+      <div class="pm-card-toolbar d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <h6 class="pm-card-title mb-0">
+          <mat-icon>people</mat-icon> Candidates ({{ filteredCandidates.length }})
+        </h6>
+        <mat-form-field appearance="outline" class="pm-search-field mb-0">
+          <mat-label>Search</mat-label>
+          <mat-icon matPrefix>search</mat-icon>
+          <input matInput [(ngModel)]="searchQuery" placeholder="Name, CNIC, email, job title…">
+        </mat-form-field>
+      </div>
+
+      <div *ngIf="loading" class="pm-empty">
+        <mat-icon>hourglass_top</mat-icon>
+        <p>Loading candidates…</p>
+      </div>
+
+      <div class="pm-table-wrap" *ngIf="!loading && filteredCandidates.length > 0">
+        <table class="table pm-table candidate-table">
+          <thead>
+            <tr>
+              <th>Candidate</th>
+              <th>Jobs applied</th>
+              <th>Last applied</th>
+              <th class="text-end">History</th>
+            </tr>
+          </thead>
+          <tbody>
+            <ng-container *ngFor="let candidate of filteredCandidates">
+              <tr [class.pm-row-expanded]="expandedGroupKey === candidate.groupKey">
+                <td>
+                  <div class="pm-candidate-cell">
+                    <div class="pm-avatar">{{ candidate.candidateName.charAt(0) | uppercase }}</div>
+                    <div>
+                      <div class="pm-candidate-name">{{ candidate.candidateName }}</div>
+                      <div class="pm-candidate-meta">CNIC {{ candidate.candidateCode || '—' }}</div>
+                      <div class="pm-candidate-meta">{{ candidate.phone || '—' }} · {{ candidate.email || '—' }}</div>
+                      <div class="pm-candidate-meta" *ngIf="candidate.experienceYears !== null && candidate.experienceYears !== undefined">
+                        {{ candidate.experienceYears }} yrs experience
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="pm-count-pill">{{ candidate.applicationCount }} job{{ candidate.applicationCount === 1 ? '' : 's' }}</span>
+                  <div class="pm-candidate-meta mt-1 latest-job-hint">
+                    Latest: {{ candidate.latestPostTitle || '—' }}
+                  </div>
+                </td>
+                <td class="text-nowrap">
+                  <div>{{ formatDisplayDate(candidate.latestAppliedDate) }}</div>
+                  <span class="pm-status pm-status-sm" [ngClass]="'pm-status-' + candidate.latestStage">
+                    {{ getStageLabel(candidate.latestStage) }}
+                  </span>
+                </td>
+                <td class="text-end">
+                  <button
+                    mat-stroked-button
+                    color="primary"
+                    type="button"
+                    class="history-btn"
+                    (click)="toggleHistory(candidate)">
+                    <mat-icon>{{ expandedGroupKey === candidate.groupKey ? 'expand_less' : 'history' }}</mat-icon>
+                    {{ expandedGroupKey === candidate.groupKey ? 'Hide history' : 'View history' }}
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="expandedGroupKey === candidate.groupKey" class="history-expand-row">
+                <td colspan="4">
+                  <div class="history-panel">
+                    <div class="history-panel-header">
+                      <strong>{{ candidate.candidateName }}</strong>
+                      <span class="text-muted">— all job applications</span>
+                    </div>
+
+                    <div *ngIf="candidate.applications.length; else noHistory" class="history-jobs-list">
+                      <div class="history-job-card" *ngFor="let app of candidate.applications; let i = index">
+                        <div class="history-job-top">
+                          <div>
+                            <span class="history-job-index">#{{ i + 1 }}</span>
+                            <button
+                              mat-button
+                              color="primary"
+                              type="button"
+                              class="pm-post-link px-0"
+                              (click)="navigateToPost(app.postId)">
+                              {{ app.postTitle || 'Untitled post' }}
+                            </button>
+                          </div>
+                          <span class="pm-status" [ngClass]="'pm-status-' + app.stage">
+                            {{ getStageLabel(app.stage) }}
+                          </span>
+                        </div>
+
+                        <div class="history-job-details">
+                          <div class="history-detail">
+                            <span class="history-detail-label">Applied</span>
+                            <span>{{ formatDisplayDate(app.createdDate) }}</span>
+                          </div>
+                          <div class="history-detail" *ngIf="app.interviewDate">
+                            <span class="history-detail-label">Interview</span>
+                            <span>{{ formatDisplayDateTime(app.interviewDate) }}</span>
+                          </div>
+                          <div class="history-detail" *ngIf="app.interviewer">
+                            <span class="history-detail-label">Interviewer</span>
+                            <span>{{ app.interviewer }}</span>
+                          </div>
+                          <div class="history-detail">
+                            <span class="history-detail-label">CV</span>
+                            <button
+                              mat-button
+                              color="primary"
+                              type="button"
+                              class="cv-link-btn px-0"
+                              [disabled]="!app.hasCv"
+                              (click)="openApplicationCv(app)">
+                              {{ app.hasCv ? (app.cvOriginalName || 'View CV') : 'No CV uploaded' }}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <ng-template #noHistory>
+                      <div class="text-muted small">No applications found for this candidate.</div>
+                    </ng-template>
+                  </div>
+                </td>
+              </tr>
+            </ng-container>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pm-empty" *ngIf="!loading && filteredCandidates.length === 0">
+        <mat-icon>person_search</mat-icon>
+        <p *ngIf="searchQuery.trim()">No candidates match your search.</p>
+        <p *ngIf="!searchQuery.trim()">No applications yet. Share apply links from your job posts.</p>
+      </div>
+    </mat-card>
+  </div>
+</section>

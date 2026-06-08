@@ -21,6 +21,35 @@ interface PublicPost {
   description?: string;
 }
 
+interface ExistingApplication {
+  id: string;
+  candidateName: string;
+  candidateCode?: string;
+  phone?: string;
+  email?: string;
+  experienceYears?: number;
+  cvOriginalName?: string;
+  hasCv: boolean;
+  stage: string;
+  createdDate: string;
+}
+
+interface CandidateProfile {
+  candidateName: string;
+  candidateCode?: string;
+  phone?: string;
+  email?: string;
+  experienceYears?: number;
+  cvOriginalName?: string;
+  hasCv?: boolean;
+}
+
+interface LookupResponse {
+  appliedOnThisPost: boolean;
+  application?: ExistingApplication;
+  profile?: CandidateProfile | null;
+}
+
 @Component({
   selector: 'app-post-apply',
   standalone: true,
@@ -53,6 +82,14 @@ export class PostApplyComponent extends BaseComponent implements OnInit {
   loading = false;
   loadError = '';
   cnicTouched = false;
+  lookupLoading = false;
+  alreadyApplied = false;
+  existingCvName = '';
+  existingHasCv = false;
+  submittedAsUpdate = false;
+  submittedKeptExistingCv = false;
+  profileCvName = '';
+  profileHasCv = false;
 
   ngOnInit(): void {
     this.postId = this.route.snapshot.paramMap.get('id') || '';
@@ -102,6 +139,104 @@ export class PostApplyComponent extends BaseComponent implements OnInit {
   onCnicBlur(): void {
     this.cnicTouched = true;
     this.onCnicInput();
+    this.lookupCandidate();
+  }
+
+  onEmailBlur(): void {
+    if (this.email.trim()) {
+      this.lookupCandidate();
+    }
+  }
+
+  lookupCandidate(): void {
+    if (!this.postId || !this.isCnicValid()) {
+      return;
+    }
+
+    const params: Record<string, string> = {
+      candidateCode: this.candidateCode.trim(),
+    };
+    if (this.email.trim()) {
+      params['email'] = this.email.trim();
+    }
+
+    this.lookupLoading = true;
+    this.sub$.sink = this.httpClient
+      .get<LookupResponse>(`proposal-management/posts/${this.postId}/apply/lookup`, { params })
+      .subscribe({
+        next: (response) => {
+          this.lookupLoading = false;
+          if (response.appliedOnThisPost && response.application) {
+            this.applyExistingApplication(response.application);
+            return;
+          }
+
+          this.alreadyApplied = false;
+          this.existingCvName = '';
+          this.existingHasCv = false;
+          this.profileCvName = '';
+          this.profileHasCv = false;
+
+          if (response.profile) {
+            this.prefillFromProfile(response.profile);
+          }
+        },
+        error: () => {
+          this.lookupLoading = false;
+        },
+      });
+  }
+
+  private applyExistingApplication(application: ExistingApplication): void {
+    this.alreadyApplied = true;
+    this.candidateName = application.candidateName || '';
+    this.candidateCode = application.candidateCode || this.candidateCode;
+    this.phone = application.phone || '';
+    this.email = application.email || '';
+    this.experienceYears = application.experienceYears ?? null;
+    this.existingCvName = application.cvOriginalName || '';
+    this.existingHasCv = application.hasCv;
+    this.profileCvName = '';
+    this.profileHasCv = false;
+    this.cv = null;
+  }
+
+  private prefillFromProfile(profile: CandidateProfile): void {
+    if (!this.candidateName.trim()) {
+      this.candidateName = profile.candidateName || '';
+    }
+    if (!this.phone.trim()) {
+      this.phone = profile.phone || '';
+    }
+    if (!this.email.trim()) {
+      this.email = profile.email || '';
+    }
+    if (this.experienceYears === null || this.experienceYears === undefined) {
+      this.experienceYears = profile.experienceYears ?? null;
+    }
+    this.profileCvName = profile.cvOriginalName || '';
+    this.profileHasCv = !!profile.hasCv;
+  }
+
+  viewExistingCv(): void {
+    if (!this.postId || !this.isCnicValid() || !this.existingHasCv) {
+      return;
+    }
+
+    this.sub$.sink = this.httpClient
+      .get(`proposal-management/posts/${this.postId}/apply/cv`, {
+        params: { candidateCode: this.candidateCode.trim() },
+        responseType: 'blob',
+      })
+      .subscribe({
+        next: (blob) => {
+          const url = URL.createObjectURL(blob);
+          window.open(url, '_blank');
+        },
+        error: () => {
+          this.toastrService.error('Could not open your CV');
+        },
+      });
   }
 
   getCnicDigits(): string {
@@ -125,6 +260,13 @@ export class PostApplyComponent extends BaseComponent implements OnInit {
     return '';
   }
 
+  get submitButtonLabel(): string {
+    if (!this.alreadyApplied) {
+      return 'Submit Application';
+    }
+    return this.cv ? 'Update CV' : 'Continue with existing CV';
+  }
+
   submitApplication(): void {
     this.cnicTouched = true;
     this.onCnicInput();
@@ -144,14 +286,31 @@ export class PostApplyComponent extends BaseComponent implements OnInit {
     formData.append('phone', this.phone.trim());
     formData.append('email', this.email.trim());
     formData.append('experienceYears', String(this.experienceYears));
-    formData.append('cv', this.cv as File);
+
+    if (this.alreadyApplied) {
+      formData.append('updateCvOnly', '1');
+    }
+
+    if (this.cv) {
+      formData.append('cv', this.cv);
+    }
+
+    const keptExistingCv = this.alreadyApplied && !this.cv;
 
     this.sub$.sink = this.httpClient
       .post(`proposal-management/posts/${this.postId}/apply`, formData)
       .subscribe({
         next: () => {
           this.submitted = true;
-          this.toastrService.success('Application submitted successfully');
+          this.submittedAsUpdate = this.alreadyApplied && !!this.cv;
+          this.submittedKeptExistingCv = keptExistingCv;
+          if (this.submittedAsUpdate) {
+            this.toastrService.success('CV updated successfully');
+          } else if (keptExistingCv) {
+            this.toastrService.success('Your existing application is confirmed');
+          } else {
+            this.toastrService.success('Application submitted successfully');
+          }
         },
         error: (err: { error?: { errors?: Record<string, string[]>; message?: string } }) => {
           const cnicErrors = err?.error?.errors?.['candidateCode'];
@@ -165,7 +324,7 @@ export class PostApplyComponent extends BaseComponent implements OnInit {
   }
 
   isApplicationInvalid(): boolean {
-    return (
+    const baseInvalid =
       !this.postId
       || !this.candidateName.trim()
       || !this.isCnicValid()
@@ -173,8 +332,12 @@ export class PostApplyComponent extends BaseComponent implements OnInit {
       || !this.email.trim()
       || this.experienceYears === null
       || this.experienceYears === undefined
-      || this.experienceYears < 0
-      || !this.cv
-    );
+      || this.experienceYears < 0;
+
+    if (this.alreadyApplied) {
+      return baseInvalid;
+    }
+
+    return baseInvalid || !this.cv;
   }
 }

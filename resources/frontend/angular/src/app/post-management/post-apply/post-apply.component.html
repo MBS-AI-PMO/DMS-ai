@@ -49,44 +49,82 @@
             <mat-hint>13 digits — format: 35201-1234567-1</mat-hint>
             <mat-error *ngIf="cnicErrorMessage">{{ cnicErrorMessage }}</mat-error>
           </mat-form-field>
+          <div class="lookup-status text-muted small" *ngIf="lookupLoading">
+            <mat-icon class="align-middle">sync</mat-icon> Checking your records…
+          </div>
+        </div>
+
+        <div class="already-applied-banner mb-3" *ngIf="alreadyApplied">
+          <mat-icon>info</mat-icon>
+          <div>
+            <strong>You have already applied for this job.</strong>
+            <p class="mb-0">Your saved details are shown below. You can keep your current CV or upload a new one.</p>
+          </div>
         </div>
 
         <div class="row">
           <div class="col-md-6">
             <mat-form-field appearance="outline" class="w-100 mb-2">
               <mat-label>Full name</mat-label>
-              <input matInput [(ngModel)]="candidateName" required>
+              <input matInput [(ngModel)]="candidateName" [readonly]="alreadyApplied" required>
             </mat-form-field>
           </div>
           <div class="col-md-6">
             <mat-form-field appearance="outline" class="w-100 mb-2">
               <mat-label>Phone</mat-label>
-              <input matInput [(ngModel)]="phone" required>
+              <input matInput [(ngModel)]="phone" [readonly]="alreadyApplied" required>
             </mat-form-field>
           </div>
           <div class="col-md-6">
             <mat-form-field appearance="outline" class="w-100 mb-2">
               <mat-label>Email</mat-label>
-              <input matInput type="email" [(ngModel)]="email" required>
-              <mat-hint>Used with CNIC to find your previous applications</mat-hint>
+              <input matInput type="email" [(ngModel)]="email" (blur)="onEmailBlur()" [readonly]="alreadyApplied" required>
+              <mat-hint *ngIf="!alreadyApplied">Used with CNIC to find your previous applications</mat-hint>
             </mat-form-field>
           </div>
           <div class="col-md-6">
             <mat-form-field appearance="outline" class="w-100 mb-2">
               <mat-label>Experience (Years)</mat-label>
-              <input matInput type="number" min="0" [(ngModel)]="experienceYears" required>
+              <input matInput type="number" min="0" [(ngModel)]="experienceYears" [readonly]="alreadyApplied" required>
             </mat-form-field>
           </div>
         </div>
 
+        <div class="existing-cv-block mb-3" *ngIf="alreadyApplied && existingHasCv">
+          <div class="existing-cv-label">
+            <mat-icon>description</mat-icon>
+            Current CV on file
+          </div>
+          <div class="existing-cv-row">
+            <div class="existing-cv-name">{{ existingCvName || 'Uploaded CV' }}</div>
+            <button mat-stroked-button color="primary" type="button" (click)="viewExistingCv()">
+              <mat-icon>visibility</mat-icon> View CV
+            </button>
+          </div>
+        </div>
+
+        <div class="profile-cv-note mb-3" *ngIf="!alreadyApplied && profileHasCv">
+          <mat-icon>info</mat-icon>
+          <span>Previous CV on record: <strong>{{ profileCvName || 'Uploaded file' }}</strong>. Please upload a CV for this application.</span>
+        </div>
+
         <div class="mb-3">
-          <label class="form-label">Upload CV <span class="text-danger">*</span></label>
+          <label class="form-label">
+            {{ alreadyApplied ? 'Upload new CV (optional)' : 'Upload CV' }}
+            <span class="text-danger" *ngIf="!alreadyApplied">*</span>
+          </label>
           <input
             type="file"
             class="form-control file-input-custom"
             accept=".pdf,.doc,.docx"
-            required
+            [required]="!alreadyApplied"
             (change)="onCvSelected(($any($event.target).files && $any($event.target).files.length) ? $any($event.target).files[0] : null)" />
+          <div class="form-text" *ngIf="alreadyApplied">
+            Leave empty to keep your current CV: <strong>{{ existingCvName || 'Uploaded file' }}</strong>
+          </div>
+          <div class="form-text" *ngIf="alreadyApplied && cv">
+            New file selected: <strong>{{ cv.name }}</strong> — this will replace your current CV.
+          </div>
         </div>
 
         <div class="text-end">
@@ -96,7 +134,8 @@
             type="button"
             [disabled]="isApplicationInvalid()"
             (click)="submitApplication()">
-            <mat-icon>send</mat-icon> Submit Application
+            <mat-icon>{{ alreadyApplied ? (cv ? 'upload_file' : 'check_circle') : 'send' }}</mat-icon>
+            {{ submitButtonLabel }}
           </button>
         </div>
       </div>
@@ -104,8 +143,12 @@
       <ng-template #submittedMessage>
         <div *ngIf="!loading && !loadError" class="submitted-state">
           <mat-icon>check_circle</mat-icon>
-          <h4>Application Submitted</h4>
-          <p>Your application has been received successfully.</p>
+          <h4 *ngIf="submittedAsUpdate">CV Updated</h4>
+          <h4 *ngIf="submittedKeptExistingCv">Application Confirmed</h4>
+          <h4 *ngIf="!submittedAsUpdate && !submittedKeptExistingCv">Application Submitted</h4>
+          <p *ngIf="submittedAsUpdate">Your CV has been updated successfully.</p>
+          <p *ngIf="submittedKeptExistingCv">Your existing application and CV remain on file.</p>
+          <p *ngIf="!submittedAsUpdate && !submittedKeptExistingCv">Your application has been received successfully.</p>
         </div>
       </ng-template>
     </mat-card-content>

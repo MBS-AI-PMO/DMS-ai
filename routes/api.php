@@ -70,6 +70,8 @@ Route::get('document/{id}/officeviewer', [DocumentController::class, 'officeview
 Route::get('/companyprofile', [CompanyProfileController::class, 'getCompanyProfile']);
 Route::post('/companyprofile/activate_license', [CompanyProfileController::class, 'updateLicense']);
 Route::get('/proposal-management/posts/{postId}/apply', [ProposalManagementController::class, 'getPublicPost']);
+Route::get('/proposal-management/posts/{postId}/apply/lookup', [ProposalManagementController::class, 'lookupPublicCandidate']);
+Route::get('/proposal-management/posts/{postId}/apply/cv', [ProposalManagementController::class, 'openPublicApplicationCv']);
 Route::post('/proposal-management/posts/{postId}/apply', [ProposalManagementController::class, 'submitPublicCandidate']);
 
 
@@ -398,6 +400,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/proposal-management/files/{id}/open', [ProposalManagementController::class, 'openFile']);
         Route::post('/proposal-management/file-requests', [ProposalManagementController::class, 'createFileRequest']);
         Route::get('/proposal-management/post-board', [ProposalManagementController::class, 'postBoard']);
+        Route::get('/proposal-management/all-candidates', [ProposalManagementController::class, 'allCandidates']);
         Route::post('/proposal-management/categories', [ProposalManagementController::class, 'createCategory']);
         Route::put('/proposal-management/categories/{id}', [ProposalManagementController::class, 'updateCategory']);
         Route::delete('/proposal-management/categories/{id}', [ProposalManagementController::class, 'deleteCategory']);
