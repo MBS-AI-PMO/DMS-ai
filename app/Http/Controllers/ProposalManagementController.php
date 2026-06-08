@@ -6,6 +6,7 @@ use App\Models\ProposalFile;
 use App\Models\ProposalFileRequest;
 use App\Models\ProposalFolder;
 use App\Models\ProposalCandidate;
+use App\Models\ProposalCandidateCv;
 use App\Models\ProposalPost;
 use App\Models\ProposalCategory;
 use App\Models\ProposalDepartment;
@@ -21,6 +22,8 @@ use Ramsey\Uuid\Uuid;
 
 class ProposalManagementController extends Controller
 {
+    private const CANDIDATE_CV_LIMIT = 5;
+
     public function index()
     {
         $userId = $this->getUserId();
@@ -674,14 +677,21 @@ class ProposalManagementController extends Controller
             return response()->json([
                 'appliedOnThisPost' => false,
                 'profile' => null,
+                'cvs' => [],
+                'maxCvs' => self::CANDIDATE_CV_LIMIT,
             ]);
         }
+
+        $this->syncApplicationCvsToVault($post->createdBy, $cnicDigits, $email);
+        $cvs = $this->getCandidateCvVault($post->createdBy, $cnicDigits, $email);
 
         $onPostQuery = ProposalCandidate::where('postId', $post->id);
         $this->applyCandidateLookupMatch($onPostQuery, $cnicDigits, $email);
         $existingOnPost = $onPostQuery->first();
 
         if ($existingOnPost) {
+            $selectedCvId = $this->findVaultCvIdByPath($post->createdBy, $cnicDigits, $email, $existingOnPost->cvPath);
+
             return response()->json([
                 'appliedOnThisPost' => true,
                 'application' => [
@@ -693,9 +703,12 @@ class ProposalManagementController extends Controller
                     'experienceYears' => $existingOnPost->experienceYears,
                     'cvOriginalName' => $existingOnPost->cvOriginalName,
                     'hasCv' => !empty($existingOnPost->cvPath),
+                    'selectedCvId' => $selectedCvId,
                     'stage' => $existingOnPost->stage,
                     'createdDate' => $this->formatApiDateTime($existingOnPost->createdDate, $existingOnPost->modifiedDate),
                 ],
+                'cvs' => $cvs,
+                'maxCvs' => self::CANDIDATE_CV_LIMIT,
             ]);
         }
 
@@ -711,9 +724,41 @@ class ProposalManagementController extends Controller
                 'phone' => $profile->phone,
                 'email' => $profile->email,
                 'experienceYears' => $profile->experienceYears,
-                'cvOriginalName' => $profile->cvOriginalName,
-                'hasCv' => !empty($profile->cvPath),
             ] : null,
+            'cvs' => $cvs,
+            'maxCvs' => self::CANDIDATE_CV_LIMIT,
+        ]);
+    }
+
+    public function openPublicVaultCv(Request $request, string $postId, string $cvId)
+    {
+        $request->validate([
+            'candidateCode' => ['required', 'string', 'max:20', function ($attribute, $value, $fail) {
+                if ($this->normalizeCnicDigits($value) === null) {
+                    $fail('CNIC must be 13 digits.');
+                }
+            }],
+        ]);
+
+        $post = ProposalPost::where('id', $postId)->firstOrFail();
+        $vaultCv = $this->findVaultCvForCandidate(
+            $post->createdBy,
+            $cvId,
+            $request->input('candidateCode'),
+            !empty($request->email) ? strtolower(trim($request->email)) : null
+        );
+
+        if (!$vaultCv->cvPath || !Storage::disk('local')->exists($vaultCv->cvPath)) {
+            abort(404, 'CV not found.');
+        }
+
+        $path = Storage::disk('local')->path($vaultCv->cvPath);
+        $mimeType = Storage::disk('local')->mimeType($vaultCv->cvPath) ?: 'application/octet-stream';
+        $fileName = $vaultCv->cvOriginalName ?: 'candidate-cv';
+
+        return response()->file($path, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="' . $fileName . '"',
         ]);
     }
 
@@ -771,7 +816,8 @@ class ProposalManagementController extends Controller
             'experienceYears' => 'required|integer|min:0|max:60',
             'workMode' => 'nullable|string|in:remote,physical',
             'address' => 'nullable|string|max:500',
-            'cv' => $isUpdateCvOnly ? 'nullable|file' : 'required|file',
+            'cv' => 'nullable|file',
+            'selectedCvId' => 'nullable|uuid',
             'updateCvOnly' => 'sometimes|boolean',
         ]);
 
@@ -782,28 +828,20 @@ class ProposalManagementController extends Controller
         );
 
         if ($existing) {
-            if ($isUpdateCvOnly) {
-                return $this->updateCandidateCv($existing, $request);
-            }
-
-            abort(422, 'You have already applied for this job. You can update your CV only.');
+            abort(422, 'You have already applied for this job. Your application cannot be changed.');
         }
 
         if ($isUpdateCvOnly) {
             abort(422, 'No existing application found for this job.');
         }
 
-        $cvPath = null;
-        $cvOriginalName = null;
-        if ($request->hasFile('cv')) {
-            $uploadedFile = $request->file('cv');
-            $cvOriginalName = $uploadedFile->getClientOriginalName();
-            $cvPath = $uploadedFile->storeAs(
-                'proposal-candidates',
-                Uuid::uuid4() . '.' . $uploadedFile->getClientOriginalExtension(),
-                'local'
-            );
-        }
+        $resolvedCv = $this->resolveApplicationCv(
+            $request,
+            $post,
+            $validated['candidateCode'],
+            $validated['email'],
+            false
+        );
 
         $now = Carbon::now();
         $candidateColumns = Schema::getColumnListing('proposalcandidates');
@@ -814,8 +852,8 @@ class ProposalManagementController extends Controller
             'candidateCode' => $this->formatCnicFromInput($validated['candidateCode']),
             'phone' => !empty($validated['phone']) ? trim($validated['phone']) : null,
             'email' => !empty($validated['email']) ? strtolower(trim($validated['email'])) : null,
-            'cvOriginalName' => $cvOriginalName,
-            'cvPath' => $cvPath,
+            'cvOriginalName' => $resolvedCv['cvOriginalName'],
+            'cvPath' => $resolvedCv['cvPath'],
             'stage' => 'cv_received',
             'createdBy' => $createdBy,
             'createdDate' => $now,
@@ -849,25 +887,26 @@ class ProposalManagementController extends Controller
         return $query->first();
     }
 
-    private function updateCandidateCv(ProposalCandidate $candidate, Request $request): array
+    private function updateCandidateCv(ProposalCandidate $candidate, Request $request, ProposalPost $post): array
     {
-        if (!$request->hasFile('cv')) {
+        if (!$request->hasFile('cv') && !$request->filled('selectedCvId')) {
             return $this->mapCandidate($candidate);
         }
 
-        if ($candidate->cvPath && Storage::disk('local')->exists($candidate->cvPath)) {
-            Storage::disk('local')->delete($candidate->cvPath);
-        }
-
-        $uploadedFile = $request->file('cv');
-        $candidate->cvOriginalName = $uploadedFile->getClientOriginalName();
-        $candidate->cvPath = $uploadedFile->storeAs(
-            'proposal-candidates',
-            Uuid::uuid4() . '.' . $uploadedFile->getClientOriginalExtension(),
-            'local'
+        $resolvedCv = $this->resolveApplicationCv(
+            $request,
+            $post,
+            $candidate->candidateCode ?? '',
+            $candidate->email ?? '',
+            true
         );
-        $candidate->modifiedDate = Carbon::now();
-        $candidate->save();
+
+        if ($resolvedCv) {
+            $candidate->cvOriginalName = $resolvedCv['cvOriginalName'];
+            $candidate->cvPath = $resolvedCv['cvPath'];
+            $candidate->modifiedDate = Carbon::now();
+            $candidate->save();
+        }
 
         return $this->mapCandidate($candidate->fresh());
     }
@@ -1583,5 +1622,239 @@ class ProposalManagementController extends Controller
                 }
             }
         });
+    }
+
+    private function mapVaultCv(ProposalCandidateCv $cv): array
+    {
+        return [
+            'id' => $cv->id,
+            'cvOriginalName' => $cv->cvOriginalName,
+            'createdDate' => $this->formatApiDateTime($cv->createdDate, $cv->modifiedDate),
+        ];
+    }
+
+    private function syncApplicationCvsToVault(string $createdBy, ?string $cnicDigits, ?string $email): void
+    {
+        if (!Schema::hasTable('proposalcandidatecvs') || (!$cnicDigits && !$email)) {
+            return;
+        }
+
+        $applicationsQuery = ProposalCandidate::where('createdBy', $createdBy)
+            ->whereNotNull('cvPath')
+            ->where('cvPath', '!=', '');
+        $this->applyCandidateLookupMatch($applicationsQuery, $cnicDigits, $email);
+
+        $existingPaths = ProposalCandidateCv::where('createdBy', $createdBy)
+            ->where(function ($query) use ($cnicDigits, $email) {
+                $this->applyVaultLookupMatch($query, $cnicDigits, $email);
+            })
+            ->pluck('cvPath')
+            ->all();
+
+        foreach ($applicationsQuery->orderBy('createdDate')->get() as $application) {
+            if (!$application->cvPath || in_array($application->cvPath, $existingPaths, true)) {
+                continue;
+            }
+
+            $now = Carbon::now();
+            ProposalCandidateCv::create([
+                'id' => Uuid::uuid4()->toString(),
+                'createdBy' => $createdBy,
+                'candidateCode' => $this->formatCnicFromInput($application->candidateCode ?? ''),
+                'email' => !empty($application->email) ? strtolower(trim($application->email)) : null,
+                'cvOriginalName' => $application->cvOriginalName,
+                'cvPath' => $application->cvPath,
+                'createdDate' => $application->createdDate ?? $now,
+                'modifiedDate' => $application->modifiedDate ?? $now,
+            ]);
+            $existingPaths[] = $application->cvPath;
+        }
+
+        $this->enforceCvVaultLimit($createdBy, $cnicDigits, $email);
+    }
+
+    private function getCandidateCvVault(string $createdBy, ?string $cnicDigits, ?string $email): array
+    {
+        if (!Schema::hasTable('proposalcandidatecvs') || (!$cnicDigits && !$email)) {
+            return [];
+        }
+
+        return ProposalCandidateCv::where('createdBy', $createdBy)
+            ->where(function ($query) use ($cnicDigits, $email) {
+                $this->applyVaultLookupMatch($query, $cnicDigits, $email);
+            })
+            ->orderByDesc('createdDate')
+            ->limit(self::CANDIDATE_CV_LIMIT)
+            ->get()
+            ->map(fn (ProposalCandidateCv $cv) => $this->mapVaultCv($cv))
+            ->values()
+            ->all();
+    }
+
+    private function applyVaultLookupMatch($query, ?string $cnicDigits, ?string $email): void
+    {
+        if (!$cnicDigits && !$email) {
+            $query->whereRaw('0 = 1');
+
+            return;
+        }
+
+        $query->where(function ($matchQuery) use ($cnicDigits, $email) {
+            if ($cnicDigits) {
+                $matchQuery->whereRaw(
+                    "REPLACE(REPLACE(REPLACE(candidateCode, '-', ''), ' ', ''), '.', '') = ?",
+                    [$cnicDigits]
+                );
+            }
+            if ($email) {
+                if ($cnicDigits) {
+                    $matchQuery->orWhereRaw('LOWER(TRIM(email)) = ?', [$email]);
+                } else {
+                    $matchQuery->whereRaw('LOWER(TRIM(email)) = ?', [$email]);
+                }
+            }
+        });
+    }
+
+    private function addCvToVault(
+        string $createdBy,
+        string $candidateCode,
+        ?string $email,
+        $uploadedFile
+    ): ProposalCandidateCv {
+        if (!Schema::hasTable('proposalcandidatecvs')) {
+            abort(500, 'CV storage is not available.');
+        }
+
+        $cvPath = $uploadedFile->storeAs(
+            'proposal-candidates',
+            Uuid::uuid4()->toString() . '.' . $uploadedFile->getClientOriginalExtension(),
+            'local'
+        );
+
+        $now = Carbon::now();
+        $vaultCv = ProposalCandidateCv::create([
+            'id' => Uuid::uuid4()->toString(),
+            'createdBy' => $createdBy,
+            'candidateCode' => $this->formatCnicFromInput($candidateCode),
+            'email' => !empty($email) ? strtolower(trim($email)) : null,
+            'cvOriginalName' => $uploadedFile->getClientOriginalName(),
+            'cvPath' => $cvPath,
+            'createdDate' => $now,
+            'modifiedDate' => $now,
+        ]);
+
+        $this->enforceCvVaultLimit(
+            $createdBy,
+            $this->normalizeCnicDigits($candidateCode),
+            !empty($email) ? strtolower(trim($email)) : null
+        );
+
+        return $vaultCv->fresh();
+    }
+
+    private function enforceCvVaultLimit(string $createdBy, ?string $cnicDigits, ?string $email): void
+    {
+        if (!Schema::hasTable('proposalcandidatecvs') || (!$cnicDigits && !$email)) {
+            return;
+        }
+
+        $entries = ProposalCandidateCv::where('createdBy', $createdBy)
+            ->where(function ($query) use ($cnicDigits, $email) {
+                $this->applyVaultLookupMatch($query, $cnicDigits, $email);
+            })
+            ->orderBy('createdDate')
+            ->get();
+
+        if ($entries->count() <= self::CANDIDATE_CV_LIMIT) {
+            return;
+        }
+
+        $toDelete = $entries->slice(0, $entries->count() - self::CANDIDATE_CV_LIMIT);
+        foreach ($toDelete as $entry) {
+            if ($entry->cvPath && Storage::disk('local')->exists($entry->cvPath)) {
+                Storage::disk('local')->delete($entry->cvPath);
+            }
+            $entry->delete();
+        }
+    }
+
+    private function findVaultCvIdByPath(
+        string $createdBy,
+        ?string $cnicDigits,
+        ?string $email,
+        ?string $cvPath
+    ): ?string {
+        if (!$cvPath || !Schema::hasTable('proposalcandidatecvs')) {
+            return null;
+        }
+
+        return ProposalCandidateCv::where('createdBy', $createdBy)
+            ->where('cvPath', $cvPath)
+            ->where(function ($query) use ($cnicDigits, $email) {
+                $this->applyVaultLookupMatch($query, $cnicDigits, $email);
+            })
+            ->value('id');
+    }
+
+    private function findVaultCvForCandidate(
+        string $createdBy,
+        string $cvId,
+        string $candidateCode,
+        ?string $email
+    ): ProposalCandidateCv {
+        $cnicDigits = $this->normalizeCnicDigits($candidateCode);
+        $normalizedEmail = !empty($email) ? strtolower(trim($email)) : null;
+
+        return ProposalCandidateCv::where('id', $cvId)
+            ->where('createdBy', $createdBy)
+            ->where(function ($query) use ($cnicDigits, $normalizedEmail) {
+                $this->applyVaultLookupMatch($query, $cnicDigits, $normalizedEmail);
+            })
+            ->firstOrFail();
+    }
+
+    private function resolveApplicationCv(
+        Request $request,
+        ProposalPost $post,
+        string $candidateCode,
+        ?string $email,
+        bool $allowSkip
+    ): ?array {
+        $normalizedEmail = !empty($email) ? strtolower(trim($email)) : null;
+
+        if ($request->filled('selectedCvId')) {
+            $vaultCv = $this->findVaultCvForCandidate(
+                $post->createdBy,
+                $request->input('selectedCvId'),
+                $candidateCode,
+                $normalizedEmail
+            );
+
+            return [
+                'cvPath' => $vaultCv->cvPath,
+                'cvOriginalName' => $vaultCv->cvOriginalName,
+            ];
+        }
+
+        if ($request->hasFile('cv')) {
+            $vaultCv = $this->addCvToVault(
+                $post->createdBy,
+                $candidateCode,
+                $normalizedEmail,
+                $request->file('cv')
+            );
+
+            return [
+                'cvPath' => $vaultCv->cvPath,
+                'cvOriginalName' => $vaultCv->cvOriginalName,
+            ];
+        }
+
+        if ($allowSkip) {
+            return null;
+        }
+
+        abort(422, 'Please select an existing CV or upload a new one.');
     }
 }

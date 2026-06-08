@@ -29,7 +29,7 @@
           <p class="mt-3 mb-0" *ngIf="post?.description">{{ post?.description }}</p>
         </div>
 
-        <div class="cnic-primary-block mb-3">
+        <div class="cnic-primary-block mb-3" [class.already-applied-readonly]="alreadyApplied">
           <div class="cnic-primary-label">
             <mat-icon>badge</mat-icon>
             CNIC (required for verification)
@@ -45,6 +45,7 @@
               maxlength="15"
               inputmode="numeric"
               autocomplete="off"
+              [readonly]="alreadyApplied"
               required />
             <mat-hint>13 digits — format: 35201-1234567-1</mat-hint>
             <mat-error *ngIf="cnicErrorMessage">{{ cnicErrorMessage }}</mat-error>
@@ -58,11 +59,11 @@
           <mat-icon>info</mat-icon>
           <div>
             <strong>You have already applied for this job.</strong>
-            <p class="mb-0">Your saved details are shown below. You can keep your current CV or upload a new one.</p>
+            <p class="mb-0">Your application details are shown below in read-only mode. No further changes can be made for this job.</p>
           </div>
         </div>
 
-        <div class="row">
+        <div class="row" [class.already-applied-readonly]="alreadyApplied">
           <div class="col-md-6">
             <mat-form-field appearance="outline" class="w-100 mb-2">
               <mat-label>Full name</mat-label>
@@ -90,52 +91,89 @@
           </div>
         </div>
 
-        <div class="existing-cv-block mb-3" *ngIf="alreadyApplied && existingHasCv">
+        <div class="existing-cv-block mb-3" *ngIf="alreadyApplied">
           <div class="existing-cv-label">
             <mat-icon>description</mat-icon>
-            Current CV on file
+            Submitted CV
           </div>
-          <div class="existing-cv-row">
-            <div class="existing-cv-name">{{ existingCvName || 'Uploaded CV' }}</div>
-            <button mat-stroked-button color="primary" type="button" (click)="viewExistingCv()">
-              <mat-icon>visibility</mat-icon> View CV
+          <div class="existing-cv-row" *ngIf="existingApplicationHasCv; else noCvSubmitted">
+            <span class="existing-cv-name">{{ existingApplicationCvName || 'Uploaded CV' }}</span>
+            <button mat-button color="primary" type="button" (click)="viewApplicationCv()">
+              <mat-icon>visibility</mat-icon> View
             </button>
           </div>
+          <ng-template #noCvSubmitted>
+            <span class="text-muted">No CV on file for this application.</span>
+          </ng-template>
         </div>
 
-        <div class="profile-cv-note mb-3" *ngIf="!alreadyApplied && profileHasCv">
-          <mat-icon>info</mat-icon>
-          <span>Previous CV on record: <strong>{{ profileCvName || 'Uploaded file' }}</strong>. Please upload a CV for this application.</span>
+        <div class="cv-vault-block mb-3" *ngIf="!alreadyApplied && (availableCvs.length > 0 || maxCvs)">
+          <div class="cv-vault-label">
+            <mat-icon>folder_open</mat-icon>
+            Your saved CVs ({{ availableCvs.length }}/{{ maxCvs }})
+          </div>
+          <p class="cv-vault-hint mb-2" *ngIf="availableCvs.length > 0">
+            Select any previous CV for this application. You can store up to {{ maxCvs }} CVs — oldest is removed when you upload a new one after the limit.
+          </p>
+
+          <mat-radio-group
+            class="cv-radio-group"
+            [ngModel]="cvMode === 'existing' ? selectedCvId : 'new'"
+            (ngModelChange)="onCvChoiceChange($event)">
+            <div class="cv-radio-item" *ngFor="let cv of availableCvs">
+              <mat-radio-button [value]="cv.id">
+                <span class="cv-radio-name">{{ cv.cvOriginalName || 'Uploaded CV' }}</span>
+                <span class="cv-radio-date">Uploaded {{ formatDisplayDate(cv.createdDate) }}</span>
+              </mat-radio-button>
+              <button mat-button color="primary" type="button" class="cv-view-btn" (click)="viewVaultCv(cv); $event.stopPropagation()">
+                <mat-icon>visibility</mat-icon> View
+              </button>
+            </div>
+            <div class="cv-radio-item cv-upload-option">
+              <mat-radio-button value="new">Upload new CV</mat-radio-button>
+              <span class="text-muted small" *ngIf="availableCvs.length >= maxCvs">
+                Oldest saved CV will be removed (FIFO).
+              </span>
+            </div>
+          </mat-radio-group>
         </div>
 
-        <div class="mb-3">
-          <label class="form-label">
-            {{ alreadyApplied ? 'Upload new CV (optional)' : 'Upload CV' }}
-            <span class="text-danger" *ngIf="!alreadyApplied">*</span>
-          </label>
+        <div class="mb-3" *ngIf="!alreadyApplied && availableCvs.length === 0">
+          <label class="form-label fw-semibold">Upload CV</label>
           <input
             type="file"
             class="form-control file-input-custom"
             accept=".pdf,.doc,.docx"
-            [required]="!alreadyApplied"
             (change)="onCvSelected(($any($event.target).files && $any($event.target).files.length) ? $any($event.target).files[0] : null)" />
-          <div class="form-text" *ngIf="alreadyApplied">
-            Leave empty to keep your current CV: <strong>{{ existingCvName || 'Uploaded file' }}</strong>
-          </div>
-          <div class="form-text" *ngIf="alreadyApplied && cv">
-            New file selected: <strong>{{ cv.name }}</strong> — this will replace your current CV.
+          <div class="form-text" *ngIf="cv">
+            Selected: <strong>{{ cv.name }}</strong>
           </div>
         </div>
 
-        <div class="text-end">
+        <div class="mb-3" *ngIf="!alreadyApplied && availableCvs.length > 0 && cvMode === 'new'">
+          <input
+            type="file"
+            class="form-control file-input-custom"
+            accept=".pdf,.doc,.docx"
+            (change)="onCvSelected(($any($event.target).files && $any($event.target).files.length) ? $any($event.target).files[0] : null)" />
+          <div class="form-text" *ngIf="cv">
+            Selected: <strong>{{ cv.name }}</strong>
+          </div>
+        </div>
+
+        <div class="form-text mb-3" *ngIf="!alreadyApplied && availableCvs.length > 0 && cvMode === 'existing' && selectedCvId">
+          Using selected CV from your saved list.
+        </div>
+
+        <div class="text-end" *ngIf="!alreadyApplied">
           <button
             mat-raised-button
             color="primary"
             type="button"
             [disabled]="isApplicationInvalid()"
             (click)="submitApplication()">
-            <mat-icon>{{ alreadyApplied ? (cv ? 'upload_file' : 'check_circle') : 'send' }}</mat-icon>
-            {{ submitButtonLabel }}
+            <mat-icon>send</mat-icon>
+            Submit Application
           </button>
         </div>
       </div>

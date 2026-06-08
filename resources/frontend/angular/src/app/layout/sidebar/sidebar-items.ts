@@ -124,7 +124,7 @@ export const ROUTES: RouteInfo[] = [
     icon: 'users',
     class: '',
     groupTitle: false,
-    claims: ['POST_MANAGEMENT_VIEW'],
+    claims: ['ALL_CANDIDATES_VIEW'],
     submenu: [],
   },
   {

@@ -7,9 +7,11 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatRadioModule } from '@angular/material/radio';
 import { ActivatedRoute } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { BaseComponent } from '../../base.component';
+import { formatDisplayDate } from '../post-management.utils';
 
 interface PublicPost {
   id: string;
@@ -21,6 +23,12 @@ interface PublicPost {
   description?: string;
 }
 
+interface VaultCv {
+  id: string;
+  cvOriginalName?: string;
+  createdDate?: string;
+}
+
 interface ExistingApplication {
   id: string;
   candidateName: string;
@@ -30,6 +38,7 @@ interface ExistingApplication {
   experienceYears?: number;
   cvOriginalName?: string;
   hasCv: boolean;
+  selectedCvId?: string;
   stage: string;
   createdDate: string;
 }
@@ -40,15 +49,17 @@ interface CandidateProfile {
   phone?: string;
   email?: string;
   experienceYears?: number;
-  cvOriginalName?: string;
-  hasCv?: boolean;
 }
 
 interface LookupResponse {
   appliedOnThisPost: boolean;
   application?: ExistingApplication;
   profile?: CandidateProfile | null;
+  cvs: VaultCv[];
+  maxCvs: number;
 }
+
+type CvMode = 'existing' | 'new';
 
 @Component({
   selector: 'app-post-apply',
@@ -61,6 +72,7 @@ interface LookupResponse {
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
+    MatRadioModule,
   ],
   templateUrl: './post-apply.component.html',
   styleUrl: './post-apply.component.scss',
@@ -84,12 +96,14 @@ export class PostApplyComponent extends BaseComponent implements OnInit {
   cnicTouched = false;
   lookupLoading = false;
   alreadyApplied = false;
-  existingCvName = '';
-  existingHasCv = false;
+  existingApplicationCvName = '';
+  existingApplicationHasCv = false;
   submittedAsUpdate = false;
   submittedKeptExistingCv = false;
-  profileCvName = '';
-  profileHasCv = false;
+  availableCvs: VaultCv[] = [];
+  maxCvs = 5;
+  selectedCvId = '';
+  cvMode: CvMode = 'new';
 
   ngOnInit(): void {
     this.postId = this.route.snapshot.paramMap.get('id') || '';
@@ -121,6 +135,34 @@ export class PostApplyComponent extends BaseComponent implements OnInit {
 
   onCvSelected(file: File | null): void {
     this.cv = file;
+    if (file) {
+      this.cvMode = 'new';
+      this.selectedCvId = '';
+    }
+  }
+
+  onCvModeChange(mode: CvMode): void {
+    this.cvMode = mode;
+    if (mode === 'existing') {
+      this.cv = null;
+      if (!this.selectedCvId && this.availableCvs.length) {
+        this.selectedCvId = this.availableCvs[0].id;
+      }
+    }
+  }
+
+  onCvChoiceChange(choice: string): void {
+    if (choice === 'new') {
+      this.onCvModeChange('new');
+      return;
+    }
+    this.onSelectedCvChange(choice);
+  }
+
+  onSelectedCvChange(cvId: string): void {
+    this.selectedCvId = cvId;
+    this.cvMode = 'existing';
+    this.cv = null;
   }
 
   onCnicInput(): void {
@@ -166,20 +208,19 @@ export class PostApplyComponent extends BaseComponent implements OnInit {
       .subscribe({
         next: (response) => {
           this.lookupLoading = false;
+          this.availableCvs = response.cvs || [];
+          this.maxCvs = response.maxCvs || 5;
+
           if (response.appliedOnThisPost && response.application) {
             this.applyExistingApplication(response.application);
             return;
           }
 
           this.alreadyApplied = false;
-          this.existingCvName = '';
-          this.existingHasCv = false;
-          this.profileCvName = '';
-          this.profileHasCv = false;
-
           if (response.profile) {
             this.prefillFromProfile(response.profile);
           }
+          this.setupCvSelection();
         },
         error: () => {
           this.lookupLoading = false;
@@ -194,11 +235,10 @@ export class PostApplyComponent extends BaseComponent implements OnInit {
     this.phone = application.phone || '';
     this.email = application.email || '';
     this.experienceYears = application.experienceYears ?? null;
-    this.existingCvName = application.cvOriginalName || '';
-    this.existingHasCv = application.hasCv;
-    this.profileCvName = '';
-    this.profileHasCv = false;
+    this.existingApplicationCvName = application.cvOriginalName || '';
+    this.existingApplicationHasCv = application.hasCv;
     this.cv = null;
+    this.selectedCvId = '';
   }
 
   private prefillFromProfile(profile: CandidateProfile): void {
@@ -214,12 +254,25 @@ export class PostApplyComponent extends BaseComponent implements OnInit {
     if (this.experienceYears === null || this.experienceYears === undefined) {
       this.experienceYears = profile.experienceYears ?? null;
     }
-    this.profileCvName = profile.cvOriginalName || '';
-    this.profileHasCv = !!profile.hasCv;
   }
 
-  viewExistingCv(): void {
-    if (!this.postId || !this.isCnicValid() || !this.existingHasCv) {
+  private setupCvSelection(preferredCvId = ''): void {
+    if (this.availableCvs.length === 0) {
+      this.cvMode = 'new';
+      this.selectedCvId = '';
+      return;
+    }
+
+    const matched = preferredCvId && this.availableCvs.some((cv) => cv.id === preferredCvId)
+      ? preferredCvId
+      : this.availableCvs[0].id;
+    this.selectedCvId = matched;
+    this.cvMode = 'existing';
+    this.cv = null;
+  }
+
+  viewApplicationCv(): void {
+    if (!this.postId || !this.isCnicValid()) {
       return;
     }
 
@@ -234,7 +287,28 @@ export class PostApplyComponent extends BaseComponent implements OnInit {
           window.open(url, '_blank');
         },
         error: () => {
-          this.toastrService.error('Could not open your CV');
+          this.toastrService.error('Could not open CV');
+        },
+      });
+  }
+
+  viewVaultCv(cv: VaultCv): void {
+    if (!this.postId || !this.isCnicValid()) {
+      return;
+    }
+
+    this.sub$.sink = this.httpClient
+      .get(`proposal-management/posts/${this.postId}/apply/cv-vault/${cv.id}`, {
+        params: { candidateCode: this.candidateCode.trim() },
+        responseType: 'blob',
+      })
+      .subscribe({
+        next: (blob) => {
+          const url = URL.createObjectURL(blob);
+          window.open(url, '_blank');
+        },
+        error: () => {
+          this.toastrService.error('Could not open CV');
         },
       });
   }
@@ -260,14 +334,33 @@ export class PostApplyComponent extends BaseComponent implements OnInit {
     return '';
   }
 
-  get submitButtonLabel(): string {
-    if (!this.alreadyApplied) {
-      return 'Submit Application';
+  isApplicationInvalid(): boolean {
+    if (this.alreadyApplied) {
+      return true;
     }
-    return this.cv ? 'Update CV' : 'Continue with existing CV';
+
+    const baseInvalid =
+      !this.postId
+      || !this.candidateName.trim()
+      || !this.isCnicValid()
+      || !this.phone.trim()
+      || !this.email.trim()
+      || this.experienceYears === null
+      || this.experienceYears === undefined
+      || this.experienceYears < 0;
+
+    if (this.cvMode === 'existing') {
+      return baseInvalid || !this.selectedCvId;
+    }
+
+    return baseInvalid || !this.cv;
   }
 
   submitApplication(): void {
+    if (this.alreadyApplied) {
+      return;
+    }
+
     this.cnicTouched = true;
     this.onCnicInput();
 
@@ -277,6 +370,11 @@ export class PostApplyComponent extends BaseComponent implements OnInit {
     }
 
     if (this.isApplicationInvalid()) {
+      if (this.cvMode === 'new' && this.availableCvs.length >= this.maxCvs && !this.cv) {
+        this.toastrService.error(`You can store up to ${this.maxCvs} CVs. Select one or upload a new CV.`);
+      } else {
+        this.toastrService.error('Please select or upload a CV');
+      }
       return;
     }
 
@@ -287,30 +385,20 @@ export class PostApplyComponent extends BaseComponent implements OnInit {
     formData.append('email', this.email.trim());
     formData.append('experienceYears', String(this.experienceYears));
 
-    if (this.alreadyApplied) {
-      formData.append('updateCvOnly', '1');
-    }
-
-    if (this.cv) {
+    if (this.cvMode === 'existing' && this.selectedCvId) {
+      formData.append('selectedCvId', this.selectedCvId);
+    } else if (this.cv) {
       formData.append('cv', this.cv);
     }
-
-    const keptExistingCv = this.alreadyApplied && !this.cv;
 
     this.sub$.sink = this.httpClient
       .post(`proposal-management/posts/${this.postId}/apply`, formData)
       .subscribe({
         next: () => {
           this.submitted = true;
-          this.submittedAsUpdate = this.alreadyApplied && !!this.cv;
-          this.submittedKeptExistingCv = keptExistingCv;
-          if (this.submittedAsUpdate) {
-            this.toastrService.success('CV updated successfully');
-          } else if (keptExistingCv) {
-            this.toastrService.success('Your existing application is confirmed');
-          } else {
-            this.toastrService.success('Application submitted successfully');
-          }
+          this.submittedAsUpdate = false;
+          this.submittedKeptExistingCv = false;
+          this.toastrService.success('Application submitted successfully');
         },
         error: (err: { error?: { errors?: Record<string, string[]>; message?: string } }) => {
           const cnicErrors = err?.error?.errors?.['candidateCode'];
@@ -323,21 +411,5 @@ export class PostApplyComponent extends BaseComponent implements OnInit {
       });
   }
 
-  isApplicationInvalid(): boolean {
-    const baseInvalid =
-      !this.postId
-      || !this.candidateName.trim()
-      || !this.isCnicValid()
-      || !this.phone.trim()
-      || !this.email.trim()
-      || this.experienceYears === null
-      || this.experienceYears === undefined
-      || this.experienceYears < 0;
-
-    if (this.alreadyApplied) {
-      return baseInvalid;
-    }
-
-    return baseInvalid || !this.cv;
-  }
+  formatDisplayDate = formatDisplayDate;
 }

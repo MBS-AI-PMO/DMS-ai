@@ -184,3 +184,74 @@
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+.cv-vault-block {
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.cv-vault-label {
+  align-items: center;
+  color: #166534;
+  display: flex;
+  font-size: 14px;
+  font-weight: 600;
+  gap: 8px;
+  margin-bottom: 6px;
+
+  mat-icon {
+    font-size: 20px;
+    height: 20px;
+    width: 20px;
+  }
+}
+
+.cv-vault-hint {
+  color: #166534;
+  font-size: 13px;
+  margin: 0;
+}
+
+.cv-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cv-radio-item {
+  align-items: center;
+  background: #fff;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  padding: 8px 10px;
+}
+
+.cv-radio-name {
+  display: block;
+  font-weight: 500;
+}
+
+.cv-radio-date {
+  color: #64748b;
+  display: block;
+  font-size: 12px;
+}
+
+.cv-view-btn {
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.cv-upload-option {
+  flex-wrap: wrap;
+}
+
+.already-applied-readonly {
+  opacity: 0.85;
+  pointer-events: none;
+}

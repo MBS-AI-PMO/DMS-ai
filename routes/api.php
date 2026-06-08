@@ -71,6 +71,7 @@ Route::get('/companyprofile', [CompanyProfileController::class, 'getCompanyProfi
 Route::post('/companyprofile/activate_license', [CompanyProfileController::class, 'updateLicense']);
 Route::get('/proposal-management/posts/{postId}/apply', [ProposalManagementController::class, 'getPublicPost']);
 Route::get('/proposal-management/posts/{postId}/apply/lookup', [ProposalManagementController::class, 'lookupPublicCandidate']);
+Route::get('/proposal-management/posts/{postId}/apply/cv-vault/{cvId}', [ProposalManagementController::class, 'openPublicVaultCv']);
 Route::get('/proposal-management/posts/{postId}/apply/cv', [ProposalManagementController::class, 'openPublicApplicationCv']);
 Route::post('/proposal-management/posts/{postId}/apply', [ProposalManagementController::class, 'submitPublicCandidate']);
 
@@ -400,8 +401,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/proposal-management/files/{id}/open', [ProposalManagementController::class, 'openFile']);
         Route::post('/proposal-management/file-requests', [ProposalManagementController::class, 'createFileRequest']);
         Route::get('/proposal-management/post-board', [ProposalManagementController::class, 'postBoard']);
-        Route::get('/proposal-management/all-candidates', [ProposalManagementController::class, 'allCandidates']);
-        Route::get('/proposal-management/all-candidates/{candidateId}/history', [ProposalManagementController::class, 'allCandidateHistory']);
         Route::post('/proposal-management/categories', [ProposalManagementController::class, 'createCategory']);
         Route::put('/proposal-management/categories/{id}', [ProposalManagementController::class, 'updateCategory']);
         Route::delete('/proposal-management/categories/{id}', [ProposalManagementController::class, 'deleteCategory']);
@@ -414,6 +413,14 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/proposal-management/posts/{postId}/candidates', [ProposalManagementController::class, 'createCandidate']);
         Route::put('/proposal-management/candidates/{id}', [ProposalManagementController::class, 'updateCandidate']);
         Route::post('/proposal-management/candidates/{id}/email', [ProposalManagementController::class, 'sendCandidateEmail']);
+    });
+
+    Route::middleware('hasToken:ALL_CANDIDATES_VIEW')->group(function () {
+        Route::get('/proposal-management/all-candidates', [ProposalManagementController::class, 'allCandidates']);
+        Route::get('/proposal-management/all-candidates/{candidateId}/history', [ProposalManagementController::class, 'allCandidateHistory']);
+    });
+
+    Route::middleware('hasToken:FILE_REQUEST_VIEW_FILE_REQUEST,ALL_CANDIDATES_VIEW')->group(function () {
         Route::get('/proposal-management/candidates/{id}/cv', [ProposalManagementController::class, 'openCandidateCv']);
     });
 

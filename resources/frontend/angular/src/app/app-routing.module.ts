@@ -253,7 +253,7 @@ const routes: Routes = [
           },
           {
             path: 'all-candidates/:candidateId/history',
-            data: { claimType: 'POST_MANAGEMENT_VIEW' },
+            data: { claimType: 'ALL_CANDIDATES_VIEW' },
             canActivate: [AuthGuard],
             loadComponent: () =>
               import('./post-management/all-candidate-history.component').then(
@@ -262,7 +262,7 @@ const routes: Routes = [
           },
           {
             path: 'all-candidates',
-            data: { claimType: 'POST_MANAGEMENT_VIEW' },
+            data: { claimType: 'ALL_CANDIDATES_VIEW' },
             canActivate: [AuthGuard],
             loadComponent: () =>
               import('./post-management/all-candidates.component').then(
