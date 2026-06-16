@@ -1,7 +1,10 @@
 -- All Candidates permission (Roles → Post Management → View All Candidates)
 -- Run once on live DB, then logout/login for updated JWT claims.
 
-SET @admin_user = (SELECT id FROM users ORDER BY createdDate LIMIT 1);
+SET @admin_user = COALESCE(
+  (SELECT id FROM users WHERE isSystemUser = 1 LIMIT 1),
+  (SELECT id FROM users LIMIT 1)
+);
 
 INSERT INTO actions (id, name, `order`, pageId, code, createdBy, modifiedBy, createdDate, modifiedDate, isDeleted)
 SELECT 'd4e5f6a7-8b9c-4d0e-1f2a-3b4c5d6e7f8a', 'View All Candidates', 2, '3d1b8a03-1b4d-4b8d-9ed0-1f0a74a08f40', 'ALL_CANDIDATES_VIEW', @admin_user, @admin_user, NOW(), NOW(), 0

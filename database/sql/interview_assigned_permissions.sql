@@ -1,7 +1,10 @@
 -- phpMyAdmin: permissions for Post Management (admin) + Assigned Interviews (interviewer)
 -- Run once on live DB, then users must logout/login (or wait for token refresh).
 
-SET @admin_user = (SELECT id FROM users ORDER BY createdDate LIMIT 1);
+SET @admin_user = COALESCE(
+  (SELECT id FROM users WHERE isSystemUser = 1 LIMIT 1),
+  (SELECT id FROM users LIMIT 1)
+);
 
 -- Pages
 INSERT INTO pages (id, name, `order`, createdBy, modifiedBy, createdDate, modifiedDate, isDeleted)
