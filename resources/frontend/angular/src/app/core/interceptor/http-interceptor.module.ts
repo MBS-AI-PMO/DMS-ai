@@ -40,6 +40,7 @@ export class HttpRequestInterceptor implements HttpInterceptor {
     if (lastChar == '/') {
       url = url.substring(0, url.length - 1);
     }
+    const isLoginRequest = url.includes('auth/login');
     if (token || token !== 'undefined') {
       const newReq = req.clone({
         headers: req.headers.set('Authorization', 'Bearer ' + token),
@@ -51,7 +52,7 @@ export class HttpRequestInterceptor implements HttpInterceptor {
           () => { },
           (err: any) => {
             if (err instanceof HttpErrorResponse) {
-              if (err.status === 401) {
+              if (err.status === 401 && !isLoginRequest) {
                 this.securityService.logout();
                 this.router.navigate(['login']);
               } else if (err.status === 403) {
@@ -89,7 +90,7 @@ export class HttpRequestInterceptor implements HttpInterceptor {
           () => { },
           (err: any) => {
             if (err instanceof HttpErrorResponse) {
-              if (err.status === 401) {
+              if (err.status === 401 && !isLoginRequest) {
                 this.securityService.logout();
                 this.router.navigate(['login']);
               } else if (err.status === 403) {

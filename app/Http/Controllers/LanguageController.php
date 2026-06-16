@@ -23,21 +23,34 @@ class LanguageController extends Controller
 
     public function downloadFile($fileName)
     {
+        $file_contents = null;
+
         if (Storage::disk('i18n')->exists($fileName)) {
             $file_contents = Storage::disk('i18n')->get($fileName);
-            $fileType = Storage::mimeType($fileName);
-
-            $fileExtension = explode('.', $fileName);
-            return response($file_contents)
-                ->header('Cache-Control', 'no-cache private')
-                ->header('Content-Description', 'File Transfer')
-                ->header('Content-Type', $fileType)
-                ->header('Content-length', strlen($file_contents))
-                ->header('Content-Disposition', 'attachment; filename=' . $fileName . '.' . $fileExtension[1])
-                ->header('Content-Transfer-Encoding', 'binary');
         } else {
-            return [];
+            $assetPath = resource_path('frontend/angular/src/assets/i18n/' . $fileName);
+            if (is_file($assetPath)) {
+                $file_contents = file_get_contents($assetPath);
+            }
         }
+
+        if ($file_contents === null) {
+            return response()->json((object) [], 200);
+        }
+
+        $fileType = Storage::disk('i18n')->exists($fileName)
+            ? Storage::disk('i18n')->mimeType($fileName)
+            : 'application/json';
+
+        $fileExtension = explode('.', $fileName);
+
+        return response($file_contents)
+            ->header('Cache-Control', 'no-cache private')
+            ->header('Content-Description', 'File Transfer')
+            ->header('Content-Type', $fileType)
+            ->header('Content-length', strlen($file_contents))
+            ->header('Content-Disposition', 'attachment; filename=' . $fileName . '.' . ($fileExtension[1] ?? 'json'))
+            ->header('Content-Transfer-Encoding', 'binary');
     }
 
     public function defaultlanguage()

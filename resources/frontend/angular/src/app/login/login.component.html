@@ -22,10 +22,14 @@
                 </div>
                 <div class="p-2 mt-5">
                   <form [formGroup]="loginFormGroup" (submit)="onLoginSubmit()">
+                    <div *ngIf="loginError && !loginErrorField" class="login-error-alert" role="alert">
+                      {{ loginError }}
+                    </div>
                     <div class="col-sm-12">
                       <div class="mb-3">
                         <label class="form-label">{{'EMAIL' | translate}}</label>
-                        <input formControlName="userName" class="form-control" type="text">
+                        <input formControlName="userName" class="form-control" type="text"
+                          [class.is-invalid]="loginErrorField === 'email'">
                         <div class="text-danger"
                           *ngIf="loginFormGroup.get('userName').touched && loginFormGroup.get('userName')?.hasError('required')">
                           {{'EMAIL_IS_REQUIRED' | translate}}
@@ -34,22 +38,39 @@
                           *ngIf="loginFormGroup.get('userName').touched && loginFormGroup.get('userName')?.hasError('email')">
                           {{'PLEASE_ENTER_VALID_EMAIL' | translate}}
                         </div>
+                        <div class="text-danger" *ngIf="loginErrorField === 'email' && loginError">
+                          {{ loginError }}
+                        </div>
                       </div>
                     </div>
                     <div class="col-sm-12">
                       <div class="mb-3">
                         <label class="form-label">{{'PASSWORD' | translate}}</label>
-                        <input type="password" formControlName="password" class="form-control" type="password">
+                        <div class="password-field">
+                          <input [type]="hidePassword ? 'password' : 'text'" formControlName="password"
+                            class="form-control" autocomplete="current-password"
+                            [class.is-invalid]="loginErrorField === 'password'">
+                          <button type="button" class="password-toggle-btn" tabindex="-1"
+                            (click)="togglePasswordVisibility()"
+                            [attr.aria-label]="hidePassword ? ('SHOW_PASSWORD' | translate) : ('HIDE_PASSWORD' | translate)">
+                            <span class="material-icons-outlined" aria-hidden="true">
+                              {{ hidePassword ? 'visibility_off' : 'visibility' }}
+                            </span>
+                          </button>
+                        </div>
                         <div class="text-danger"
                           *ngIf="loginFormGroup.get('password').touched && loginFormGroup.get('password')?.hasError('required')">
                           {{'PASSWORD_IS_REQUIRED' | translate}}
                         </div>
+                        <div class="text-danger" *ngIf="loginErrorField === 'password' && loginError">
+                          {{ loginError }}
+                        </div>
                       </div>
                     </div>
                     <div class="col-sm-12 mb-3">
-                      <a class="forget-password-btn" [routerLink]="['/forgot-password']">{{'FORGOT_PASSWORD' |
-                        translate}}?</a>
-                      <button mat-flat-button color="primary" class="login100-form-btn btn-sm" type="submit">
+                      <a class="forget-password-btn" [routerLink]="['/forgot-password']">{{'FORGOT_PASSWORD' | translate}}</a>
+                      <button mat-flat-button color="primary" class="login100-form-btn btn-sm" type="submit"
+                        [disabled]="isSubmitting">
                         {{'LOGIN' | translate}}
                       </button>
                     </div>

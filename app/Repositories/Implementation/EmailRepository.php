@@ -27,67 +27,84 @@ class EmailRepository  implements EmailRepositoryInterface
     {
         $smtpSettings = EmailSMTPSettings::where('isDefault', 1)->first();
 
-        if ($smtpSettings) {
-            $mail = new  PHPMailer(true);
-            $mail->isSMTP();
-            $mail->Host       = $smtpSettings['host'];
-            $mail->SMTPAuth   = true;
-            $mail->Username   = $smtpSettings['userName'];
-            $mail->Password   = $smtpSettings['password'];
-            $mail->SMTPSecure = $smtpSettings['encryption'];
-            $mail->Port       = $smtpSettings['port'];
-            $mail->addAddress($attribute['to_address']);
-
-            if (!empty($attribute['cc_address'])) {
-                $ccAddresses = is_array($attribute['cc_address'])
-                    ? $attribute['cc_address']
-                    : [$attribute['cc_address']];
-                foreach ($ccAddresses as $ccAddress) {
-                    $ccAddress = trim((string) $ccAddress);
-                    if ($ccAddress !== '') {
-                        $mail->addCC($ccAddress);
-                    }
-                }
-            }
-
-            $mail->setFrom($smtpSettings['fromEmail'], $smtpSettings['fromName'] ?? $smtpSettings['fromEmail']);
-            $mail->isHTML(true);
-            $mail->CharSet = 'UTF-8';
-            $mail->Subject = $attribute['subject'];
-            $mail->Body    = $attribute['message'];
-            $mail->AltBody = $attribute['message'];
-            $mail->Sendmail   = '/usr/sbin/sendmail -bs';
-
-            $emaillogattachments = [];
-            if ($attribute['path'] != null) {
-                $file_contents = Storage::disk($attribute['location'])->get($attribute['doc_url']);
-                $mail->addStringAttachment($file_contents, $attribute['file_name']);
-
-                $path = $this->saveEmailAttachment($file_contents, $attribute['file_name']);
-                if ($path) {
-                    $emaillogattachments[] = [
-                        'path' => $path,
-                        'name' => $attribute['file_name'],
-                    ];
-                }
-            }
-
-            $emailLog = [
-                'senderEmail' => $smtpSettings['userName'],
-                'recipientEmail' => $attribute['to_address'],
-                'subject' => $attribute['subject'],
-                'body' => $attribute['message']
-            ];
-
-            try {
-                $mail->send();
-                $emailLog['status'] = 'sent';
-            } catch (\Throwable $th) {
-                $emailLog['status'] = 'failed';
-                $emailLog['errorMessage'] = $th->getMessage();
-            }
-            $this->emailLogRepository->createLog($emailLog, $emaillogattachments);
+        if (!$smtpSettings) {
+            throw new \RuntimeException('Default SMTP settings are not configured.');
         }
+
+        $mail = new PHPMailer(true);
+        $this->configureSmtpMailer($mail, $smtpSettings);
+        $mail->addAddress($attribute['to_address']);
+
+        if (!empty($attribute['cc_address'])) {
+            $ccAddresses = is_array($attribute['cc_address'])
+                ? $attribute['cc_address']
+                : [$attribute['cc_address']];
+            foreach ($ccAddresses as $ccAddress) {
+                $ccAddress = trim((string) $ccAddress);
+                if ($ccAddress !== '') {
+                    $mail->addCC($ccAddress);
+                }
+            }
+        }
+
+        $mail->setFrom($smtpSettings['fromEmail'], $smtpSettings['fromName'] ?? $smtpSettings['fromEmail']);
+        $mail->isHTML(true);
+        $mail->CharSet = 'UTF-8';
+        $mail->Subject = $attribute['subject'];
+        $mail->Body    = $attribute['message'];
+        $mail->AltBody = $attribute['message'];
+
+        $emaillogattachments = [];
+        if ($attribute['path'] != null) {
+            $file_contents = Storage::disk($attribute['location'])->get($attribute['doc_url']);
+            $mail->addStringAttachment($file_contents, $attribute['file_name']);
+
+            $path = $this->saveEmailAttachment($file_contents, $attribute['file_name']);
+            if ($path) {
+                $emaillogattachments[] = [
+                    'path' => $path,
+                    'name' => $attribute['file_name'],
+                ];
+            }
+        }
+
+        $emailLog = [
+            'senderEmail' => $smtpSettings['userName'],
+            'recipientEmail' => $attribute['to_address'],
+            'subject' => $attribute['subject'],
+            'body' => $attribute['message']
+        ];
+
+        try {
+            $mail->send();
+            $emailLog['status'] = 'sent';
+        } catch (\Throwable $th) {
+            $emailLog['status'] = 'failed';
+            $emailLog['errorMessage'] = $th->getMessage();
+            $this->emailLogRepository->createLog($emailLog, $emaillogattachments);
+            throw $th;
+        }
+
+        $this->emailLogRepository->createLog($emailLog, $emaillogattachments);
+    }
+
+    private function configureSmtpMailer(PHPMailer $mail, EmailSMTPSettings $smtpSettings): void
+    {
+        $mail->isSMTP();
+        $mail->Host = $smtpSettings->host;
+        $mail->SMTPAuth = true;
+        $mail->Username = $smtpSettings->userName;
+        $mail->Password = $smtpSettings->password;
+        $mail->SMTPSecure = $smtpSettings->encryption ?: PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port = (int) $smtpSettings->port;
+        $mail->Timeout = 30;
+        $mail->SMTPOptions = [
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true,
+            ],
+        ];
     }
 
     public function saveEmailAttachment($file_contents, $name)

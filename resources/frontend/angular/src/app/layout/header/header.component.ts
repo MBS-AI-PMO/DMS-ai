@@ -9,10 +9,8 @@ import {
   ChangeDetectorRef,
 } from '@angular/core';
 import { Router } from '@angular/router';
-import { LanguageService } from '@core/services/language.service';
 import { WINDOW } from '@core/services/window.service';
 import { SecurityService } from '@core/security/security.service';
-import { LanguageFlag } from '@core/domain-classes/language-flag';
 import { TranslationService } from '@core/services/translation.service';
 import { NotificationService } from 'src/app/notification/notification.service';
 import { UserNotification } from '@core/domain-classes/notification';
@@ -28,20 +26,16 @@ import { NotificationType } from '@core/domain-classes/notification-enum';
 export class HeaderComponent implements OnInit {
   isNavbarCollapsed = true;
   isNavbarShow = true;
-  countryName: string | string[] = [];
-  defaultFlag?: string;
   isOpenSidebar = false;
   docElement: HTMLElement | undefined;
   isFullScreen = false;
   appUser: User = null;
-  language: LanguageFlag;
   newNotificationCount = 0;
   notifications: UserNotification[] = [];
   refereshReminderTimeInMinute = 10;
   logoImage = '';
   smallLogoImage = '';
   isUnReadNotification = false;
-  languages: LanguageFlag[] = [];
   direction: Direction;
 
   constructor(
@@ -50,7 +44,6 @@ export class HeaderComponent implements OnInit {
     private renderer: Renderer2,
     public elementRef: ElementRef,
     private router: Router,
-    public languageService: LanguageService,
     private securityService: SecurityService,
     private translationService: TranslationService,
     private cd: ChangeDetectorRef,
@@ -72,7 +65,6 @@ export class HeaderComponent implements OnInit {
   ngOnInit() {
     this.setTopLogAndName();
     this.getNotification();
-    this.setDefaultLanguage();
     this.companyProfileSubscription();
     this.getLangDir();
     this.sidebarMenuStatus();
@@ -93,36 +85,7 @@ export class HeaderComponent implements OnInit {
       if (profile) {
         this.logoImage = profile.logoUrl;
         this.smallLogoImage = profile.smallLogoUrl;
-        this.languages = profile.languages;
-        this.setDefaultLanguage();
       }
-    });
-  }
-
-  setDefaultLanguage() {
-    const lang = this.translationService.getSelectedLanguage();
-    if (lang) {
-      this.setLanguageWithRefresh(lang);
-    }
-  }
-
-  setLanguageWithRefresh(lang: string) {
-    const selecedLanguage = this.languages.find((c) => c.code == lang);
-    this.languages.forEach((language: LanguageFlag) => {
-      if (language.code === lang) {
-        language.active = true;
-      } else {
-        language.active = false;
-      }
-    });
-    this.translationService.setLanguage(selecedLanguage);
-    this.defaultFlag = this.languages.find((c) => c.code == lang)?.imageUrl;
-  }
-
-  setNewLanguageRefresh(lang: LanguageFlag) {
-    this.translationService.setLanguage(lang).subscribe((response) => {
-      this.setLanguageWithRefresh(response['LANGUAGE']);
-      window.location.reload();
     });
   }
 

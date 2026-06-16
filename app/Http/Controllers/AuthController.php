@@ -103,10 +103,9 @@ class AuthController extends Controller
                 dd($debugPayload);
             }
 
-            $response = [
+            $response = array_merge([
                 'status' => 'error',
-                'message' => 'Unauthorized',
-            ];
+            ], $this->buildLoginErrorResponse());
 
             if ($this->shouldExposeLoginDebug($request)) {
                 $response['debug'] = $debugPayload;
@@ -246,6 +245,84 @@ class AuthController extends Controller
             'jwtError' => $this->loginJwtError,
             'jwtSecretConfigured' => filled(config('jwt.secret')),
             'appDebug' => (bool) config('app.debug'),
+        ];
+    }
+
+    private function buildLoginErrorResponse(): array
+    {
+        $reason = $this->loginFailureReason ?? 'UNKNOWN';
+        $detail = $this->loginFailureDetail;
+
+        return match ($reason) {
+            'EMPTY_CREDENTIALS' => $this->buildEmptyCredentialsError($detail),
+            'USER_NOT_FOUND' => [
+                'message' => 'No account found with this email.',
+                'errorCode' => 'USER_NOT_FOUND',
+                'field' => 'email',
+            ],
+            'WRONG_PASSWORD' => [
+                'message' => 'Incorrect password.',
+                'errorCode' => 'WRONG_PASSWORD',
+                'field' => 'password',
+            ],
+            'USER_DELETED' => [
+                'message' => 'This account has been disabled.',
+                'errorCode' => 'USER_DELETED',
+                'field' => 'email',
+            ],
+            'USER_IS_SYSTEM' => [
+                'message' => 'This account cannot be used to sign in.',
+                'errorCode' => 'USER_IS_SYSTEM',
+                'field' => 'email',
+            ],
+            'PASSWORD_EMPTY_IN_DB' => [
+                'message' => 'Password is not set for this account. Please contact your administrator.',
+                'errorCode' => 'PASSWORD_EMPTY_IN_DB',
+                'field' => 'password',
+            ],
+            'JWT_TOKEN_NOT_CREATED', 'CLAIMS_QUERY_FAILED' => [
+                'message' => 'Unable to sign in right now. Please try again later.',
+                'errorCode' => 'LOGIN_SERVER_ERROR',
+                'field' => null,
+            ],
+            'EXCEPTION' => [
+                'message' => 'Something went wrong. Please try again.',
+                'errorCode' => 'LOGIN_EXCEPTION',
+                'field' => null,
+            ],
+            default => [
+                'message' => 'Login failed. Please check your email and password.',
+                'errorCode' => 'LOGIN_FAILED',
+                'field' => null,
+            ],
+        };
+    }
+
+    private function buildEmptyCredentialsError(array $detail): array
+    {
+        $emailProvided = (bool) ($detail['emailProvided'] ?? false);
+        $passwordProvided = (bool) ($detail['passwordProvided'] ?? false);
+
+        if (!$emailProvided && !$passwordProvided) {
+            return [
+                'message' => 'Email and password are required.',
+                'errorCode' => 'EMPTY_CREDENTIALS',
+                'field' => null,
+            ];
+        }
+
+        if (!$emailProvided) {
+            return [
+                'message' => 'Email is required.',
+                'errorCode' => 'EMPTY_EMAIL',
+                'field' => 'email',
+            ];
+        }
+
+        return [
+            'message' => 'Password is required.',
+            'errorCode' => 'EMPTY_PASSWORD',
+            'field' => 'password',
         ];
     }
 

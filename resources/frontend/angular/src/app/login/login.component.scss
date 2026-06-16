@@ -167,4 +167,57 @@
 .forget-password-btn {
     float: right !important;
     margin-bottom: 1rem;
+    text-decoration: none;
+}
+
+.login-error-alert {
+    background-color: #fdecea;
+    border: 1px solid #f5c2c7;
+    border-radius: 8px;
+    color: #b42318;
+    font-size: 14px;
+    margin-bottom: 1rem;
+    padding: 12px 14px;
+}
+
+.form-control.is-invalid {
+    border-color: #dc3545;
+}
+
+.password-field {
+    position: relative;
+
+    .form-control {
+        padding-right: 48px;
+    }
+}
+
+.password-toggle-btn {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    color: #6c757d;
+    cursor: pointer;
+    display: flex;
+    height: 36px;
+    justify-content: center;
+    line-height: 1;
+    min-width: 36px;
+    padding: 0;
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 3;
+
+    .material-icons-outlined {
+        font-size: 22px;
+        line-height: 1;
+    }
+
+    &:hover,
+    &:focus {
+        color: #333;
+        outline: none;
+    }
 }

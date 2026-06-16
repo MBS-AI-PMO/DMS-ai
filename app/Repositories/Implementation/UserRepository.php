@@ -160,11 +160,8 @@ class UserRepository extends BaseRepository implements UserRepositoryInterface
         $appuser->save();
 
         try {
-            $body = Storage::disk('public')->get('reset-password-template.html');
-            
-            // $body = file_get_contents($filePath);
             $link = $request->getSchemeAndHttpHost() . "/reset-password/" . $appuser->resetPasswordCode;
-            $body = str_replace("##RESET_LINK##", $link, $body);
+            $body = $this->buildResetPasswordBody($link);
             $message = [
                 'to_address' => $appuser->email,
                 'subject' => 'Reset Password',
@@ -175,13 +172,39 @@ class UserRepository extends BaseRepository implements UserRepositoryInterface
             try {
                 $this->emailRepository->sendEmail($message);
             } catch (\Exception $e) {
-                return  response()->json(['Message' => 'Not able to send email please review your SMTP Settings.'], 409);
+                return response()->json([
+                    'Message' => 'Not able to send email please review your SMTP Settings.',
+                    'error' => $e->getMessage(),
+                ], 409);
             }
         } catch (\Exception $e) {
             return response()->json([
-                'Message' => 'Error while seding reset password link.' . $e->getMessage(),
+                'Message' => 'Error while sending reset password link.',
+                'error' => $e->getMessage(),
             ], 409);
         }
+
+        return response()->json([
+            'Message' => 'Reset password link sent to your email.',
+        ], 200);
+    }
+
+    private function buildResetPasswordBody(string $link): string
+    {
+        $body = '';
+
+        if (Storage::disk('public')->exists('reset-password-template.html')) {
+            $body = (string) Storage::disk('public')->get('reset-password-template.html');
+        }
+
+        if (trim($body) === '') {
+            $body = '<p>Hello,</p>'
+                . '<p>We received a request to reset your password.</p>'
+                . '<p><a href="##RESET_LINK##">Click here to reset your password</a></p>'
+                . '<p>If you did not request this, please ignore this email.</p>';
+        }
+
+        return str_replace('##RESET_LINK##', $link, $body);
     }
 
     public function getUserInfoForResetPassword($id)

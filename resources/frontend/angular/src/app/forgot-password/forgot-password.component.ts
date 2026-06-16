@@ -20,6 +20,7 @@ export class ForgotPasswordComponent extends BaseComponent implements OnInit {
   loginFormGroup: UntypedFormGroup;
   logoImage = '';
   bannerImage = '';
+  isSubmitting = false;
 
   constructor(
     private fb: UntypedFormBuilder,
@@ -45,17 +46,25 @@ export class ForgotPasswordComponent extends BaseComponent implements OnInit {
 
   onLoginSubmit() {
     if (this.loginFormGroup.valid) {
+      this.isSubmitting = true;
       const url = `${window.location.protocol}//${window.location.host}`;
       const userObject = Object.assign(this.loginFormGroup.value);
       userObject.userName = userObject.email;
       userObject.hostUrl = url;
       this.userService.sendResetPasswordLink(userObject).subscribe({
-        next: (c) => {
+        next: () => {
+          this.isSubmitting = false;
           this.toastr.success(
-            this.translationService.getValue('EMAIL_SENT_SUCCESSFULLY')
+            this.translationService.getValue('RESET_PASSWORD_LINK_SENT_TO_YOUR_EMAIL')
           );
           this.router.navigate(['/login']);
-        }
+        },
+        error: (err: CommonError) => {
+          this.isSubmitting = false;
+          const body = (err?.error ?? {}) as { Message?: string; message?: string; error?: string };
+          const msg = body.Message || body.message || body.error || 'Unable to send reset email.';
+          this.toastr.error(msg);
+        },
       });
     } else {
       this.loginFormGroup.markAllAsTouched();

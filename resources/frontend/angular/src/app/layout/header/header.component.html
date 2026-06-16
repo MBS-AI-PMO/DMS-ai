@@ -37,20 +37,12 @@
         </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
-        <li class="nav-item">
-          <button mat-button [matMenuTriggerFor]="languagemenu"
-            class="lang-dropdown nav-notification-icons d-flex align-items-center mt-1">
-            <img src="{{defaultFlag}}" height="16">
-          </button>
-          <mat-menu #languagemenu="matMenu" class="lang-item-menu">
-            <div *ngFor="let item of languages" class="lang-item">
-              <button mat-menu-item class="dropdown-item lang-item-list" (click)="setNewLanguageRefresh(item)"
-                [ngClass]="{'active': item.active===true}">
-                <img src="{{item.imageUrl}}" class="flag-img" height="12"> <span
-                  class="align-middle">{{item.name}}</span>
-              </button>
-            </div>
-          </mat-menu>
+        <li class="nav-item d-flex align-items-center">
+          <a class="nav-notification-icons d-flex align-items-center" routerLink="/" aria-label="Home">
+            <img *ngIf="smallLogoImage" [src]="smallLogoImage" alt="header-icon" style="height: 18px; width: auto;" />
+            <img *ngIf="!smallLogoImage" src="assets/images/logo-small.png" alt="header-icon"
+              style="height: 18px; width: auto;" />
+          </a>
         </li>
         <li class="nav-item" ngbDropdown [dir]="direction === 'rtl' ? 'ltr' : 'auto'">
           <button mat-button [matMenuTriggerFor]="notificationMenu" class="nav-notification-icons">

@@ -105,14 +105,22 @@ class EmailSMTPSettingRepository extends BaseRepository implements EmailSMTPSett
     {
 
         try {
-            $mail = new  PHPMailer(true);
+            $mail = new PHPMailer(true);
             $mail->isSMTP();
-            $mail->Host       = $attribute['host'];
-            $mail->SMTPAuth   = true;
-            $mail->Username   = $attribute['userName'];
-            $mail->Password   = $attribute['password'];
-            $mail->SMTPSecure = $attribute['encryption'];
-            $mail->Port       = $attribute['port'];
+            $mail->Host = $attribute['host'];
+            $mail->SMTPAuth = true;
+            $mail->Username = $attribute['userName'];
+            $mail->Password = $attribute['password'];
+            $mail->SMTPSecure = $attribute['encryption'] ?: PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port = (int) $attribute['port'];
+            $mail->Timeout = 30;
+            $mail->SMTPOptions = [
+                'ssl' => [
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                    'allow_self_signed' => true,
+                ],
+            ];
             $mail->addAddress($attribute['fromEmail']);
             $mail->setFrom($attribute['fromEmail'], $attribute['fromName'] ?? $attribute['fromEmail']);
             $mail->isHTML(true);
@@ -120,7 +128,6 @@ class EmailSMTPSettingRepository extends BaseRepository implements EmailSMTPSett
             $mail->Subject = 'Account Configuration Test';
             $mail->Body    = 'Account Configuration Test';
             $mail->AltBody = 'Account Configuration Test';
-            $mail->Sendmail   = '/usr/sbin/sendmail -bs';
             $emaillogattachments = [];
 
 
