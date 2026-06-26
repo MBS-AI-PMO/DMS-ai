@@ -15,6 +15,7 @@ import { map, Observable, startWith } from 'rxjs';
 import { WorkflowService } from 'src/app/workflows/manage-workflow/workflow-service';
 import { WorkflowStore } from 'src/app/workflows/manage-workflow/workflow-store';
 import { MatAutocompleteModule, MatOption } from '@angular/material/autocomplete';
+import { MatIconModule } from '@angular/material/icon';
 import { DocumentWorkflowService } from 'src/app/workflows/manage-workflow/document-workflow.service';
 
 @Component({
@@ -28,7 +29,8 @@ import { DocumentWorkflowService } from 'src/app/workflows/manage-workflow/docum
     MatButtonModule,
     NgSelectModule,
     CommonModule,
-    MatAutocompleteModule
+    MatAutocompleteModule,
+    MatIconModule,
   ],
   templateUrl: './document-workflow-dialog.component.html',
   styleUrl: './document-workflow-dialog.component.scss'

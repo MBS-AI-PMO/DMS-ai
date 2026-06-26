@@ -9,6 +9,7 @@ import { TranslationService } from '@core/services/translation.service';
 import { SubSink } from '@shared/sub-sink';
 import { ManageDocumentStatusComponent } from '../manage-document-status/manage-document-status.component';
 import { DocumentStatusStore } from '../store/document-status.store';
+import { DMS_FORM_DIALOG_CONFIG } from '@core/common-dialog/form-dialog.config';
 
 @Component({
   selector: 'app-document-status-list',
@@ -31,13 +32,13 @@ export class DocumentStatusListComponent {
 
   onCreateDocumentStatus(): void {
     this.dialog.open(ManageDocumentStatusComponent, {
-      width: '500px',
+      ...DMS_FORM_DIALOG_CONFIG,
     });
   }
 
   onEditDocumentStatus(documentStatus: DocumentStatus): void {
     this.dialog.open(ManageDocumentStatusComponent, {
-      width: '500px',
+      ...DMS_FORM_DIALOG_CONFIG,
       data: { ...documentStatus }
     });
   }

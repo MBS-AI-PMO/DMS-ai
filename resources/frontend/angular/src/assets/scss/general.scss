@@ -1,7 +1,7 @@
 ﻿@import "variables.scss";
 
 body {
-  background-color: #f1f2f7;
+  background-color: #f0f2f8;
 }
 
 body {
@@ -85,6 +85,14 @@ section {
 
     .content-block {
       padding: 0px 10px 0px 15px;
+    }
+
+    &.dms-module {
+      background: #f0f2f8;
+      border-top-left-radius: 22px;
+      margin-top: 60px;
+      min-height: calc(100vh - 60px);
+      padding-top: 10px;
     }
   }
 }
@@ -316,11 +324,11 @@ textarea:-ms-input-placeholder {
 }
 
 .mat-mdc-paginator {
-  background-color: #f5f5f5 !important;
+  background-color: transparent !important;
 }
 
 .mat-mdc-footer-row {
-  background-color: #f5f5f5 !important;
+  background-color: transparent !important;
 }
 
 .small-icon {

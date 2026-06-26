@@ -20,6 +20,7 @@ import { CategoryStore } from 'src/app/category/store/category-store';
 import { ClientStore } from 'src/app/client/client-store';
 import { DocumentEditComponent } from '../document-edit/document-edit.component';
 import { MatDialog } from '@angular/material/dialog';
+import { DMS_DOCUMENT_EDIT_DIALOG_CONFIG } from '@core/common-dialog/form-dialog.config';
 import { MatTabChangeEvent, MatTabsModule } from '@angular/material/tabs';
 import { DocumentWorkflowLogsComponent } from './document-workflow-logs/document-workflow-logs.component';
 
@@ -95,7 +96,7 @@ export class DocumentDetailsComponent extends BaseComponent implements OnInit {
       clients: this.clientStore.clients(),
     };
     const dialogRef = this.dialog.open(DocumentEditComponent, {
-   width: '700px',
+      ...DMS_DOCUMENT_EDIT_DIALOG_CONFIG,
       data: Object.assign({}, documentCategories),
     });
 

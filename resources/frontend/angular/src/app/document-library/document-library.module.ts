@@ -4,7 +4,9 @@ import { DocumentLibraryListComponent } from './document-library-list/document-l
 import { DocumentLibraryRoutingModule } from './document-library-routing.module';
 import { MatSortModule } from '@angular/material/sort';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { ScrollingModule } from '@angular/cdk/scrolling';
 import { SharedModule } from '@shared/shared.module';
+import { DocumentDialogsModule } from 'src/app/document/document-dialogs.module';
 import { DocumentReminderComponent } from './document-reminder/document-reminder.component';
 import { AddDocumentComponent } from './add-document/add-document.component';
 import { ReminderListComponent } from './reminder-list/reminder-list.component';
@@ -25,6 +27,12 @@ import {
 } from 'ng-pick-datetime-ex';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { NgSelectModule } from '@ng-select/ng-select';
+import { DocumentDeleteDialogComponent } from 'src/app/document-delete-dialog/document-delete-dialog.component';
+import { DocumentSignatureComponent } from '@shared/document-signature/document-signature.component';
+import { DocumentWorkflowDialogComponent } from 'src/app/document/document-workflow-dialog/document-workflow-dialog.component';
+import { AiDocumentSummaryComponent } from 'src/app/open-ai/ai-document-summary/ai-document-summary.component';
+import { DocumentWatermarkComponent } from 'src/app/document/document-watermark/document-watermark.component';
+import { VisualWorkflowGraphComponent } from 'src/app/workflows/visual-workflow-graph/visual-workflow-graph.component';
 
 @NgModule({
   declarations: [
@@ -38,6 +46,7 @@ import { NgSelectModule } from '@ng-select/ng-select';
     SharedModule,
     ReactiveFormsModule,
     DocumentLibraryRoutingModule,
+    DocumentDialogsModule,
     MatTableModule,
     MatDialogModule,
     MatSlideToggleModule,
@@ -52,9 +61,16 @@ import { NgSelectModule } from '@ng-select/ng-select';
     MatRadioModule,
     MatMenuModule,
     MatProgressBarModule,
+    ScrollingModule,
     OwlDateTimeModule,
     OwlNativeDateTimeModule,
     NgSelectModule,
+    DocumentDeleteDialogComponent,
+    DocumentSignatureComponent,
+    DocumentWorkflowDialogComponent,
+    AiDocumentSummaryComponent,
+    DocumentWatermarkComponent,
+    VisualWorkflowGraphComponent,
   ],
 })
 export class DocumentLibraryModule {}

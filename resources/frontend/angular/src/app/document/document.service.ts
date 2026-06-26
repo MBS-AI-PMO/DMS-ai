@@ -52,15 +52,27 @@ export class DocumentService {
     formData.append('retentionAction', document.retentionAction?.toString() ? document.retentionAction?.toString() : '');
     formData.append(
       'documentMetaDatas',
-      JSON.stringify(document.documentMetaDatas)
+      JSON.stringify(document.documentMetaDatas ?? [])
+    );
+    formData.append(
+      'documentmetadatas',
+      JSON.stringify(document.documentMetaDatas ?? [])
     );
     formData.append(
       'documentRolePermissions',
       JSON.stringify(document.documentRolePermissions ?? [])
     );
+    formData.append(
+      'documentrolepermissions',
+      JSON.stringify(document.documentRolePermissions ?? [])
+    );
 
     formData.append(
       'documentUserPermissions',
+      JSON.stringify(document.documentUserPermissions ?? [])
+    );
+    formData.append(
+      'documentuserpermissions',
       JSON.stringify(document.documentUserPermissions ?? [])
     );
 

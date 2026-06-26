@@ -193,7 +193,14 @@
 
 
 .navbar-header {
-  background-color: $theme-navbar-brand;;
+  background:
+    linear-gradient(180deg, rgba(103, 119, 239, 0.1) 0%, transparent 55%),
+    linear-gradient(185deg, #1e2229 0%, $theme-navbar-brand 42%, #252a33 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  border-top-right-radius: 22px;
+  overflow: hidden;
+  position: relative;
+  z-index: 1000;
 
   .logo-name {
     color: #6f6f6f;

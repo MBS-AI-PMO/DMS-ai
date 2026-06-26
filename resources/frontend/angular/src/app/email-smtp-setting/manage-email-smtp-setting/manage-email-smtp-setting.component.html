@@ -1,13 +1,12 @@
-<section class="content">
+<section class="content dms-module">
   <div class="content-block">
     <div class="block-header">
       <div class="breadcrumb-main">
-        <div class="row">
-          <div class="col-md-6 mb-2">
-            <span *ngIf="!isEditMode" class="mb-0 page-title">{{'ADD_EMAIL_SMTP_SETTING' |
-              translate}}<app-page-help-text code="MANAGE_EMAIL_SMTP_SETTING"></app-page-help-text></span>
-            <span *ngIf="isEditMode" class="mb-0 page-title">{{'EDIT_EMAIL_SMTP_SETTING' |
-              translate}}<app-page-help-text code="MANAGE_EMAIL_SMTP_SETTING"></app-page-help-text></span>
+        <div class="row align-items-center">
+          <div class="col">
+            <span *ngIf="!isEditMode" class="mb-0 page-title">{{'ADD_EMAIL_SMTP_SETTING' | translate}}</span>
+            <span *ngIf="isEditMode" class="mb-0 page-title">{{'EDIT_EMAIL_SMTP_SETTING' | translate}}</span>
+            <app-page-help-text code="MANAGE_EMAIL_SMTP_SETTING"></app-page-help-text>
           </div>
         </div>
       </div>

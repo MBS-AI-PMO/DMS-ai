@@ -1,86 +1,129 @@
-<div class="container-fluid p-0" [dir]="direction">
-  <div class="row g-0">
-    <div class="col-lg-8">
-      <div class="auth-bg">
-        <div *ngIf="bannerImage" class="bg-overlay" style='background-image: url({{bannerImage}});'></div>
-        <div *ngIf="!bannerImage" class="bg-overlay" style='background-image: url("assets/images/login-image.png");'>
-        </div>
-      </div>
-    </div>
-    <div class="col-lg-4">
-      <div class="auth-content p-4 d-flex align-items-center min-vh-100">
-        <div class="w-100">
-          <div class="row justify-content-center">
-            <div class="col-lg-9">
-              <div>
-                <div class="text-center">
-                  <div class="m-b-10">
-                    <a class="logo-full"><img *ngIf="logoImage" [src]="logoImage" alt="logo-full"></a>
-                    <a class="logo-full"><img *ngIf="!logoImage" src="assets/images/logo.png" alt="logo-full"></a>
-                  </div>
-                  <p class="text-muted"> {{'LOGIN_TO_CONTINUE' | translate}}</p>
-                </div>
-                <div class="p-2 mt-5">
-                  <form [formGroup]="loginFormGroup" (submit)="onLoginSubmit()">
-                    <div *ngIf="loginError && !loginErrorField" class="login-error-alert" role="alert">
-                      {{ loginError }}
-                    </div>
-                    <div class="col-sm-12">
-                      <div class="mb-3">
-                        <label class="form-label">{{'EMAIL' | translate}}</label>
-                        <input formControlName="userName" class="form-control" type="text"
-                          [class.is-invalid]="loginErrorField === 'email'">
-                        <div class="text-danger"
-                          *ngIf="loginFormGroup.get('userName').touched && loginFormGroup.get('userName')?.hasError('required')">
-                          {{'EMAIL_IS_REQUIRED' | translate}}
-                        </div>
-                        <div class="text-danger"
-                          *ngIf="loginFormGroup.get('userName').touched && loginFormGroup.get('userName')?.hasError('email')">
-                          {{'PLEASE_ENTER_VALID_EMAIL' | translate}}
-                        </div>
-                        <div class="text-danger" *ngIf="loginErrorField === 'email' && loginError">
-                          {{ loginError }}
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col-sm-12">
-                      <div class="mb-3">
-                        <label class="form-label">{{'PASSWORD' | translate}}</label>
-                        <div class="password-field">
-                          <input [type]="hidePassword ? 'password' : 'text'" formControlName="password"
-                            class="form-control" autocomplete="current-password"
-                            [class.is-invalid]="loginErrorField === 'password'">
-                          <button type="button" class="password-toggle-btn" tabindex="-1"
-                            (click)="togglePasswordVisibility()"
-                            [attr.aria-label]="hidePassword ? ('SHOW_PASSWORD' | translate) : ('HIDE_PASSWORD' | translate)">
-                            <span class="material-icons-outlined" aria-hidden="true">
-                              {{ hidePassword ? 'visibility_off' : 'visibility' }}
-                            </span>
-                          </button>
-                        </div>
-                        <div class="text-danger"
-                          *ngIf="loginFormGroup.get('password').touched && loginFormGroup.get('password')?.hasError('required')">
-                          {{'PASSWORD_IS_REQUIRED' | translate}}
-                        </div>
-                        <div class="text-danger" *ngIf="loginErrorField === 'password' && loginError">
-                          {{ loginError }}
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col-sm-12 mb-3">
-                      <a class="forget-password-btn" [routerLink]="['/forgot-password']">{{'FORGOT_PASSWORD' | translate}}</a>
-                      <button mat-flat-button color="primary" class="login100-form-btn btn-sm" type="submit"
-                        [disabled]="isSubmitting">
-                        {{'LOGIN' | translate}}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+<div class="login-page" [dir]="direction">
+  <div class="login-page__ambient" aria-hidden="true">
+    <span class="login-page__orb login-page__orb--one"></span>
+    <span class="login-page__orb login-page__orb--two"></span>
+    <span class="login-page__orb login-page__orb--three"></span>
+    <span class="login-page__grid"></span>
   </div>
+
+  <div class="login-page__mobile-scene" aria-hidden="true">
+    <div class="login-page__cube login-page__cube--sm login-page__cube--mobile">
+      <span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <span class="login-page__ring login-page__ring--mobile"></span>
+  </div>
+
+  <section class="login-page__hero">
+    <div class="login-page__hero-bg"></div>
+
+    <div class="login-page__scene" aria-hidden="true">
+      <div class="login-page__scene-core">
+        <div class="login-page__ring login-page__ring--outer"></div>
+        <div class="login-page__ring login-page__ring--inner"></div>
+
+        <div class="login-page__orbit login-page__orbit--a">
+          <span class="login-page__orbit-node"></span>
+        </div>
+        <div class="login-page__orbit login-page__orbit--b">
+          <span class="login-page__orbit-node login-page__orbit-node--alt"></span>
+        </div>
+
+        <div class="login-page__cube login-page__cube--lg">
+          <span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="login-page__cube login-page__cube--md">
+          <span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="login-page__cube login-page__cube--sm">
+          <span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+
+        <div class="login-page__doc-stack">
+          <i class="login-page__doc login-page__doc--1"></i>
+          <i class="login-page__doc login-page__doc--2"></i>
+          <i class="login-page__doc login-page__doc--3"></i>
+        </div>
+
+        <div class="login-page__shield">
+          <span class="material-icons-outlined">folder_open</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="login-page__hero-content">
+      <div class="login-page__hero-copy">
+        <p class="login-page__eyebrow">Document Management System</p>
+        <h1 class="login-page__headline">{{ 'LOGIN_TO_CONTINUE' | translate }}</h1>
+        <p class="login-page__subline">Secure access to your documents, workflows, and team collaboration.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="login-page__panel">
+    <div class="login-page__card">
+      <div class="login-page__card-glow" aria-hidden="true"></div>
+
+      <div class="login-page__brand">
+        <div class="login-page__logo-wrap">
+          <img *ngIf="logoImage" [src]="logoImage" alt="logo" class="login-page__logo">
+          <img *ngIf="!logoImage" src="assets/images/logo.png" alt="logo" class="login-page__logo">
+        </div>
+        <h2 class="login-page__title">{{ 'LOGIN' | translate }}</h2>
+      </div>
+
+      <form class="login-page__form" [formGroup]="loginFormGroup" (submit)="onLoginSubmit()">
+        <div *ngIf="loginError && !loginErrorField" class="login-page__alert" role="alert">
+          <span class="material-icons-outlined" aria-hidden="true">error_outline</span>
+          {{ loginError }}
+        </div>
+
+        <div class="login-page__field">
+          <label class="login-page__label" for="login-email">{{ 'EMAIL' | translate }}</label>
+          <div class="login-page__input-shell"
+            [class.login-page__input-shell--invalid]="loginErrorField === 'email' || (loginFormGroup.get('userName').touched && loginFormGroup.get('userName')?.invalid)">
+            <span class="material-icons-outlined login-page__input-icon" aria-hidden="true">mail_outline</span>
+            <input id="login-email" formControlName="userName" class="login-page__input" type="email"
+              autocomplete="username" placeholder="name@company.com">
+          </div>
+          <p class="login-page__error"
+            *ngIf="loginFormGroup.get('userName').touched && loginFormGroup.get('userName')?.hasError('required')">
+            {{ 'EMAIL_IS_REQUIRED' | translate }}
+          </p>
+          <p class="login-page__error"
+            *ngIf="loginFormGroup.get('userName').touched && loginFormGroup.get('userName')?.hasError('email')">
+            {{ 'PLEASE_ENTER_VALID_EMAIL' | translate }}
+          </p>
+          <p class="login-page__error" *ngIf="loginErrorField === 'email' && loginError">{{ loginError }}</p>
+        </div>
+
+        <div class="login-page__field">
+          <label class="login-page__label" for="login-password">{{ 'PASSWORD' | translate }}</label>
+          <div class="login-page__input-shell login-page__input-shell--password"
+            [class.login-page__input-shell--invalid]="loginErrorField === 'password' || (loginFormGroup.get('password').touched && loginFormGroup.get('password')?.invalid)">
+            <span class="material-icons-outlined login-page__input-icon" aria-hidden="true">lock_outline</span>
+            <input id="login-password" [type]="hidePassword ? 'password' : 'text'" formControlName="password"
+              class="login-page__input login-page__input--password" autocomplete="current-password"
+              placeholder="Enter your password">
+            <button type="button" class="login-page__toggle" tabindex="-1" (click)="togglePasswordVisibility()"
+              [attr.aria-label]="hidePassword ? ('SHOW_PASSWORD' | translate) : ('HIDE_PASSWORD' | translate)">
+              <span class="material-icons-outlined" aria-hidden="true">
+                {{ hidePassword ? 'visibility_off' : 'visibility' }}
+              </span>
+            </button>
+          </div>
+          <p class="login-page__error"
+            *ngIf="loginFormGroup.get('password').touched && loginFormGroup.get('password')?.hasError('required')">
+            {{ 'PASSWORD_IS_REQUIRED' | translate }}
+          </p>
+          <p class="login-page__error" *ngIf="loginErrorField === 'password' && loginError">{{ loginError }}</p>
+        </div>
+
+        <a class="login-page__forgot" [routerLink]="['/forgot-password']">{{ 'FORGOT_PASSWORD' | translate }}</a>
+
+        <button class="login-page__submit" type="submit" [disabled]="isSubmitting">
+          {{ isSubmitting ? ('LOGIN' | translate) + '...' : ('LOGIN' | translate) }}
+        </button>
+      </form>
+    </div>
+  </section>
 </div>

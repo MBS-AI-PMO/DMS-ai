@@ -4,17 +4,12 @@ import { DocumentRoutingModule } from './document-routing.module';
 import { DocumentListComponent } from './document-list/document-list.component';
 import { DocumentManageComponent } from './document-manage/document-manage.component';
 import { DocumentManagePresentationComponent } from './document-manage-presentation/document-manage-presentation.component';
-import { DocumentEditComponent } from './document-edit/document-edit.component';
 import { MatSortModule } from '@angular/material/sort';
 import { SharedModule } from '@shared/shared.module';
-import { DocumentPermissionModule } from './document-permission/document-permission.module';
-import { SendEmailComponent } from './send-email/send-email.component';
+import { DocumentDialogsModule } from './document-dialogs.module';
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
 import { DocumentReminderComponent } from './document-reminder/document-reminder.component';
 import { MatIconModule } from '@angular/material/icon';
-import { DocumentCommentComponent } from './document-comment/document-comment.component';
-import { DocumentUploadNewVersionComponent } from './document-upload-new-version/document-upload-new-version.component';
-import { DocumentVersionHistoryComponent } from './document-version-history/document-version-history.component';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialogModule } from '@angular/material/dialog';
@@ -32,8 +27,6 @@ import {
   OwlNativeDateTimeModule,
 } from 'ng-pick-datetime-ex';
 import { NgSelectModule } from '@ng-select/ng-select';
-import { SharableLinkComponent } from './sharable-link/sharable-link.component';
-import { ClipboardModule } from '@angular/cdk/clipboard';
 import { DocumentDeepSearchComponent } from './document-deep-search/document-deep-search.component';
 
 @NgModule({
@@ -41,13 +34,7 @@ import { DocumentDeepSearchComponent } from './document-deep-search/document-dee
     DocumentListComponent,
     DocumentManageComponent,
     DocumentManagePresentationComponent,
-    DocumentEditComponent,
-    SendEmailComponent,
     DocumentReminderComponent,
-    DocumentCommentComponent,
-    DocumentUploadNewVersionComponent,
-    DocumentVersionHistoryComponent,
-    SharableLinkComponent,
     DocumentDeepSearchComponent,
   ],
   imports: [
@@ -64,7 +51,7 @@ import { DocumentDeepSearchComponent } from './document-deep-search/document-dee
     MatButtonModule,
     SharedModule,
     MatProgressBarModule,
-    DocumentPermissionModule,
+    DocumentDialogsModule,
     MatCheckboxModule,
     MatMenuModule,
     CKEditorModule,
@@ -73,7 +60,6 @@ import { DocumentDeepSearchComponent } from './document-deep-search/document-dee
     OwlDateTimeModule,
     OwlNativeDateTimeModule,
     NgSelectModule,
-    ClipboardModule,
   ],
 })
 export class DocumentModule { }

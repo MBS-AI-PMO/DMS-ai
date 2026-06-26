@@ -38,7 +38,7 @@ export class WorkflowTransitionService {
 
     updateWorkflowTransition(transitions: WorkflowTransition[]): Observable<WorkflowTransition[] | CommonError> {
         let workflowId = transitions[0].workflowId;
-        const url = `workflowTransitions/${workflowId}`;
+        const url = `workflowtransitions/${workflowId}`;
         return this.httpClient
             .put<WorkflowTransition[]>(url, transitions)
             .pipe(catchError(this.commonHttpErrorService.handleError));

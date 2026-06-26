@@ -1,34 +1,38 @@
-<div class="d-flex">
-    <span mat-dialog-title class="dialog-title">{{ "WATERMARK_DOCUMENT" | translate }}
-        <app-page-help-text [code]="'WATERMARK_DOCUMENT'"></app-page-help-text>
-    </span>
-    <button mat-icon-button class="close-button ms-auto" (click)="closeDialog()">
-        <mat-icon class="close-icon" color="warn">close</mat-icon>
+<div class="dms-form-dialog__shell">
+  <div class="dms-form-dialog__header">
+    <div class="dms-form-dialog__heading">
+      <h2 class="dms-form-dialog__title">{{ 'WATERMARK_DOCUMENT' | translate }}</h2>
+      <app-page-help-text [code]="'WATERMARK_DOCUMENT'"></app-page-help-text>
+    </div>
+    <button type="button" class="dms-form-dialog__close" (click)="closeDialog()" [attr.aria-label]="'CANCEL' | translate">
+      <mat-icon>close</mat-icon>
     </button>
-</div>
+  </div>
 
-<div mat-dialog-content class="pt-0">
-    <form [formGroup]="documentWatermarkForm">
-        <div class="row">
-            <div class="col-md-12 mt-2">
-                <label class="form-label">{{'WATERMARK_TEXT' | translate}}</label>
-                <input formControlName="watermarkText" type="text" id="link" class="form-control">
-                <div
-                    *ngIf="documentWatermarkForm.get('watermarkText').touched && documentWatermarkForm.get('watermarkText')?.errors">
-                    <div class="text-danger"
-                        *ngIf="documentWatermarkForm.get('watermarkText').touched  && documentWatermarkForm.get('watermarkText').errors?.['required']">
-                        {{'WATERMARK_TEXT_IS_REQUIRED' | translate}}
-                    </div>
-                </div>
+  <mat-dialog-content class="dms-form-dialog__body">
+    <div class="dms-form-dialog__form-card">
+      <form [formGroup]="documentWatermarkForm">
+        <div class="dms-form-dialog__field dms-form-dialog__field--full">
+          <label class="form-label">{{ 'WATERMARK_TEXT' | translate }}</label>
+          <input formControlName="watermarkText" type="text" class="form-control">
+          <div *ngIf="documentWatermarkForm.get('watermarkText').touched && documentWatermarkForm.get('watermarkText')?.errors">
+            <div class="text-danger" *ngIf="documentWatermarkForm.get('watermarkText').errors?.['required']">
+              {{ 'WATERMARK_TEXT_IS_REQUIRED' | translate }}
             </div>
-            <div class="m-t-10 col-md-12">
-                <button type="submit" (click)="createWatermark()" class="btn btn-success">
-                    {{'ADD_WATERMARK' | translate}}
-                </button>
-                <button type="submit" (click)="closeDialog()" class="btn btn-danger ms-2">
-                    {{'CANCEL' | translate}}
-                </button>
-            </div>
+          </div>
         </div>
-    </form>
+      </form>
+    </div>
+  </mat-dialog-content>
+
+  <div mat-dialog-actions class="dms-form-dialog__actions">
+    <button type="button" class="dms-form-dialog__btn dms-form-dialog__btn--cancel" (click)="closeDialog()">
+      <i-feather name="x-circle"></i-feather>
+      {{ 'CANCEL' | translate }}
+    </button>
+    <button type="button" class="dms-form-dialog__btn dms-form-dialog__btn--save" (click)="createWatermark()">
+      <i-feather name="save"></i-feather>
+      {{ 'ADD_WATERMARK' | translate }}
+    </button>
+  </div>
 </div>

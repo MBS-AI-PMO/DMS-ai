@@ -1,20 +1,18 @@
-<section class="content">
+<section class="content dms-module">
   <div class="content-block">
-    <div class="block-header">
-      <div class="breadcrumb-main">
-        <div class="row">
-          <div class="col-md-6 mb-2">
-            <span class="mb-0 page-title">{{ "ADD_DOCUMENT" | translate }}
-              <app-page-help-text code="ADD_DOCUMENT"></app-page-help-text>
-            </span>
-          </div>
-        </div>
+    <div class="dms-page-header">
+      <div class="dms-page-header__text">
+        <h1 class="dms-page-title">
+          {{ 'ADD_DOCUMENT' | translate }}
+          <app-page-help-text code="ADD_DOCUMENT"></app-page-help-text>
+        </h1>
       </div>
     </div>
-    <div class="row">
-      <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
-        <div class="card">
-          <div class="body">
+    <div class="dms-panel">
+      <div class="dms-panel__toolbar">
+        <h2 class="dms-panel__toolbar-title">{{ 'DOCUMENT_DETAILS' | translate }}</h2>
+      </div>
+      <div class="dms-panel__body">
             <form [formGroup]="documentForm">
               <div class="row">
                 <div class="col-md-3">
@@ -259,20 +257,18 @@
                     </div>
                   </ng-container>
                 </div>
-                <div class="m-t-10 col-md-12">
-                  <button class="btn btn-success btn-sm m-r-10" (click)="SaveDocument()" cdkFocusInitial>
+                <div class="m-t-10 col-md-12 dms-form-actions">
+                  <button class="btn btn-success btn-sm dms-btn-icon" (click)="SaveDocument()" cdkFocusInitial type="button">
                     <i-feather name="save" class="small-icon"></i-feather>
-                    {{ "SAVE" | translate }}
+                    {{ 'SAVE' | translate }}
                   </button>
-                  <button type="button" class="btn btn-danger btn-sm" [routerLink]="['/']">
+                  <button type="button" class="btn btn-danger btn-sm dms-btn-icon" [routerLink]="['/']">
                     <i-feather name="x-circle" class="small-icon"></i-feather>
-                    {{ "CANCEL" | translate }}
+                    {{ 'CANCEL' | translate }}
                   </button>
                 </div>
               </div>
             </form>
-          </div>
-        </div>
       </div>
     </div>
   </div>

@@ -16,6 +16,7 @@ import { Role } from '@core/domain-classes/role';
 import { CommonService } from '@core/services/common.service';
 import { User } from '@core/domain-classes/user';
 import { WorkflowService } from './workflow-service';
+import { normalizeWorkflow, normalizeWorkflows } from './workflow-normalizer';
 
 type WorkflowState = {
     workflows: Workflow[];
@@ -71,7 +72,7 @@ export const WorkflowStore = signalStore(
                             tapResponse({
                                 next: (workflows: Workflow[]) => {
                                     patchState(store, {
-                                        workflows: [...workflows],
+                                        workflows: normalizeWorkflows(workflows),
                                         commonError: null,
                                     });
                                 },
@@ -115,10 +116,11 @@ export const WorkflowStore = signalStore(
                         workflowService.addWorkflow(workflow).pipe(
                             tapResponse({
                                 next: (newWorkflow: Workflow) => {
+                                    const normalizedWorkflow = normalizeWorkflow(newWorkflow) as Workflow;
                                     patchState(store, {
-                                        workflows: [...store.workflows(), { ...newWorkflow }],
+                                        workflows: [...store.workflows(), normalizedWorkflow],
                                         commonError: null,
-                                        currentWorkflow: { ...newWorkflow },
+                                        currentWorkflow: normalizedWorkflow,
                                         currentStep: 1
                                     });
                                     toastrService.success(
@@ -140,13 +142,17 @@ export const WorkflowStore = signalStore(
                         workflowService.updateWorkflow(workflow).pipe(
                             tapResponse({
                                 next: (updatedWorkflow: Workflow) => {
-                                    const currentWorkflow = store.currentWorkflow();
-                                    updatedWorkflow.name = updatedWorkflow.name;
-                                    updatedWorkflow.description = updatedWorkflow.description;
+                                    const mergedWorkflow = normalizeWorkflow({
+                                        ...store.currentWorkflow(),
+                                        ...updatedWorkflow,
+                                        name: updatedWorkflow.name,
+                                        description: updatedWorkflow.description,
+                                    }) as Workflow;
                                     patchState(store, {
-                                        currentWorkflow: { ...currentWorkflow },
-                                        workflows: [...store
-                                            .workflows().filter((w) => w.id !== updatedWorkflow.id), currentWorkflow
+                                        currentWorkflow: mergedWorkflow,
+                                        workflows: [
+                                            ...store.workflows().filter((w) => w.id !== mergedWorkflow.id),
+                                            mergedWorkflow,
                                         ],
                                         commonError: null,
                                         currentStep: 1
@@ -166,7 +172,10 @@ export const WorkflowStore = signalStore(
             ),
             getCurrentWorkflow: () => store.currentWorkflow(),
             setCurrentWorkflow: (workFlow: Workflow) => {
-                patchState(store, { currentWorkflow: { ...workFlow }, isEditMode: true });
+                patchState(store, {
+                    currentWorkflow: normalizeWorkflow(workFlow) as Workflow,
+                    isEditMode: true,
+                });
             },
             setError: (commonError: CommonError) => {
                 patchState(store, { commonError: { ...commonError } })
@@ -178,7 +187,7 @@ export const WorkflowStore = signalStore(
                             tapResponse({
                                 next: (workflow: Workflow) => {
                                     patchState(store, {
-                                        currentWorkflow: workflow,
+                                        currentWorkflow: normalizeWorkflow(workflow) as Workflow,
                                         commonError: null,
                                     });
                                 },

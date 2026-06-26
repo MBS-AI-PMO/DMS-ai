@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, Renderer2 } from '@angular/core';
 import {
   UntypedFormBuilder,
   UntypedFormGroup,
@@ -8,8 +8,11 @@ import { ToastrService } from 'ngx-toastr';
 import { UserService } from '../user/user.service';
 import { TranslationService } from '@core/services/translation.service';
 import { SecurityService } from '@core/security/security.service';
+import { CommonError } from '@core/error-handler/common-error';
 import { BaseComponent } from '../base.component';
 import { Router } from '@angular/router';
+import { Direction } from '@angular/cdk/bidi';
+import { DOCUMENT } from '@angular/common';
 
 @Component({
   selector: 'app-forgot-password',
@@ -19,7 +22,7 @@ import { Router } from '@angular/router';
 export class ForgotPasswordComponent extends BaseComponent implements OnInit {
   loginFormGroup: UntypedFormGroup;
   logoImage = '';
-  bannerImage = '';
+  direction: Direction;
   isSubmitting = false;
 
   constructor(
@@ -28,14 +31,30 @@ export class ForgotPasswordComponent extends BaseComponent implements OnInit {
     private userService: UserService,
     private securityService: SecurityService,
     private toastr: ToastrService,
-    private router: Router
+    private router: Router,
+    private renderer: Renderer2,
+    @Inject(DOCUMENT) private document: Document
   ) {
     super();
     this.companyProfileSubscription();
+    this.getLangDir();
   }
 
   ngOnInit(): void {
     this.createFormGroup();
+  }
+
+  getLangDir() {
+    this.sub$.sink = this.translationService.lanDir$.subscribe(
+      (c: Direction) => {
+        this.direction = c;
+        if (this.direction == 'rtl') {
+          this.renderer.addClass(this.document.body, 'rtl');
+        } else {
+          this.renderer.removeClass(this.document.body, 'rtl');
+        }
+      }
+    );
   }
 
   createFormGroup(): void {
@@ -75,7 +94,6 @@ export class ForgotPasswordComponent extends BaseComponent implements OnInit {
     this.securityService.companyProfile.subscribe((profile) => {
       if (profile) {
         this.logoImage = profile.logoUrl;
-        this.bannerImage = profile.bannerUrl;
       }
     });
   }

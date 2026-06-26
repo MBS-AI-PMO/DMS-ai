@@ -19,8 +19,7 @@ use App\Http\Controllers\AngularController;
 // });
 
 Route::any('/{any}', [AngularController::class, 'index'])
-    ->where('any', '^(?!api).*$')
-    ->where('any', '^(?!install|update).*$');
+    ->where('any', '^(?!api|install|update).*$');
     // ->where('any', '^(?!update).*$');
 // Route::get('/category', [CategoryController::class, 'index']);
 // Route::get('/category',function(){

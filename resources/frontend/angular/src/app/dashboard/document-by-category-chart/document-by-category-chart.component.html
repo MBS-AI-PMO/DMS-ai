@@ -1,14 +1,50 @@
-<div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
-  <div class="card">
-    <div class="header">
-      <span class="page-title">{{ "DOCUMENTS_BY_CATEGORY" | translate }}
+<div class="chart-panel">
+  <div class="chart-panel__header">
+    <div class="chart-panel__title-wrap">
+      <h2 class="chart-panel__title">
+        {{ 'DOCUMENTS_BY_CATEGORY' | translate }}
         <app-page-help-text code="DOCUMENTS_BY_CATEGORY"></app-page-help-text>
-      </span>
+      </h2>
+      <p class="chart-panel__meta" *ngIf="!loading && single.length">
+        {{ totalDocuments }} {{ 'DOCUMENT' | translate }}
+        · {{ single.length }} {{ 'DOCUMENT_CATEGORIES' | translate }}
+      </p>
     </div>
-    <div class="body">
-      <ngx-charts-pie-chart [results]="single" legendTitle="{{'DOCUMENT_CATEGORIES' | translate}}" [legend]="true"
-        [labels]="true">
+
+    <div class="chart-panel__actions" *ngIf="!loading && single.length">
+      <div class="chart-toggle" role="group">
+        <button type="button" class="chart-toggle__btn" [class.active]="chartType === 'pie'"
+          (click)="setChartType('pie')">
+          <i-feather name="pie-chart" class="small-icon"></i-feather>
+        </button>
+        <button type="button" class="chart-toggle__btn" [class.active]="chartType === 'bar'"
+          (click)="setChartType('bar')">
+          <i-feather name="bar-chart-2" class="small-icon"></i-feather>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="chart-panel__body">
+    <div class="chart-loading" *ngIf="loading">
+      <div class="chart-loading__spinner"></div>
+    </div>
+
+    <div class="chart-empty" *ngIf="!loading && !single.length">
+      <i-feather name="inbox" class="chart-empty__icon"></i-feather>
+      <p>{{ 'NO_DATA_FOUND' | translate }}</p>
+    </div>
+
+    <div class="chart-wrapper" #chartContainer *ngIf="!loading && single.length">
+      <ngx-charts-pie-chart *ngIf="chartType === 'pie'" [results]="single" [view]="view" [scheme]="colorScheme"
+        [legend]="true" [legendTitle]="''" [legendPosition]="legendPosition" [labels]="true" [doughnut]="true"
+        [arcWidth]="0.42" [gradient]="true" [animations]="true" [trimLabels]="false" [maxLabelLength]="24">
       </ngx-charts-pie-chart>
+
+      <ngx-charts-bar-vertical *ngIf="chartType === 'bar'" [results]="single" [view]="view" [scheme]="colorScheme"
+        [legend]="false" [xAxis]="true" [yAxis]="true" [showXAxisLabel]="false" [showYAxisLabel]="false"
+        [gradient]="true" [animations]="true" [roundEdges]="true" [barPadding]="10">
+      </ngx-charts-bar-vertical>
     </div>
   </div>
 </div>

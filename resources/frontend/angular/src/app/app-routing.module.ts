@@ -17,6 +17,7 @@ const routes: Routes = [
     path: '',
     component: AppComponent,
     resolve: { profile: CompanyProfileResolver },
+    runGuardsAndResolvers: 'paramsOrQueryParamsChange',
     children: [
       {
         path: 'preview/:code',
@@ -63,6 +64,16 @@ const routes: Routes = [
         children: [
           {
             path: '',
+            redirectTo: 'assigned-documents',
+            pathMatch: 'full',
+          },
+          {
+            path: 'add',
+            redirectTo: 'assigned-documents/add',
+            pathMatch: 'full',
+          },
+          {
+            path: 'assigned-documents',
             canLoad: [AuthGuard],
             loadChildren: () =>
               import('./document-library/document-library.module').then(
@@ -149,6 +160,7 @@ const routes: Routes = [
           },
           {
             path: 'email-smtp',
+            canActivate: [AuthGuard],
             loadChildren: () =>
               import('./email-smtp-setting/email-smtp-setting.module').then(
                 (m) => m.EmailSmtpSettingModule
@@ -156,6 +168,7 @@ const routes: Routes = [
           },
           {
             path: 'company-profile',
+            canActivate: [AuthGuard],
             loadChildren: () =>
               import('./company-profile/company-profile.module').then(
                 (m) => m.CompanyProfileModule
@@ -460,7 +473,7 @@ const routes: Routes = [
 
           {
             path: '**',
-            redirectTo: '/',
+            redirectTo: 'assigned-documents',
           },
         ],
       },

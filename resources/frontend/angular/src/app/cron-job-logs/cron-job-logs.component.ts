@@ -13,6 +13,7 @@ import { debounceTime, distinctUntilChanged, merge, Observable, Subject, tap } f
 import { CronJobLogService } from './cron-job-log.service';
 import { ResponseHeader } from '@core/domain-classes/document-header';
 import { LogsRetentionSettingsComponent } from '../logs-retention-settings/logs-retention-settings.component';
+import { DMS_FORM_DIALOG_CONFIG } from '@core/common-dialog/form-dialog.config';
 import { MatDialog } from '@angular/material/dialog';
 
 @Component({
@@ -123,8 +124,7 @@ export class CronJobLogsComponent extends BaseComponent implements OnInit, After
 
   manageLogsRetention() {
     this.dialog.open(LogsRetentionSettingsComponent, {
-      width: '35vw',
-      maxHeight: '70vh',
+      ...DMS_FORM_DIALOG_CONFIG,
       data: { type: 'cron-job-log-setting' },
     });
   }

@@ -25,7 +25,7 @@ export class CompanyProfileService {
   updateCompanyProfile(
     companyProfile
   ): Observable<CompanyProfile | CommonError> {
-    const url = `companyProfile`;
+    const url = `companyprofile`;
     return this.http
       .post<CompanyProfile>(url, companyProfile)
       .pipe(catchError(this.commonHttpErrorService.handleError));

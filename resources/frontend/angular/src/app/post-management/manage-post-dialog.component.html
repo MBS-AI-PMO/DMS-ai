@@ -1,0 +1,126 @@
+<div class="dms-form-dialog__shell">
+  <div class="dms-form-dialog__header">
+    <div class="dms-form-dialog__heading">
+      <h2 class="dms-form-dialog__title">{{ editingPostId ? 'Edit Job Post' : 'Add Job Post' }}</h2>
+    </div>
+    <button type="button" class="dms-form-dialog__close" (click)="close()" aria-label="Close">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content class="dms-form-dialog__body">
+    <div class="dms-form-dialog__form-card pm-post-form">
+      <div class="dms-form-dialog__form-grid">
+        <div class="dms-form-dialog__field dms-form-dialog__field--full">
+          <label class="form-label" for="postTitle">Post title</label>
+          <input id="postTitle" class="form-control" [(ngModel)]="newPostTitle" placeholder="e.g. Senior PHP Developer">
+        </div>
+
+        <div class="dms-form-dialog__field">
+          <span class="pm-field-step">Step 1</span>
+          <label class="form-label">Category</label>
+          <mat-form-field appearance="outline" class="w-100 pm-dialog-field">
+            <mat-select [(ngModel)]="newPostCategoryId" (selectionChange)="onPostCategorySelect($event.value)"
+              placeholder="Choose category">
+              <mat-option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</mat-option>
+              <mat-option [value]="addCategoryOption" class="pm-add-option">
+                <mat-icon>add_circle_outline</mat-icon>
+                <span>Add new category…</span>
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <div class="pm-inline-add-form" *ngIf="showPostInlineCategory">
+            <div class="pm-inline-add-title">New category</div>
+            <input class="form-control mb-2" [(ngModel)]="postInlineCategoryName" placeholder="IT, HR, Sales">
+            <div class="pm-inline-dept-block">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="small fw-semibold">Departments (optional)</span>
+                <button mat-button type="button" (click)="addPostInlineDeptRow()">
+                  <mat-icon>add</mat-icon> Add row
+                </button>
+              </div>
+              <div class="pm-inline-dept-row" *ngFor="let row of postInlineDeptRows; let i = index; trackBy: trackByIndex">
+                <input class="form-control" [(ngModel)]="postInlineDeptRows[i].name" placeholder="e.g. Frontend">
+                <button mat-icon-button color="warn" type="button" (click)="removePostInlineDeptRow(i)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </div>
+            <div class="pm-inline-add-actions">
+              <button type="button" class="dms-action-btn dms-action-btn--cancel" (click)="cancelPostInlineCategory()">Cancel</button>
+              <button type="button" class="dms-action-btn dms-action-btn--save" (click)="savePostInlineCategory()">Save &amp; use</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="dms-form-dialog__field">
+          <span class="pm-field-step">Step 2</span>
+          <label class="form-label">Department</label>
+          <mat-form-field appearance="outline" class="w-100 pm-dialog-field">
+            <mat-select [(ngModel)]="newPostDepartmentId" (selectionChange)="onPostDepartmentSelect($event.value)"
+              [disabled]="!newPostCategoryId" placeholder="Select department">
+              <mat-option *ngFor="let dept of postFormDepartments" [value]="dept.id">{{ dept.name }}</mat-option>
+              <mat-option [value]="addDepartmentOption" class="pm-add-option" [disabled]="!newPostCategoryId">
+                <mat-icon>add_circle_outline</mat-icon>
+                <span>Add new department…</span>
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <div class="pm-inline-add-form" *ngIf="showPostInlineDepartment">
+            <div class="pm-inline-add-title">New department</div>
+            <input class="form-control mb-2" [(ngModel)]="postInlineDepartmentName" placeholder="HR, Frontend, Accounts">
+            <div class="pm-inline-add-actions">
+              <button type="button" class="dms-action-btn dms-action-btn--cancel" (click)="cancelPostInlineDepartment()">Cancel</button>
+              <button type="button" class="dms-action-btn dms-action-btn--save" (click)="savePostInlineDepartment()">Save &amp; use</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="dms-form-dialog__field">
+          <label class="form-label" for="postExp">Experience (years)</label>
+          <input id="postExp" class="form-control" type="number" min="0" [(ngModel)]="newPostExperienceYears">
+        </div>
+
+        <div class="dms-form-dialog__field">
+          <label class="form-label">Work mode</label>
+          <mat-form-field appearance="outline" class="w-100 pm-dialog-field">
+            <mat-select [(ngModel)]="newPostWorkMode">
+              <mat-option value="remote">Remote</mat-option>
+              <mat-option value="physical">Physical</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="dms-form-dialog__field dms-form-dialog__field--full" *ngIf="newPostWorkMode === 'physical'">
+          <label class="form-label" for="postAddress">Address</label>
+          <input id="postAddress" class="form-control" [(ngModel)]="newPostAddress" placeholder="Office location">
+        </div>
+
+        <div class="dms-form-dialog__field dms-form-dialog__field--full">
+          <label class="form-label" for="postDesc">Description</label>
+          <textarea id="postDesc" class="form-control" rows="3" [(ngModel)]="newPostDescription"
+            placeholder="Job summary and requirements"></textarea>
+        </div>
+      </div>
+
+      <div class="pm-form-note" *ngIf="selectedDepartment">
+        <mat-icon>info_outline</mat-icon>
+        <span>
+          Interview questions will be taken from
+          <strong>{{ selectedDepartment.name }}</strong> department (not edited per post).
+        </span>
+      </div>
+    </div>
+  </mat-dialog-content>
+
+  <div mat-dialog-actions class="dms-form-dialog__actions">
+    <button type="button" class="dms-form-dialog__btn dms-form-dialog__btn--cancel" (click)="close()">
+      <i-feather name="x-circle"></i-feather>
+      Cancel
+    </button>
+    <button type="button" class="dms-form-dialog__btn dms-form-dialog__btn--save" (click)="savePost()" cdkFocusInitial>
+      <i-feather name="save"></i-feather>
+      {{ editingPostId ? 'Update Post' : 'Save Post' }}
+    </button>
+  </div>
+</div>

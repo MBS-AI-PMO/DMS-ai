@@ -4,6 +4,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -12,21 +13,15 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
-import { forkJoin, of, switchMap } from 'rxjs';
+import { DMS_FORM_DIALOG_WIDE_CONFIG } from '@core/common-dialog/form-dialog.config';
+import { FeatherIconsModule } from '@shared/feather-icons.module';
 import { BaseComponent } from '../base.component';
-import { PostBoardData, ProposalCategory, ProposalDepartment } from './post-management.types';
 import {
-  clampPageIndex,
-  filterBySearch,
-  getDefaultQuestions,
-  serializeQuestions,
-  slicePage,
-} from './post-management.utils';
-
-interface DepartmentFormRow {
-  id?: string;
-  name: string;
-}
+  ManageCategoryDialogComponent,
+  ManageCategoryDialogData,
+} from './manage-category-dialog.component';
+import { PostBoardData, ProposalCategory, ProposalDepartment } from './post-management.types';
+import { clampPageIndex, filterBySearch, slicePage } from './post-management.utils';
 
 @Component({
   selector: 'app-post-categories',
@@ -38,11 +33,13 @@ interface DepartmentFormRow {
     TranslateModule,
     MatButtonModule,
     MatCardModule,
+    MatDialogModule,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
     MatTooltipModule,
     MatPaginatorModule,
+    FeatherIconsModule,
   ],
   templateUrl: './post-categories.component.html',
   styleUrl: './post-categories.component.scss',
@@ -51,14 +48,10 @@ export class PostCategoriesComponent extends BaseComponent implements OnInit {
   private readonly httpClient = inject(HttpClient);
   private readonly toastrService = inject(ToastrService);
   private readonly route = inject(ActivatedRoute);
+  private readonly dialog = inject(MatDialog);
 
   categories: ProposalCategory[] = [];
   departments: ProposalDepartment[] = [];
-
-  showCategoryForm = false;
-  editingCategoryId = '';
-  categoryName = '';
-  departmentRows: DepartmentFormRow[] = [];
 
   categorySearch = '';
   categoryPageIndex = 0;
@@ -78,10 +71,10 @@ export class PostCategoriesComponent extends BaseComponent implements OnInit {
         this.clampCategoryPage();
 
         const categoryId = this.route.snapshot.queryParamMap.get('categoryId');
-        if (categoryId && !this.showCategoryForm) {
+        if (categoryId) {
           const cat = this.categories.find((c) => c.id === categoryId);
           if (cat) {
-            this.editCategory(cat);
+            this.openCategoryDialog(cat);
           }
         }
       });
@@ -114,89 +107,23 @@ export class PostCategoriesComponent extends BaseComponent implements OnInit {
     this.clampCategoryPage();
   }
 
-  openAddCategory(): void {
-    this.resetCategoryForm();
-    this.departmentRows = [{ name: '' }];
-    this.showCategoryForm = true;
-  }
-
-  addDepartmentRow(): void {
-    this.departmentRows.push({ name: '' });
-  }
-
-  removeDepartmentRow(index: number): void {
-    if (this.departmentRows.length === 1) {
-      this.departmentRows[0].name = '';
-      return;
-    }
-    this.departmentRows.splice(index, 1);
-  }
-
-  trackByIndex(index: number): number {
-    return index;
-  }
-
-  saveCategory(): void {
-    if (!this.categoryName.trim()) {
-      this.toastrService.warning('Enter a category name');
-      return;
-    }
-
-    const body = { name: this.categoryName.trim() };
-
-    if (this.editingCategoryId) {
-      this.sub$.sink = this.httpClient
-        .put(`proposal-management/categories/${this.editingCategoryId}`, body)
-        .pipe(switchMap(() => this.syncDepartmentsForCategory(this.editingCategoryId)))
-        .subscribe(() => {
-          this.toastrService.success('Category and departments saved');
-          this.resetCategoryForm();
+  openCategoryDialog(category?: ProposalCategory): void {
+    const data: ManageCategoryDialogData = {
+      category,
+      departments: this.departments,
+    };
+    this.sub$.sink = this.dialog
+      .open(ManageCategoryDialogComponent, { ...DMS_FORM_DIALOG_WIDE_CONFIG, data })
+      .afterClosed()
+      .subscribe((saved) => {
+        if (saved) {
           this.loadData();
-        });
-      return;
-    }
-
-    this.sub$.sink = this.httpClient
-      .post<ProposalCategory>('proposal-management/categories', body)
-      .pipe(switchMap((category) => this.syncDepartmentsForCategory(category.id)))
-      .subscribe(() => {
-        this.toastrService.success('Category and departments created');
-        this.resetCategoryForm();
-        this.loadData();
+        }
       });
   }
 
-  private syncDepartmentsForCategory(categoryId: string) {
-    const rows = this.departmentRows.filter((r) => r.name.trim());
-    if (!rows.length) {
-      return of(null);
-    }
-
-    const requests = rows.map((row) => {
-      const deptBody = {
-        categoryId,
-        name: row.name.trim(),
-        basicQuestions: serializeQuestions(getDefaultQuestions('basic')),
-        intermediateQuestions: serializeQuestions(getDefaultQuestions('intermediate')),
-        expertQuestions: serializeQuestions(getDefaultQuestions('expert')),
-      };
-      if (row.id) {
-        return this.httpClient.put(`proposal-management/departments/${row.id}`, deptBody);
-      }
-      return this.httpClient.post('proposal-management/departments', deptBody);
-    });
-
-    return forkJoin(requests);
-  }
-
   editCategory(cat: ProposalCategory): void {
-    this.editingCategoryId = cat.id;
-    this.categoryName = cat.name;
-    const existing = this.getDepartmentsForCategory(cat.id);
-    this.departmentRows = existing.length
-      ? existing.map((d) => ({ id: d.id, name: d.name }))
-      : [{ name: '' }];
-    this.showCategoryForm = true;
+    this.openCategoryDialog(cat);
   }
 
   deleteCategory(cat: ProposalCategory): void {
@@ -210,13 +137,6 @@ export class PostCategoriesComponent extends BaseComponent implements OnInit {
       },
       error: (err) => this.toastrService.error(err?.error?.message || 'Could not delete category'),
     });
-  }
-
-  resetCategoryForm(): void {
-    this.showCategoryForm = false;
-    this.editingCategoryId = '';
-    this.categoryName = '';
-    this.departmentRows = [];
   }
 
   private clampCategoryPage(): void {

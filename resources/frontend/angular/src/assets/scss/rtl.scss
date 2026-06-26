@@ -11,6 +11,8 @@
 
     .navbar-header {
       margin-bottom: 0px;
+      border-top-left-radius: 22px;
+      border-top-right-radius: 0;
     }
   }
 
@@ -68,6 +70,14 @@
 
       .content-block {
         padding: 25px 10px 0px 0px;
+      }
+
+      &.dms-module {
+        border-top-left-radius: 0;
+        border-top-right-radius: 22px;
+        margin-top: 60px;
+        min-height: calc(100vh - 60px);
+        padding-top: 10px;
       }
     }
   }
@@ -923,6 +933,9 @@
   }
 
   .sidebar {
-    border-radius: 0.5rem 0rem 0rem 0rem;
+    border-bottom-left-radius: 22px;
+    border-bottom-right-radius: 0;
+    left: auto;
+    right: 0;
   }
 }

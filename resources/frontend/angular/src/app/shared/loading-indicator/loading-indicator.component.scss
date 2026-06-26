@@ -1,12 +1,133 @@
-.spinner-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 56px;
-  right: 0;
-  z-index: 1001;
-  display: flex;
+.dms-loader-overlay {
   align-items: center;
+  backdrop-filter: blur(4px);
+  background: rgba(248, 249, 252, 0.72);
+  bottom: 0;
+  display: flex;
   justify-content: center;
-  color: #6777ef !important;
+  left: 0;
+  position: fixed;
+  right: 0;
+  top: 0;
+  z-index: 10001;
+}
+
+.dms-loader {
+  align-items: center;
+  animation: dmsLoaderFadeIn 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.dms-loader__orbits {
+  height: 64px;
+  position: relative;
+  width: 64px;
+}
+
+.dms-loader__core {
+  background: #6777ef;
+  border-radius: 50%;
+  box-shadow: 0 0 20px rgba(103, 119, 239, 0.55);
+  height: 12px;
+  left: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  animation: dmsLoaderPulse 1.2s ease-in-out infinite;
+}
+
+.dms-loader__orbit {
+  border: 2px solid transparent;
+  border-radius: 50%;
+  border-top-color: #6777ef;
+  left: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+
+  &--1 {
+    animation: dmsLoaderSpin 1.1s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+    height: 64px;
+    width: 64px;
+  }
+
+  &--2 {
+    animation: dmsLoaderSpin 1.4s cubic-bezier(0.5, 0, 0.5, 1) infinite reverse;
+    border-top-color: rgba(103, 119, 239, 0.55);
+    height: 48px;
+    width: 48px;
+  }
+
+  &--3 {
+    animation: dmsLoaderSpin 0.9s linear infinite;
+    border-right-color: rgba(44, 48, 59, 0.25);
+    border-top-color: rgba(44, 48, 59, 0.35);
+    height: 32px;
+    width: 32px;
+  }
+}
+
+.dms-loader__label {
+  color: #2c303b;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+
+  &::after {
+    animation: dmsLoaderDots 1.4s steps(4, end) infinite;
+    content: '';
+  }
+}
+
+@keyframes dmsLoaderSpin {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes dmsLoaderPulse {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: translate(-50%, -50%) scale(1.35);
+    opacity: 0.75;
+  }
+}
+
+@keyframes dmsLoaderFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes dmsLoaderDots {
+  0% {
+    content: '';
+  }
+
+  25% {
+    content: '.';
+  }
+
+  50% {
+    content: '..';
+  }
+
+  75% {
+    content: '...';
+  }
 }

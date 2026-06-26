@@ -277,24 +277,34 @@ class DocumentRepository extends BaseRepository implements DocumentRepositoryInt
             $model = $this->model->newInstance($request);
             $model->url = $path;
             $model->categoryId = $request->categoryId;
-            $model->clientId = $request->clientId;
-            $model->statusId = $request->statusId;
+            $model->clientId = $request->clientId ?: null;
+            $model->statusId = $request->statusId ?: null;
             $model->name = $request->name;
             $model->location = $request->location;
             $model->description = $request->description;
-            $metaDatas = $request->documentmetadatas;
+            $metaDatas = $this->resolveDocumentMetaDatas($request);
             $model->isIndexed = $isIndexed;
-            $model->retentionPeriod = $request->retentionPeriod;
-            $model->retentionAction = $request->retentionAction;
+            $model->retentionPeriod = $request->retentionPeriod ?: null;
+            $model->retentionAction = $request->retentionAction !== null && $request->retentionAction !== ''
+                ? $request->retentionAction
+                : null;
             $model->save();
             $this->resetModel();
             $result = $this->parseResult($model);
 
-            foreach (json_decode($metaDatas) as $metaTag) {
-                DocumentMetaDatas::create(array(
-                    'documentId' =>   $result->id,
-                    'metatag' =>  $metaTag->metatag,
-                ));
+            foreach ($metaDatas as $metaTag) {
+                $metatag = is_array($metaTag)
+                    ? ($metaTag['metatag'] ?? '')
+                    : ($metaTag->metatag ?? '');
+
+                if ($metatag === '') {
+                    continue;
+                }
+
+                DocumentMetaDatas::create([
+                    'documentId' => $result->id,
+                    'metatag' => $metatag,
+                ]);
             }
 
             // create index of document.
@@ -302,8 +312,12 @@ class DocumentRepository extends BaseRepository implements DocumentRepositoryInt
                 $this->indexer->createDocumentIndex($result->id, $path, $request->location);
             }
 
-            $documentrolepermissions = json_decode($request->documentrolepermissions);
-            $rolePermissionsArray = array();
+            $documentrolepermissions = json_decode(
+                $request->input('documentRolePermissions')
+                    ?? $request->input('documentrolepermissions')
+                    ?? '[]'
+            ) ?: [];
+            $rolePermissionsArray = [];
             foreach ($documentrolepermissions as $docuemntrole) {
                 $startDate = '';
                 $endDate = '';
@@ -342,7 +356,11 @@ class DocumentRepository extends BaseRepository implements DocumentRepositoryInt
                 }
             }
 
-            $documentuserpermissions = json_decode($request->documentuserpermissions);
+            $documentuserpermissions = json_decode(
+                $request->input('documentUserPermissions')
+                    ?? $request->input('documentuserpermissions')
+                    ?? '[]'
+            ) ?: [];
             foreach ($documentuserpermissions as $docuemntUser) {
                 $startDate = '';
                 $endDate = '';
@@ -405,6 +423,9 @@ class DocumentRepository extends BaseRepository implements DocumentRepositoryInt
             return response()->json($result);
         } catch (\Exception $e) {
             DB::rollBack();
+            FacadesLog::error('Document save failed: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
             return response()->json([
                 'message' => 'Error in saving data.',
             ], 409);
@@ -417,36 +438,72 @@ class DocumentRepository extends BaseRepository implements DocumentRepositoryInt
             DB::beginTransaction();
             $model = $this->model->find($id);
 
+            if (!$model) {
+                DB::rollBack();
+                return response()->json([
+                    'message' => 'Document not found.',
+                ], 404);
+            }
+
             $model->name = $request->name;
             $model->description = $request->description;
             $model->categoryId = $request->categoryId;
-            $model->clientId = $request->clientId;
-            $model->statusId = $request->statusId;
-            $model->retentionPeriod = $request->retentionPeriod;
-            $model->retentionAction = $request->retentionAction;
-            $metaDatas = $request->documentmetadatas;
+            $model->clientId = $request->clientId ?: null;
+            $model->statusId = $request->statusId ?: null;
+            $model->retentionPeriod = $request->retentionPeriod ?: null;
+            $model->retentionAction = $request->retentionAction !== null && $request->retentionAction !== ''
+                ? $request->retentionAction
+                : null;
+            if ($request->filled('location')) {
+                $model->location = $request->location;
+            }
+            $metaDatas = $this->resolveDocumentMetaDatas($request);
             $model->save();
             $this->resetModel();
             $result = $this->parseResult($model);
 
-            $documentMetadatas = DocumentMetaDatas::where('documentId', '=', $id)->get('id');
-            DocumentMetaDatas::destroy($documentMetadatas);
+            DocumentMetaDatas::where('documentId', '=', $id)->delete();
 
             foreach ($metaDatas as $metaTag) {
+                $metatag = is_array($metaTag)
+                    ? ($metaTag['metatag'] ?? '')
+                    : ($metaTag->metatag ?? '');
+
+                if ($metatag === '') {
+                    continue;
+                }
+
                 DocumentMetaDatas::create(array(
                     'documentId' =>  $id,
-                    'metatag' =>  $metaTag['metatag'],
+                    'metatag' =>  $metatag,
                 ));
             }
 
             DB::commit();
-            return $result;;
+            return $result;
         } catch (\Exception $e) {
             DB::rollBack();
+            FacadesLog::error('Document update failed: ' . $e->getMessage(), [
+                'documentId' => $id,
+            ]);
             return response()->json([
                 'message' => 'Error in saving data.',
             ], 409);
         }
+    }
+
+    private function resolveDocumentMetaDatas($request): array
+    {
+        $metaDatas = $request->input('documentMetaDatas')
+            ?? $request->input('documentmetadatas')
+            ?? [];
+
+        if (is_string($metaDatas)) {
+            $decoded = json_decode($metaDatas, true);
+            return is_array($decoded) ? $decoded : [];
+        }
+
+        return is_array($metaDatas) ? $metaDatas : [];
     }
 
     public function assignedDocuments($attributes)

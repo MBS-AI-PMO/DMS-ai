@@ -4,6 +4,11 @@
   @import '../node_modules/angular-calendar/css/angular-calendar.css';
   @import "@ng-select/ng-select/themes/default.theme.css";
   @import "assets/scss/variables.scss";
+  @import "assets/scss/dms-ui.scss";
+  @import "assets/scss/dms-paginator.scss";
+  @import "assets/scss/dms-confirm-dialog.scss";
+  @import "assets/scss/dms-form-dialog.scss";
+  @import "assets/scss/dms-workflow-view-dialog.scss";
   @import "app/post-management/post-management-shared.scss";
 
 // Standalone routes: ensure content clears fixed sidebar (same as general.scss section.content)

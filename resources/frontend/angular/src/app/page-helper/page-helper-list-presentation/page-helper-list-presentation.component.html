@@ -1,4 +1,4 @@
-<section class="content">
+<section class="content dms-module">
   <div class="block-header">
     <div class="breadcrumb-main">
       <div class="row">
@@ -21,14 +21,16 @@
                 {{ "ACTION" | translate }}
               </th>
               <td mat-cell *matCellDef="let element">
-                <button (click)="managePageHelper(element)" class="btn btn-success btn-sm me-2" type="button">
-                  <i-feather name="edit" class="small-icon"></i-feather>
-                  <span class="d-none d-sm-inline"> {{'EDIT' | translate}} </span>
-                </button>
-                <button (click)="viewPageHelper(element)" class="btn btn-primary btn-sm me-2" type="button">
-                  <i-feather name="eye" class="small-icon"></i-feather>
-                  <span class="d-none d-sm-inline">  {{ "VIEW" | translate }}</span>
-                </button>
+                <div class="dms-table-actions">
+                  <button (click)="managePageHelper(element)" class="btn btn-success btn-sm" type="button">
+                    <i-feather name="edit" class="small-icon"></i-feather>
+                    <span class="d-none d-sm-inline"> {{'EDIT' | translate}} </span>
+                  </button>
+                  <button (click)="viewPageHelper(element)" class="btn btn-primary btn-sm" type="button">
+                    <i-feather name="eye" class="small-icon"></i-feather>
+                    <span class="d-none d-sm-inline">  {{ "VIEW" | translate }}</span>
+                  </button>
+                </div>
               </td>
             </ng-container>
             <!-- Name Column -->

@@ -1,67 +1,70 @@
-<section class="content">
-  <div class="content-block">
-    <div class="block-header">
-      <div class="breadcrumb-main">
-        <div class="row">
-          <div class="col-6">
-            <div class="mb-2">
-              <span class="page-title">{{'MANAGE_ROLE' | translate}} <app-page-help-text
-                  code="MANAGE_ROLE"></app-page-help-text></span>
+<section class="content dms-module role-manage-page">
+  <div class="container-fluid">
+    <div class="row align-items-center role-manage-page__header">
+      <div class="col-md-6 mb-2">
+        <span class="mb-0 page-title">
+          {{ 'MANAGE_ROLE' | translate }}
+          <app-page-help-text code="MANAGE_ROLE"></app-page-help-text>
+        </span>
+      </div>
+    </div>
+
+    <div class="role-manage-card">
+      <div class="role-manage-card__section role-manage-card__section--role">
+        <label class="role-manage-card__label" for="roleName">{{ 'ROLE_NAME' | translate }}</label>
+        <input id="roleName" [(ngModel)]="role.name" type="text" class="role-manage-card__input"
+          placeholder="{{ 'ROLE_NAME' | translate }}">
+      </div>
+
+      <div class="role-permissions">
+        <div class="role-permissions__toolbar">
+          <div class="role-permissions__intro">
+            <h3 class="role-permissions__title">{{ 'PERMISSION' | translate }}</h3>
+            <p class="role-permissions__subtitle">{{ 'SELECT_WHAT_THIS_ROLE_CAN_ACCESS' | translate }}</p>
+          </div>
+          <div class="role-permissions__toolbar-actions">
+            <span class="role-permissions__badge">
+              {{ getSelectedCount() }} / {{ getTotalActionCount() }} {{ 'SELECTED' | translate }}
+            </span>
+            <mat-checkbox color="primary" class="role-permissions__select-all" [checked]="isAllSelected()"
+              [indeterminate]="isPartiallySelected()" (change)="selecetAll($event)">
+              {{ 'SELECT_ALL' | translate }}
+            </mat-checkbox>
+          </div>
+        </div>
+
+        <div class="role-permission-list alt-bg">
+          <div class="role-permission-list__page wrap" *ngFor="let page of pages">
+            <div class="role-permission-list__page-header">
+              <mat-checkbox color="primary" [checked]="isPageFullySelected(page)"
+                [indeterminate]="isPagePartiallySelected(page)" (change)="onPageSelect($event, page)">
+                <strong>{{ toPermissionKey(page.name) | translate }}</strong>
+              </mat-checkbox>
+              <span class="role-permission-group__count">
+                {{ getPageSelectedCount(page) }} / {{ getPageActions(page).length }}
+              </span>
+            </div>
+            <div class="role-permission-list__actions row m-l-15" *ngIf="getPageActions(page).length">
+              <div class="col-sm-3 role-permission-list__action" *ngFor="let action of getPageActions(page)">
+                <mat-checkbox color="primary" [checked]="checkPermission(action.id)"
+                  (change)="onPermissionChange($event, page, action)">
+                  {{ toPermissionKey(action.name) | translate }}
+                </mat-checkbox>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-    <div class="row">
-      <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
-        <div class="card">
-          <div class="body">
-            <div class="row margin-2">
-              <div class="col-md-6">
-                <label class="form-label">{{'ROLE_NAME' | translate}}</label>
-                <input [(ngModel)]="role.name" type="text" class="form-control">
-              </div>
-            </div>
-            <div class="row margin-2">
-              <div class="col-sm-12">
-                <h4 class="widget-title">{{'PERMISSION' | translate}}</h4>
-                <mat-checkbox color="primary" (change)="selecetAll($event)">
-                  {{'SELECT_ALL' | translate}}
-                </mat-checkbox>
-              </div>
-            </div>
-            <div class="row">
-              <div class="col-sm-12 alt-bg">
-                <div fxLayout="row wrap" class="wrap" *ngFor='let page of pages; let i=index'>
-                  <div fxFlex="100" fxFlex.sm="100">
-                    <mat-checkbox color="primary" (change)="onPageSelect($event,page)">
-                      <b> {{page.name.replaceAll(' ', '_').toUpperCase() | translate}}</b>
-                    </mat-checkbox>
-                  </div>
-                  <div class="row m-l-15">
-                    <div class="col-sm-3 row" *ngFor='let action of page.pageActions ?? []'>
-                      <mat-checkbox color="primary" [checked]="checkPermission(action.id)"
-                        (change)="onPermissionChange($any($event),page,action)">
-                        {{action.name.replaceAll(' ', '_').toUpperCase() | translate}}
-                      </mat-checkbox>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            <div class="row">
-              <div class="col-sm-12 mt-2">
-                <button class="btn btn-success btn-sm m-r-10" (click)="saveRole()" cdkFocusInitial>
-                  <i-feather name="save" class="small-icon"></i-feather> {{'SAVE' | translate}}
-                </button>
-                <button class="btn btn-danger btn-sm" [routerLink]="['/roles']">
-                  <i-feather name="x-circle" class="small-icon"></i-feather> {{'CANCEL' | translate}}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div class="role-manage-card__footer dms-page-footer-actions">
+        <button type="button" class="dms-action-btn dms-action-btn--cancel" [routerLink]="['/roles']">
+          <i-feather name="x-circle"></i-feather>
+          {{ 'CANCEL' | translate }}
+        </button>
+        <button type="button" class="dms-action-btn dms-action-btn--save" (click)="saveRole()" cdkFocusInitial>
+          <i-feather name="save"></i-feather>
+          {{ 'SAVE' | translate }}
+        </button>
       </div>
     </div>
   </div>

@@ -11,7 +11,7 @@ export const ROUTES: RouteInfo[] = [
     submenu: [],
   },
   {
-    path: '',
+    path: 'assigned-documents',
     title: 'ASSIGNED_DOCUMENTS',
     icon: 'list',
     class: '',

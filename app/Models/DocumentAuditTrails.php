@@ -4,9 +4,9 @@ namespace App\Models;
 
 use Ramsey\Uuid\Uuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Notifications\Notifiable;
 use App\Traits\Uuids;
 

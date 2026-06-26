@@ -1,166 +1,26 @@
-<section class="content pm-module">
-  <div class="content-block">
-    <div class="pm-page-header">
-      <div>
-        <span class="page-title">{{ "POST_MANAGEMENT" | translate }}</span>
-        <p class="pm-page-subtitle">Job posts list. Categories and departments are managed together.</p>
+<section class="content dms-module pm-module">
+  <div class="container-fluid">
+    <div class="content-block">
+      <div class="row align-items-center pm-page-header">
+        <div class="col mb-2">
+          <span class="page-title">{{ 'POST_MANAGEMENT' | translate }}</span>
+          <p class="pm-page-subtitle">Job posts, categories, and departments — manage recruitment in one place.</p>
+        </div>
+        <div class="col-auto pm-page-header-actions dms-page-actions">
+          <button type="button" class="dms-action-btn dms-action-btn--cancel" routerLink="/post-management/categories">
+            <i-feather name="layers"></i-feather>
+            Manage Categories
+          </button>
+          <button type="button" class="dms-action-btn dms-action-btn--cancel" routerLink="/post-management/departments">
+            <i-feather name="briefcase"></i-feather>
+            Manage Departments
+          </button>
+          <button type="button" class="dms-action-btn dms-action-btn--save" (click)="openManagePostDialog()">
+            <i-feather name="plus"></i-feather>
+            Add Post
+          </button>
+        </div>
       </div>
-      <div class="pm-page-header-actions">
-        <button mat-stroked-button color="primary" type="button" routerLink="/post-management/categories">
-          <mat-icon>category</mat-icon> Manage Categories
-        </button>
-        <button mat-flat-button color="primary" type="button" (click)="openNewPostForm()">
-          <mat-icon>add</mat-icon> Add Post
-        </button>
-      </div>
-    </div>
-
-    <div class="pm-tab-body">
-      <mat-card class="pm-card mat-elevation-z0 mb-3" *ngIf="showPostForm">
-        <mat-card-content class="pm-post-form">
-          <h6 class="pm-form-title">{{ editingPostId ? 'Edit Post' : 'Create Post' }}</h6>
-
-          <div class="row g-3">
-            <div class="col-12">
-              <mat-form-field appearance="outline" class="w-100">
-                <mat-label>Post title</mat-label>
-                <input matInput [(ngModel)]="newPostTitle" placeholder="e.g. Senior PHP Developer">
-              </mat-form-field>
-            </div>
-
-            <div class="col-md-6">
-              <span class="pm-field-step">Step 1</span>
-              <mat-form-field appearance="outline" class="w-100">
-                <mat-label>Category</mat-label>
-                <mat-select
-                  [(ngModel)]="newPostCategoryId"
-                  (selectionChange)="onPostCategorySelect($event.value)"
-                  placeholder="Choose category"
-                >
-                  <mat-option *ngFor="let cat of categories" [value]="cat.id">
-                    {{ cat.name }}
-                  </mat-option>
-                  <mat-option [value]="addCategoryOption" class="pm-add-option">
-                    <mat-icon>add_circle_outline</mat-icon>
-                    <span>Add new category…</span>
-                  </mat-option>
-                </mat-select>
-                <mat-hint>Or choose “Add new category…” below</mat-hint>
-              </mat-form-field>
-              <div class="pm-inline-add-form" *ngIf="showPostInlineCategory">
-                <div class="pm-inline-add-title">New category</div>
-                <mat-form-field appearance="outline" class="w-100 mb-2">
-                  <mat-label>Category name</mat-label>
-                  <input matInput [(ngModel)]="postInlineCategoryName" placeholder="IT, HR, Sales">
-                </mat-form-field>
-                <div class="pm-inline-dept-block">
-                  <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="small fw-semibold">Departments (optional)</span>
-                    <button mat-button type="button" (click)="addPostInlineDeptRow()">
-                      <mat-icon>add</mat-icon> Add row
-                    </button>
-                  </div>
-                  <div class="pm-inline-dept-row" *ngFor="let row of postInlineDeptRows; let i = index; trackBy: trackByIndex">
-                    <mat-form-field appearance="outline" class="flex-grow-1 mb-0">
-                      <mat-label>Department</mat-label>
-                      <input matInput [(ngModel)]="postInlineDeptRows[i].name" placeholder="e.g. Frontend">
-                    </mat-form-field>
-                    <button mat-icon-button color="warn" type="button" (click)="removePostInlineDeptRow(i)">
-                      <mat-icon>delete</mat-icon>
-                    </button>
-                  </div>
-                </div>
-                <div class="pm-inline-add-actions">
-                  <button mat-button type="button" (click)="cancelPostInlineCategory()">Cancel</button>
-                  <button mat-flat-button color="primary" type="button" (click)="savePostInlineCategory()">Save &amp; use</button>
-                </div>
-              </div>
-            </div>
-
-            <div class="col-md-6">
-              <span class="pm-field-step">Step 2</span>
-              <mat-form-field appearance="outline" class="w-100">
-                <mat-label>Department</mat-label>
-                <mat-select
-                  [(ngModel)]="newPostDepartmentId"
-                  (selectionChange)="onPostDepartmentSelect($event.value)"
-                  [disabled]="!newPostCategoryId"
-                  placeholder="Select department"
-                >
-                  <mat-option *ngFor="let dept of postFormDepartments" [value]="dept.id">
-                    {{ dept.name }}
-                  </mat-option>
-                  <mat-option
-                    [value]="addDepartmentOption"
-                    class="pm-add-option"
-                    [disabled]="!newPostCategoryId"
-                  >
-                    <mat-icon>add_circle_outline</mat-icon>
-                    <span>Add new department…</span>
-                  </mat-option>
-                </mat-select>
-                <mat-hint *ngIf="!newPostCategoryId">Select or add a category first</mat-hint>
-                <mat-hint *ngIf="newPostCategoryId && !postFormDepartments.length">No departments — add one below</mat-hint>
-              </mat-form-field>
-              <div class="pm-inline-add-form" *ngIf="showPostInlineDepartment">
-                <div class="pm-inline-add-title">New department</div>
-                <mat-form-field appearance="outline" class="w-100 mb-2">
-                  <mat-label>Department name</mat-label>
-                  <input matInput [(ngModel)]="postInlineDepartmentName" placeholder="HR, Frontend, Accounts">
-                </mat-form-field>
-                <div class="pm-inline-add-actions">
-                  <button mat-button type="button" (click)="cancelPostInlineDepartment()">Cancel</button>
-                  <button mat-flat-button color="primary" type="button" (click)="savePostInlineDepartment()">Save &amp; use</button>
-                </div>
-              </div>
-            </div>
-
-            <div [ngClass]="newPostWorkMode === 'remote' ? 'col-md-6' : 'col-md-4'">
-              <mat-form-field appearance="outline" class="w-100">
-                <mat-label>Experience (years)</mat-label>
-                <input matInput type="number" min="0" [(ngModel)]="newPostExperienceYears">
-              </mat-form-field>
-            </div>
-
-            <div [ngClass]="newPostWorkMode === 'remote' ? 'col-md-6' : 'col-md-4'">
-              <mat-form-field appearance="outline" class="w-100">
-                <mat-label>Work mode</mat-label>
-                <mat-select [(ngModel)]="newPostWorkMode">
-                  <mat-option value="remote">Remote</mat-option>
-                  <mat-option value="physical">Physical</mat-option>
-                </mat-select>
-              </mat-form-field>
-            </div>
-
-            <div class="col-md-4" *ngIf="newPostWorkMode === 'physical'">
-              <mat-form-field appearance="outline" class="w-100">
-                <mat-label>Address</mat-label>
-                <input matInput [(ngModel)]="newPostAddress" placeholder="Office location">
-              </mat-form-field>
-            </div>
-
-            <div class="col-12">
-              <mat-form-field appearance="outline" class="w-100">
-                <mat-label>Description</mat-label>
-                <textarea matInput rows="3" [(ngModel)]="newPostDescription" placeholder="Job summary and requirements"></textarea>
-              </mat-form-field>
-            </div>
-          </div>
-
-          <div class="pm-form-note" *ngIf="selectedDepartment">
-            <mat-icon>info_outline</mat-icon>
-            <span>
-              Interview questions will be taken from
-              <strong>{{ selectedDepartment.name }}</strong> department (not edited per post).
-            </span>
-          </div>
-
-          <div class="pm-form-actions">
-            <button mat-button type="button" (click)="resetPostForm()">Cancel</button>
-            <button mat-flat-button color="primary" type="button" (click)="createPost()">Save Post</button>
-          </div>
-        </mat-card-content>
-      </mat-card>
 
       <mat-card class="pm-card pm-data-card mat-elevation-z0">
         <div class="pm-card-toolbar pm-card-toolbar-stacked">
@@ -172,10 +32,7 @@
           <div class="pm-list-filters">
             <mat-form-field appearance="outline" class="pm-filter-field" subscriptSizing="dynamic">
               <mat-label>Category</mat-label>
-              <mat-select
-                [(ngModel)]="postFilterCategoryId"
-                (ngModelChange)="onPostFilterCategoryChange()"
-              >
+              <mat-select [(ngModel)]="postFilterCategoryId" (ngModelChange)="onPostFilterCategoryChange()">
                 <mat-option value="">All categories</mat-option>
                 <mat-option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</mat-option>
               </mat-select>
@@ -204,9 +61,8 @@
               />
             </mat-form-field>
             <button
-              mat-stroked-button
               type="button"
-              class="pm-clear-filters-btn"
+              class="dms-action-btn dms-action-btn--cancel pm-clear-filters-btn"
               *ngIf="hasActivePostFilters"
               (click)="clearPostFilters()"
             >
@@ -250,19 +106,21 @@
                   </a>
                 </td>
                 <td class="pm-date-cell">{{ formatDisplayDate(post.createdDate) }}</td>
-                <td class="text-end pm-actions">
-                  <button mat-icon-button class="pm-icon-btn pm-icon-btn-primary" type="button" matTooltip="Candidates" (click)="selectPost(post.id)">
-                    <mat-icon>groups</mat-icon>
-                  </button>
-                  <button mat-icon-button class="pm-icon-btn" type="button" matTooltip="Copy link" (click)="copyApplyLink(post)">
-                    <mat-icon>content_copy</mat-icon>
-                  </button>
-                  <button mat-icon-button class="pm-icon-btn pm-icon-btn-primary" type="button" matTooltip="Edit" (click)="editPost(post)">
-                    <mat-icon>edit</mat-icon>
-                  </button>
-                  <button mat-icon-button class="pm-icon-btn" color="warn" type="button" matTooltip="Delete" (click)="deletePost(post)">
-                    <mat-icon>delete</mat-icon>
-                  </button>
+                <td class="text-end">
+                  <div class="dms-table-actions">
+                    <button class="btn btn-success btn-sm" type="button" matTooltip="Candidates" (click)="selectPost(post.id)">
+                      <i-feather name="users" class="small-icon"></i-feather>
+                    </button>
+                    <button class="btn btn-primary btn-sm" type="button" matTooltip="Copy link" (click)="copyApplyLink(post)">
+                      <i-feather name="link" class="small-icon"></i-feather>
+                    </button>
+                    <button class="btn btn-success btn-sm" type="button" matTooltip="Edit" (click)="editPost(post)">
+                      <i-feather name="edit" class="small-icon"></i-feather>
+                    </button>
+                    <button class="btn btn-danger btn-sm" type="button" matTooltip="Delete" (click)="deletePost(post)">
+                      <i-feather name="trash-2" class="small-icon"></i-feather>
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -283,12 +141,16 @@
 
         <div class="pm-empty" *ngIf="!posts.length">
           <mat-icon>post_add</mat-icon>
-          <p>No job posts yet. Use <strong>Add Post</strong> to create one.</p>
+          <p>No job posts yet.</p>
+          <button type="button" class="dms-action-btn dms-action-btn--save mt-2" (click)="openManagePostDialog()">
+            <i-feather name="plus"></i-feather>
+            Add Post
+          </button>
         </div>
         <div class="pm-empty" *ngIf="posts.length && !filteredPosts.length">
           <mat-icon>search_off</mat-icon>
           <p>No posts match your filters or search.</p>
-          <button mat-stroked-button color="primary" type="button" *ngIf="hasActivePostFilters" (click)="clearPostFilters()">
+          <button type="button" class="dms-action-btn dms-action-btn--cancel mt-2" *ngIf="hasActivePostFilters" (click)="clearPostFilters()">
             Clear filters
           </button>
         </div>

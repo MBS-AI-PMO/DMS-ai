@@ -1,0 +1,78 @@
+<div class="dms-form-dialog__shell">
+  <div class="dms-form-dialog__header">
+    <div class="dms-form-dialog__heading">
+      <h2 class="dms-form-dialog__title">{{ editingDepartmentId ? 'Edit Department' : 'Add Department' }}</h2>
+    </div>
+    <button type="button" class="dms-form-dialog__close" (click)="close()" aria-label="Close">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content class="dms-form-dialog__body">
+    <div class="dms-form-dialog__form-card">
+      <div class="dms-form-dialog__form-grid">
+        <div class="dms-form-dialog__field">
+          <label class="form-label">Category</label>
+          <mat-form-field appearance="outline" class="w-100 pm-dialog-field">
+            <mat-select [(ngModel)]="departmentCategoryId">
+              <mat-option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <div class="dms-form-dialog__field">
+          <label class="form-label" for="deptName">Department name</label>
+          <input id="deptName" class="form-control" [(ngModel)]="departmentName" placeholder="HR, Frontend, Accounts">
+        </div>
+      </div>
+
+      <div class="question-bank mt-3">
+        <div class="fw-semibold mb-2">Interview questions (for all posts in this department)</div>
+        <div class="row">
+          <div class="col-md-4" *ngFor="let level of questionLevels">
+            <div class="question-title text-capitalize">{{ level }}</div>
+            <ng-container [ngSwitch]="level">
+              <ng-container *ngSwitchCase="'basic'">
+                <div class="question-row" *ngFor="let q of deptBasicQuestions; let i = index; trackBy: trackByIndex">
+                  <input class="form-control mb-2" [(ngModel)]="deptBasicQuestions[i]" [placeholder]="'Q' + (i + 1)">
+                  <button mat-icon-button color="warn" type="button" (click)="removeDeptQuestion('basic', i)"><mat-icon>delete</mat-icon></button>
+                </div>
+                <button type="button" class="dms-action-btn dms-action-btn--cancel" (click)="addDeptQuestion('basic')">
+                  <i-feather name="plus"></i-feather> Add
+                </button>
+              </ng-container>
+              <ng-container *ngSwitchCase="'intermediate'">
+                <div class="question-row" *ngFor="let q of deptIntermediateQuestions; let i = index; trackBy: trackByIndex">
+                  <input class="form-control mb-2" [(ngModel)]="deptIntermediateQuestions[i]" [placeholder]="'Q' + (i + 1)">
+                  <button mat-icon-button color="warn" type="button" (click)="removeDeptQuestion('intermediate', i)"><mat-icon>delete</mat-icon></button>
+                </div>
+                <button type="button" class="dms-action-btn dms-action-btn--cancel" (click)="addDeptQuestion('intermediate')">
+                  <i-feather name="plus"></i-feather> Add
+                </button>
+              </ng-container>
+              <ng-container *ngSwitchCase="'expert'">
+                <div class="question-row" *ngFor="let q of deptExpertQuestions; let i = index; trackBy: trackByIndex">
+                  <input class="form-control mb-2" [(ngModel)]="deptExpertQuestions[i]" [placeholder]="'Q' + (i + 1)">
+                  <button mat-icon-button color="warn" type="button" (click)="removeDeptQuestion('expert', i)"><mat-icon>delete</mat-icon></button>
+                </div>
+                <button type="button" class="dms-action-btn dms-action-btn--cancel" (click)="addDeptQuestion('expert')">
+                  <i-feather name="plus"></i-feather> Add
+                </button>
+              </ng-container>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+    </div>
+  </mat-dialog-content>
+
+  <div mat-dialog-actions class="dms-form-dialog__actions">
+    <button type="button" class="dms-form-dialog__btn dms-form-dialog__btn--cancel" (click)="close()">
+      <i-feather name="x-circle"></i-feather>
+      Cancel
+    </button>
+    <button type="button" class="dms-form-dialog__btn dms-form-dialog__btn--save" (click)="saveDepartment()" cdkFocusInitial>
+      <i-feather name="save"></i-feather>
+      {{ editingDepartmentId ? 'Update' : 'Save' }}
+    </button>
+  </div>
+</div>

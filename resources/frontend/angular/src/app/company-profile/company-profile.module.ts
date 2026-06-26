@@ -5,7 +5,6 @@ import { CompanyProfileRoutingModule } from './company-profile-routing.module';
 import { SharedModule } from '@shared/shared.module';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
-import { MatTabsModule } from '@angular/material/tabs';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 
@@ -17,7 +16,6 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
     SharedModule,
     ReactiveFormsModule,
     MatCardModule,
-    MatTabsModule,
     NgSelectModule,
     MatCheckboxModule
   ],

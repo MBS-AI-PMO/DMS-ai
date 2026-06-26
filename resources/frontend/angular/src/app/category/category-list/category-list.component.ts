@@ -6,6 +6,7 @@ import { CommonDialogService } from '@core/common-dialog/common-dialog.service';
 import { Category } from '@core/domain-classes/category';
 import { TranslationService } from '@core/services/translation.service';
 import { CategoryStore } from '../store/category-store';
+import { DMS_FORM_DIALOG_CONFIG } from '@core/common-dialog/form-dialog.config';
 import { BaseComponent } from 'src/app/base.component';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 
@@ -57,7 +58,7 @@ export class CategoryListComponent extends BaseComponent {
 
   manageCategory(category: Category): void {
     const dialogRef = this.dialog.open(ManageCategoryComponent, {
-      width: '400px',
+      ...DMS_FORM_DIALOG_CONFIG,
       data: Object.assign({}, category),
     });
   }

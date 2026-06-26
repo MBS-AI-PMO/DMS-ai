@@ -1,0 +1,578 @@
+// Uses $theme-active-color from variables.scss (imported in styles.scss)
+$prop-primary: $theme-active-color;
+$prop-primary-soft: #eef0fd;
+$prop-border: #e8eaef;
+$prop-text: #2c303b;
+$prop-muted: #6c757d;
+$prop-bg: #f8f9fc;
+$prop-shadow: 0 4px 18px rgba(44, 48, 59, 0.06);
+$prop-shadow-hover: 0 12px 28px rgba(103, 119, 239, 0.18);
+
+.prop-module {
+  .prop-page-header {
+    margin-bottom: 1.25rem;
+  }
+
+  .prop-form-card,
+  .prop-upload-card {
+    margin-bottom: 1rem;
+    overflow: visible !important;
+  }
+
+  .pm-card.prop-upload-card,
+  .pm-card.prop-form-card {
+    overflow: visible !important;
+  }
+
+  .prop-upload-card {
+    .mat-mdc-tab-body-wrapper {
+      min-height: 220px;
+      overflow: visible !important;
+    }
+
+    .mat-mdc-tab-body {
+      overflow: visible !important;
+    }
+
+    .mat-mdc-tab-body-content {
+      overflow: visible !important;
+      padding: 0.5rem 0 0.25rem;
+    }
+
+    .mat-mdc-form-field {
+      display: block;
+      margin-bottom: 0.5rem;
+      width: 100%;
+    }
+
+    .tab-content-wrap {
+      min-height: 180px;
+      overflow: visible;
+      padding: 1rem 0.25rem 0.5rem;
+    }
+  }
+}
+
+.prop-fade-in {
+  animation: propFadeIn 0.35s ease backwards;
+}
+
+.prop-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.25rem;
+}
+
+.prop-close-btn {
+  color: $prop-muted !important;
+  margin-left: auto;
+
+  &:hover {
+    background: $prop-primary-soft !important;
+    color: $prop-primary !important;
+  }
+}
+
+.prop-form-card .pm-card-toolbar {
+  gap: 0.5rem;
+}
+
+.prop-loading {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  justify-content: center;
+  min-height: 280px;
+  padding: 2rem;
+}
+
+.prop-loading__orbits {
+  height: 56px;
+  position: relative;
+  width: 56px;
+}
+
+.prop-loading__core {
+  animation: propPulse 1.2s ease-in-out infinite;
+  background: $prop-primary;
+  border-radius: 50%;
+  box-shadow: 0 0 16px rgba(103, 119, 239, 0.5);
+  height: 10px;
+  left: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+}
+
+.prop-loading__ring {
+  animation: propSpin 1.1s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  border-top-color: $prop-primary;
+  height: 56px;
+  left: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 56px;
+
+  &--2 {
+    animation-duration: 1.4s;
+    animation-direction: reverse;
+    border-top-color: rgba(103, 119, 239, 0.45);
+    height: 40px;
+    width: 40px;
+  }
+}
+
+.prop-loading__text {
+  color: $prop-muted;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.prop-view--enter {
+  animation: propFadeIn 0.4s ease;
+  overflow: visible;
+}
+
+.prop-animate-in {
+  animation: propFadeUp 0.45s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+
+  &--delay {
+    animation-delay: 0.08s;
+  }
+
+  &--delay-2 {
+    animation-delay: 0.14s;
+  }
+}
+
+.prop-panel__body {
+  padding: 1.15rem 1.25rem;
+}
+
+.prop-form-body,
+.prop-tabs-body {
+  overflow: visible;
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.prop-form-actions {
+  align-items: center;
+  border-top: 1px solid $prop-border;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+
+  &--end {
+    justify-content: flex-end;
+  }
+
+  &--flat {
+    border-top: none;
+    margin-top: 0.5rem;
+    padding-top: 0;
+  }
+}
+
+.prop-breadcrumb-bar {
+  align-items: center;
+  background: #fff;
+  border: 1px solid $prop-border;
+  border-radius: 14px;
+  box-shadow: $prop-shadow;
+  display: flex;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0.85rem 0.5rem 0.35rem;
+}
+
+.prop-back-btn {
+  color: $prop-primary !important;
+  transition: transform 0.2s ease, background 0.2s ease !important;
+
+  &:hover {
+    background: $prop-primary-soft !important;
+    transform: translateX(-2px);
+  }
+}
+
+.prop-breadcrumb {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.prop-breadcrumb__link {
+  background: none;
+  border: none;
+  border-radius: 8px;
+  color: $prop-primary;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: $prop-primary-soft;
+    text-decoration: none;
+  }
+}
+
+.prop-breadcrumb__sep {
+  color: #cbd5e1;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0 0.15rem;
+  user-select: none;
+}
+
+.prop-breadcrumb__current {
+  color: $prop-text;
+  font-size: 0.875rem;
+  font-weight: 600;
+  max-width: 200px;
+  overflow: hidden;
+  padding: 0.25rem 0.5rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prop-folder-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+
+  &--compact {
+    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+}
+
+.prop-folder-card {
+  align-items: center;
+  animation: propFadeUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+  background: linear-gradient(180deg, #fff 0%, $prop-bg 100%);
+  border: 1px solid $prop-border;
+  border-radius: 14px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1.1rem 0.75rem;
+  text-align: center;
+  transition:
+    transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.28s ease,
+    border-color 0.28s ease;
+
+  &:hover {
+    border-color: rgba(103, 119, 239, 0.35);
+    box-shadow: $prop-shadow-hover;
+    transform: translateY(-4px);
+
+    .prop-folder-card__icon {
+      transform: scale(1.08);
+    }
+
+    .prop-folder-card__hint {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  &:active {
+    transform: translateY(-1px);
+  }
+
+  &--small {
+    padding: 0.85rem 0.5rem;
+
+    .prop-folder-card__icon mat-icon {
+      font-size: 32px;
+      height: 32px;
+      width: 32px;
+    }
+  }
+}
+
+.prop-folder-card__icon {
+  align-items: center;
+  background: $prop-primary-soft;
+  border-radius: 12px;
+  color: $prop-primary;
+  display: flex;
+  height: 52px;
+  justify-content: center;
+  transition: transform 0.28s ease;
+  width: 52px;
+
+  mat-icon {
+    font-size: 28px;
+    height: 28px;
+    width: 28px;
+  }
+}
+
+.prop-folder-card__name {
+  color: $prop-text;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.3;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prop-folder-card__hint {
+  color: $prop-muted;
+  font-size: 0.7rem;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.prop-list-wrap {
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 0.35rem 0.5rem 0.5rem;
+  scrollbar-color: rgba(103, 119, 239, 0.5) transparent;
+  scrollbar-width: thin;
+
+  &::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(103, 119, 239, 0.45);
+    border-radius: 999px;
+  }
+}
+
+.prop-list-item {
+  align-items: center;
+  animation: propFadeUp 0.35s ease backwards;
+  border-bottom: 1px solid #f0f2f7;
+  display: flex;
+  gap: 0.65rem;
+  padding: 0.75rem 0.65rem;
+  transition: background 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    background: #fafbff;
+    transform: translateX(3px);
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.prop-list-item__icon {
+  align-items: center;
+  background: $prop-primary-soft;
+  border-radius: 10px;
+  color: $prop-primary;
+  display: flex;
+  flex-shrink: 0;
+  height: 36px;
+  justify-content: center;
+  width: 36px;
+
+  mat-icon {
+    font-size: 20px;
+    height: 20px;
+    width: 20px;
+  }
+
+  &--warn {
+    background: #fff7ed;
+    color: #ea580c;
+  }
+}
+
+.prop-list-item__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.prop-list-item__text {
+  color: $prop-text;
+  font-size: 0.875rem;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prop-status-pill {
+  align-self: flex-start;
+  background: #fef3c7;
+  border-radius: 999px;
+  color: #b45309;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 0.2rem 0.55rem;
+
+  &--success {
+    background: #dcfce7;
+    color: #15803d;
+  }
+}
+
+.prop-upload-row {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
+
+  .prop-file-input {
+    flex: 1;
+    min-height: 42px;
+    padding: 0.45rem 0.85rem;
+  }
+}
+
+.prop-file-picker {
+  align-items: center;
+  background: #fff;
+  border: 1px dashed rgba(103, 119, 239, 0.4);
+  border-radius: 12px;
+  color: $prop-muted;
+  cursor: pointer;
+  display: flex;
+  flex: 1;
+  font-size: 0.875rem;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.5rem 0.85rem;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &:hover {
+    background: $prop-primary-soft;
+    border-color: $prop-primary;
+    box-shadow: 0 0 0 3px rgba(103, 119, 239, 0.12);
+    color: $prop-text;
+  }
+
+  mat-icon {
+    color: $prop-primary;
+    flex-shrink: 0;
+    font-size: 20px;
+    height: 20px;
+    width: 20px;
+  }
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.prop-file-picker__input {
+  display: none;
+}
+
+.prop-tab-content {
+  padding: 1rem 0.25rem 0.25rem;
+}
+
+.prop-tab-icon {
+  font-size: 18px;
+  height: 18px;
+  margin-right: 6px;
+  vertical-align: middle;
+  width: 18px;
+}
+
+.prop-module .prop-tabs {
+  .mat-mdc-tab-labels {
+    border-bottom: 1px solid $prop-border;
+  }
+
+  .mat-mdc-tab {
+    transition: color 0.2s ease;
+  }
+
+  .mdc-tab-indicator__content--underline {
+    border-color: $prop-primary !important;
+    border-radius: 2px 2px 0 0;
+  }
+}
+
+.prop-empty {
+  padding: 2.5rem 1rem;
+
+  &--compact {
+    padding: 1.75rem 1rem;
+  }
+
+  button {
+    margin-top: 0.75rem;
+  }
+}
+
+.prop-content-grid {
+  margin-top: 0.25rem;
+}
+
+@keyframes propFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes propFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes propSpin {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes propPulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  50% {
+    opacity: 0.7;
+    transform: translate(-50%, -50%) scale(1.3);
+  }
+}

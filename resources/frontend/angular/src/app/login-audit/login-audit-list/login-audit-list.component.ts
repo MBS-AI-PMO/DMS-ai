@@ -17,6 +17,7 @@ import { LoginAuditDataSource } from '../login-audit-datasource';
 import { LoginAuditService } from '../login-audit.service';
 import { MatDialog } from '@angular/material/dialog';
 import { LogsRetentionSettingsComponent } from 'src/app/logs-retention-settings/logs-retention-settings.component';
+import { DMS_FORM_DIALOG_CONFIG } from '@core/common-dialog/form-dialog.config';
 
 @Component({
   selector: 'app-login-audit-list',
@@ -101,8 +102,7 @@ export class LoginAuditListComponent
 
   manageLogsRetention() {
     this.dialog.open(LogsRetentionSettingsComponent, {
-      width: '35vw',
-      maxHeight: '70vh',
+      ...DMS_FORM_DIALOG_CONFIG,
       data: { type: 'login-audit-log-setting' },
     });
   }

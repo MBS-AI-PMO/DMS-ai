@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, ViewEncapsulation } from '@angular/core';
 import {
   UntypedFormBuilder,
   UntypedFormGroup,
@@ -16,6 +16,7 @@ import { ToastrService } from 'ngx-toastr';
   selector: 'app-document-comment',
   templateUrl: './document-comment.component.html',
   styleUrls: ['./document-comment.component.scss'],
+  encapsulation: ViewEncapsulation.None,
 })
 export class DocumentCommentComponent extends BaseComponent implements OnInit {
   commentForm: UntypedFormGroup;

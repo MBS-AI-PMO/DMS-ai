@@ -7,6 +7,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from '@shared/shared.module';
 import { MatTableModule } from '@angular/material/table';
 import { MatDialogModule } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
 
 
 @NgModule({
@@ -21,6 +22,7 @@ import { MatDialogModule } from '@angular/material/dialog';
     ReactiveFormsModule,
     MatTableModule,
     MatDialogModule,
+    MatIconModule,
     SharedModule
   ]
 })

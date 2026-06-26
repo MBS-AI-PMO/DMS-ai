@@ -6,6 +6,7 @@ import { tapResponse } from '@ngrx/operators';
 import { CommonError } from '@core/error-handler/common-error';
 import { WorkflowStore } from './workflow-store';
 import { WorkflowService } from './workflow-service';
+import { normalizeWorkflow } from './workflow-normalizer';
 
 export const createWorkFlowResolver: ResolveFn<Workflow | CommonError> = (
   route: ActivatedRouteSnapshot,
@@ -18,7 +19,7 @@ export const createWorkFlowResolver: ResolveFn<Workflow | CommonError> = (
     return workFlowService.getWorkflow(id)
       .pipe(
         tapResponse({
-          next: c => store.setCurrentWorkflow(c as Workflow),
+          next: c => store.setCurrentWorkflow(normalizeWorkflow(c as Workflow) as Workflow),
           error: e => store.setError(e as CommonError),
         })
       )

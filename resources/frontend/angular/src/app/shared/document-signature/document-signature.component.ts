@@ -16,6 +16,7 @@ import { ToastrService } from 'ngx-toastr';
 import SignaturePad from 'signature_pad';
 import { PipesModule } from '@shared/pipes/pipes.module';
 import { MatProgressSpinnerModule, ProgressSpinnerMode } from '@angular/material/progress-spinner';
+import { MatIconModule } from '@angular/material/icon';
 import { DocumentService } from 'src/app/document/document.service';
 import { DocumentSignature } from '@core/domain-classes/document-signature';
 import { DocumentInfo } from '@core/domain-classes/document-info';
@@ -36,7 +37,8 @@ import { CommonService } from '@core/services/common.service';
     MatSelectModule,
     PipesModule,
     CommonModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatIconModule,
   ],
   templateUrl: './document-signature.component.html',
   styleUrl: './document-signature.component.scss',

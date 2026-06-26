@@ -43,6 +43,14 @@ import { FormControl } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { Direction } from '@angular/cdk/bidi';
 import { DocumentDeleteDialogComponent } from 'src/app/document-delete-dialog/document-delete-dialog.component';
+import { DMS_CONFIRM_DIALOG_CONFIG } from '@core/common-dialog/confirm-dialog.config';
+import {
+  DMS_DOCUMENT_COMMENT_DIALOG_CONFIG,
+  DMS_DOCUMENT_EDIT_DIALOG_CONFIG,
+  DMS_FORM_DIALOG_CONFIG,
+  DMS_FORM_DIALOG_LARGE_CONFIG,
+  DMS_FORM_DIALOG_WIDE_CONFIG,
+} from '@core/common-dialog/form-dialog.config';
 import { SharableLinkComponent } from '../sharable-link/sharable-link.component';
 import { DocumentShareableLink } from '@core/domain-classes/document-shareable-link';
 import { ClientStore } from 'src/app/client/client-store';
@@ -52,6 +60,7 @@ import { DocumentWorkflowDialogComponent } from '../document-workflow-dialog/doc
 import { DocumentWorkflow } from '@core/domain-classes/document-workflow';
 import { VisualWorkflowInstance } from '@core/domain-classes/visual-workflow-instance';
 import { VisualWorkflowGraphComponent } from 'src/app/workflows/visual-workflow-graph/visual-workflow-graph.component';
+import { DMS_WORKFLOW_VIEW_DIALOG_CONFIG } from 'src/app/workflows/workflow-view-dialog.config';
 import { DocumentWorkflowService } from 'src/app/workflows/manage-workflow/document-workflow.service';
 import { DocumentSignatureComponent } from '@shared/document-signature/document-signature.component';
 import { AiDocumentSummaryComponent } from 'src/app/open-ai/ai-document-summary/ai-document-summary.component';
@@ -287,8 +296,9 @@ export class DocumentListComponent
 
   deleteDocument(document: DocumentInfo) {
     const dialogRef = this.dialog.open(DocumentDeleteDialogComponent, {
-      width: '50vw',
-      maxHeight: '70vh',
+      ...DMS_CONFIRM_DIALOG_CONFIG,
+      width: '480px',
+      maxHeight: '85vh',
     });
 
     dialogRef.afterClosed().subscribe((isTrue: boolean) => {
@@ -331,7 +341,7 @@ export class DocumentListComponent
       clients: this.clientStore.clients(),
     };
     const dialogRef = this.dialog.open(DocumentEditComponent, {
-      width: '700px',
+      ...DMS_DOCUMENT_EDIT_DIALOG_CONFIG,
       data: Object.assign({}, documentCategories),
     });
 
@@ -344,8 +354,7 @@ export class DocumentListComponent
 
   addComment(document: Document) {
     const dialogRef = this.dialog.open(DocumentCommentComponent, {
-      width: '800px',
-      maxHeight: '70vh',
+      ...DMS_DOCUMENT_COMMENT_DIALOG_CONFIG,
       data: Object.assign({}, document),
     });
 
@@ -358,16 +367,14 @@ export class DocumentListComponent
 
   manageDocumentPermission(documentInfo: DocumentInfo) {
     this.dialog.open(DocumentPermissionListComponent, {
+      ...DMS_FORM_DIALOG_LARGE_CONFIG,
       data: documentInfo,
-      width: '80vw',
-      maxHeight: '80vh',
     });
   }
   onSharedSelectDocument() {
     const dialogRef = this.dialog.open(DocumentPermissionMultipleComponent, {
+      ...DMS_FORM_DIALOG_LARGE_CONFIG,
       data: this.selection.selected,
-      width: '80vw',
-      maxHeight: '80vh',
     });
     this.sub$.sink = dialogRef.afterClosed().subscribe((result: boolean) => {
       this.selection.clear();
@@ -376,8 +383,7 @@ export class DocumentListComponent
 
   uploadNewVersion(document: Document) {
     const dialogRef = this.dialog.open(DocumentUploadNewVersionComponent, {
-      width: '800px',
-      maxHeight: '70vh',
+      ...DMS_FORM_DIALOG_WIDE_CONFIG,
       data: Object.assign({}, document),
     });
 
@@ -428,16 +434,15 @@ export class DocumentListComponent
 
   sendEmail(documentInfo: DocumentInfo) {
     this.dialog.open(SendEmailComponent, {
+      ...DMS_FORM_DIALOG_LARGE_CONFIG,
       data: documentInfo,
-      width: '80vw',
     });
   }
 
   addReminder(documentInfo: DocumentInfo) {
     this.dialog.open(DocumentReminderComponent, {
+      ...DMS_FORM_DIALOG_LARGE_CONFIG,
       data: documentInfo,
-      width: '80vw',
-      maxHeight: '90vh',
     });
   }
 
@@ -482,9 +487,7 @@ export class DocumentListComponent
       .subscribe((documentVersions: DocumentVersion[]) => {
         documentInfo.documentVersions = documentVersions;
         const dialogRef = this.dialog.open(DocumentVersionHistoryComponent, {
-          width: '70vw',
-          maxHeight: '70vh',
-          panelClass: 'full-width-dialog',
+          ...DMS_FORM_DIALOG_LARGE_CONFIG,
           data: Object.assign({}, documentInfo),
         });
         dialogRef.afterClosed().subscribe((isRestore: boolean) => {
@@ -500,7 +503,7 @@ export class DocumentListComponent
       .getDocumentShareableLink(document.id)
       .subscribe((link: DocumentShareableLink) => {
         this.dialog.open(SharableLinkComponent, {
-          width: '500px',
+          ...DMS_FORM_DIALOG_WIDE_CONFIG,
           data: { document, link },
         });
       });
@@ -557,8 +560,7 @@ export class DocumentListComponent
       document: documentInfo,
     };
     const dialogRef = this.dialog.open(DocumentWorkflowDialogComponent, {
-      width: '40vw',
-      maxHeight: '70vh',
+      ...DMS_FORM_DIALOG_CONFIG,
       data: Object.assign({}, document),
     });
 
@@ -578,7 +580,7 @@ export class DocumentListComponent
           data.documentId = workflowInstance.id;
           data.documentName = workflowInstance.name;
           this.dialog.open(VisualWorkflowGraphComponent, {
-            minWidth: '90vw',
+            ...DMS_WORKFLOW_VIEW_DIALOG_CONFIG,
             data: Object.assign({}, data),
           });
         },
@@ -588,7 +590,7 @@ export class DocumentListComponent
 
   signDocument(document: DocumentInfo) {
     const dialogRef = this.dialog.open(DocumentSignatureComponent, {
-      width: '60vw',
+      ...DMS_FORM_DIALOG_LARGE_CONFIG,
       data: Object.assign({}, document),
     });
     dialogRef.afterClosed().subscribe((result: boolean) => {
@@ -601,14 +603,14 @@ export class DocumentListComponent
 
   generateSummary(document: DocumentInfo) {
     this.dialog.open(AiDocumentSummaryComponent, {
-      width: '60vw',
+      ...DMS_FORM_DIALOG_LARGE_CONFIG,
       data: Object.assign({}, document),
     });
   }
 
   watermarkDocument(document: DocumentInfo) {
     const dialogRef = this.dialog.open(DocumentWatermarkComponent, {
-      width: '500px',
+      ...DMS_FORM_DIALOG_CONFIG,
       data: Object.assign({}, document),
     });
     dialogRef.afterClosed().subscribe((result: boolean) => {

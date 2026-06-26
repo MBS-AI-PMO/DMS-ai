@@ -16,6 +16,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { fromToStepValidator } from './from-to-step-validate';
 import { WorkflowTransition } from '@core/domain-classes/workflow-transition';
 import { WorkflowStore } from '../workflow-store';
+import { getWorkflowSteps, getWorkflowTransitions, normalizeWorkflow } from '../workflow-normalizer';
 import { ClonerService } from '@core/services/clone.service';
 import { NgxGraphModule, Node } from '@swimlane/ngx-graph';
 import { curveMonotoneX } from 'd3-shape';
@@ -56,9 +57,9 @@ export class ManageTransitionComponent implements OnInit, AfterViewInit {
   links: any[] = [];
   curve = curveMonotoneX;
 
-  currentWorkflow = this.workflowStore.currentWorkflow();
-  workflowSteps = this.currentWorkflow?.workflowSteps;
-  workflowTransitions = this.currentWorkflow?.transitions;
+  currentWorkflow: ReturnType<typeof normalizeWorkflow>;
+  workflowSteps: ReturnType<typeof getWorkflowSteps> = [];
+  workflowTransitions: ReturnType<typeof getWorkflowTransitions> = [];
   @ViewChild('graph') graph: any;
 
   constructor() {
@@ -84,6 +85,10 @@ export class ManageTransitionComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
+    this.currentWorkflow = normalizeWorkflow(this.workflowStore.currentWorkflow());
+    this.workflowSteps = getWorkflowSteps(this.currentWorkflow);
+    this.workflowTransitions = getWorkflowTransitions(this.currentWorkflow);
+
     this.nodes = this.workflowSteps.map((step) => ({
       id: step.id,
       label: step.name,

@@ -1,51 +1,49 @@
-<div class="d-flex">
-    <span mat-dialog-title class="dialog-title">{{'DOCUMENT_SUMMARY' | translate}}
-    </span>
-    <button mat-icon-button class="ms-auto" (click)="closeDialog()">
-        <mat-icon class="close-icon" color="warn">close</mat-icon>
-    </button>
-</div>
-<mat-dialog-content>
-    <form [formGroup]="summaryForm" (ngSubmit)="generateSummary()">
-        <div class="row">
-            <div class="col-sm-12">
-                <div class="form-group ">
-                    <label> {{'SELECT_MODEL' | translate }} </label>
-                    <mat-select panelClass="mat-select-control" class="form-control" formControlName="model">
-                        <ng-container *ngFor="let provider of providers">
-                            <mat-optgroup [label]="provider">
-                                <mat-option *ngFor="let groupModel of groupedModels[provider]" [value]="groupModel.id">
-                                    {{ groupModel.label }} — {{ groupModel.description }}
-                                </mat-option>
-                            </mat-optgroup>
-                        </ng-container>
-                    </mat-select>
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-sm-12 mt-2">
-                <div class="alert alert-warning d-flex align-items-start" role="alert">
-                    <mat-icon color="warn" class="me-2" aria-hidden="true">warning</mat-icon>
-                    <div>
-                       {{'AI_SUMMARY_WARNING' | translate}}
-                    </div>
-                </div>
-                <button [disabled]="isLoading" mat-raised-button color="primary" type="submit">
-                    {{'GENERATE_SUMMARY' | translate}}
-                </button>
-            </div>
-        </div>
-    </form>
-
-    <div *ngIf="summary" class="mt-4 p-3 border rounded bg-gray-100">
-        <div class="d-flex align-items-center">
-            <h3 class="mb-0">{{'AI_SUMMARY' | translate}}</h3>
-            <button mat-icon-button class="ms-auto" (click)="copySummary()" aria-label="Copy summary">
-                <mat-icon>content_copy</mat-icon>
-            </button>
-        </div>
-        <p [innerHTML]="summary"></p>
+<div class="dms-form-dialog__shell">
+  <div class="dms-form-dialog__header">
+    <div class="dms-form-dialog__heading">
+      <h2 class="dms-form-dialog__title">{{ 'DOCUMENT_SUMMARY' | translate }}</h2>
     </div>
-</mat-dialog-content>
+    <button type="button" class="dms-form-dialog__close" (click)="closeDialog()" [attr.aria-label]="'CANCEL' | translate">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content class="dms-form-dialog__body">
+    <div class="dms-form-dialog__form-card">
+      <form [formGroup]="summaryForm" (ngSubmit)="generateSummary()">
+        <div class="dms-form-dialog__field dms-form-dialog__field--full">
+          <label class="form-label">{{ 'SELECT_MODEL' | translate }}</label>
+          <mat-select panelClass="mat-select-control" class="form-control" formControlName="model">
+            <ng-container *ngFor="let provider of providers">
+              <mat-optgroup [label]="provider">
+                <mat-option *ngFor="let groupModel of groupedModels[provider]" [value]="groupModel.id">
+                  {{ groupModel.label }} — {{ groupModel.description }}
+                </mat-option>
+              </mat-optgroup>
+            </ng-container>
+          </mat-select>
+        </div>
+
+        <div class="dms-form-dialog__field dms-form-dialog__field--full">
+          <div class="alert alert-warning d-flex align-items-start" role="alert">
+            <mat-icon color="warn" class="me-2" aria-hidden="true">warning</mat-icon>
+            <div>{{ 'AI_SUMMARY_WARNING' | translate }}</div>
+          </div>
+          <button [disabled]="isLoading" type="submit" class="dms-form-dialog__btn dms-form-dialog__btn--save">
+            {{ 'GENERATE_SUMMARY' | translate }}
+          </button>
+        </div>
+      </form>
+
+      <div *ngIf="summary" class="dms-form-dialog__comment-item mt-3">
+        <div class="d-flex align-items-center mb-2">
+          <h3 class="mb-0">{{ 'AI_SUMMARY' | translate }}</h3>
+          <button type="button" class="dms-form-dialog__close ms-auto" (click)="copySummary()" aria-label="Copy summary">
+            <mat-icon>content_copy</mat-icon>
+          </button>
+        </div>
+        <div [innerHTML]="summary"></div>
+      </div>
+    </div>
+  </mat-dialog-content>
+</div>

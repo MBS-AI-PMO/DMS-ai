@@ -2,6 +2,7 @@ import { Component, inject, OnInit, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MyWorkflow, NextTransition, VisualWorkflowInstance } from '@core/domain-classes/visual-workflow-instance';
 import { VisualWorkflowGraphComponent } from 'src/app/workflows/visual-workflow-graph/visual-workflow-graph.component';
+import { DMS_WORKFLOW_VIEW_DIALOG_CONFIG } from 'src/app/workflows/workflow-view-dialog.config';
 import { BasePreviewComponent } from '@shared/base-preview/base-preview.component';
 import { CommonDialogService } from '@core/common-dialog/common-dialog.service';
 import { TranslationService } from '@core/services/translation.service';
@@ -18,7 +19,7 @@ import { DocumentInfo } from '@core/domain-classes/document-info';
 @Component({
   selector: 'app-my-workflow',
   templateUrl: './my-workflow.component.html',
-  styleUrl: './my-workflow.component.scss'
+  styleUrls: ['./my-workflow.component.scss'],
 })
 export class MyWorkflowComponent extends BaseComponent implements OnInit {
   @ViewChild(MatPaginator) paginator: MatPaginator;
@@ -95,7 +96,7 @@ export class MyWorkflowComponent extends BaseComponent implements OnInit {
           data.documentId = workflowInstance.documentId;
           data.documentName = workflowInstance.documentName;
           this.dialog.open(VisualWorkflowGraphComponent, {
-            width: '90vw',
+            ...DMS_WORKFLOW_VIEW_DIALOG_CONFIG,
             data: Object.assign({}, data),
           });
         }

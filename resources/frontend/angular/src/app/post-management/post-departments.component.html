@@ -1,90 +1,29 @@
-<section class="content pm-module">
-  <div class="content-block">
-    <div class="pm-page-header">
-      <div>
-        <button mat-icon-button type="button" routerLink="/post-management" matTooltip="Back to job posts" class="pm-back-btn">
-          <mat-icon>arrow_back</mat-icon>
-        </button>
-        <span class="page-title">Departments</span>
-        <p class="pm-page-subtitle">Departments include interview questions used for all posts in that department.</p>
+<section class="content dms-module pm-module">
+  <div class="container-fluid">
+    <div class="content-block">
+      <div class="row align-items-center pm-page-header">
+        <div class="col mb-2">
+          <button mat-icon-button type="button" routerLink="/post-management" matTooltip="Back to job posts" class="pm-back-btn">
+            <mat-icon>arrow_back</mat-icon>
+          </button>
+          <span class="page-title">Manage Departments</span>
+          <p class="pm-page-subtitle">Departments include interview questions used for all posts in that department.</p>
+        </div>
+        <div class="col-auto pm-page-header-actions dms-page-actions">
+          <button type="button" class="dms-action-btn dms-action-btn--cancel" routerLink="/post-management/categories">
+            <i-feather name="layers"></i-feather>
+            Manage Categories
+          </button>
+          <button type="button" class="dms-action-btn dms-action-btn--save" (click)="openDepartmentDialog()" [disabled]="!categories.length">
+            <i-feather name="plus"></i-feather>
+            Add Department
+          </button>
+        </div>
       </div>
-      <div class="pm-page-header-actions">
-        <button mat-flat-button color="primary" type="button" (click)="openAddDepartment()" [disabled]="!categories.length">
-          <mat-icon>add</mat-icon> Add Department
-        </button>
-      </div>
-    </div>
 
-    <p class="text-muted small mb-3" *ngIf="!categories.length">
-      <a routerLink="/post-management/categories">Add a category</a> before creating departments.
-    </p>
-
-    <div class="pm-tab-body">
-      <mat-card class="pm-card mat-elevation-z0 mb-3" *ngIf="showDepartmentForm">
-        <mat-card-content class="p-4">
-          <h6 class="section-title mb-3">{{ editingDepartmentId ? 'Edit Department' : 'New Department' }}</h6>
-          <div class="row">
-            <div class="col-md-4">
-              <mat-form-field appearance="outline" class="w-100 mb-2">
-                <mat-label>Category</mat-label>
-                <mat-select [(ngModel)]="departmentCategoryId">
-                  <mat-option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</mat-option>
-                </mat-select>
-              </mat-form-field>
-            </div>
-            <div class="col-md-4">
-              <mat-form-field appearance="outline" class="w-100 mb-2">
-                <mat-label>Department name</mat-label>
-                <input matInput [(ngModel)]="departmentName" placeholder="HR, Frontend, Accounts">
-              </mat-form-field>
-            </div>
-          </div>
-          <div class="question-bank mb-3">
-            <div class="fw-semibold mb-2">Interview questions (for all posts in this department)</div>
-            <div class="row">
-              <div class="col-md-4" *ngFor="let level of questionLevels">
-                <div class="question-title text-capitalize">{{ level }}</div>
-                <ng-container [ngSwitch]="level">
-                  <ng-container *ngSwitchCase="'basic'">
-                    <div class="question-row" *ngFor="let q of deptBasicQuestions; let i = index; trackBy: trackByIndex">
-                      <mat-form-field appearance="outline" class="w-100 mb-2">
-                        <mat-label>Q{{ i + 1 }}</mat-label>
-                        <input matInput [(ngModel)]="deptBasicQuestions[i]">
-                      </mat-form-field>
-                      <button mat-icon-button color="warn" type="button" (click)="removeDeptQuestion('basic', i)"><mat-icon>delete</mat-icon></button>
-                    </div>
-                    <button mat-stroked-button type="button" (click)="addDeptQuestion('basic')"><mat-icon>add</mat-icon> Add</button>
-                  </ng-container>
-                  <ng-container *ngSwitchCase="'intermediate'">
-                    <div class="question-row" *ngFor="let q of deptIntermediateQuestions; let i = index; trackBy: trackByIndex">
-                      <mat-form-field appearance="outline" class="w-100 mb-2">
-                        <mat-label>Q{{ i + 1 }}</mat-label>
-                        <input matInput [(ngModel)]="deptIntermediateQuestions[i]">
-                      </mat-form-field>
-                      <button mat-icon-button color="warn" type="button" (click)="removeDeptQuestion('intermediate', i)"><mat-icon>delete</mat-icon></button>
-                    </div>
-                    <button mat-stroked-button type="button" (click)="addDeptQuestion('intermediate')"><mat-icon>add</mat-icon> Add</button>
-                  </ng-container>
-                  <ng-container *ngSwitchCase="'expert'">
-                    <div class="question-row" *ngFor="let q of deptExpertQuestions; let i = index; trackBy: trackByIndex">
-                      <mat-form-field appearance="outline" class="w-100 mb-2">
-                        <mat-label>Q{{ i + 1 }}</mat-label>
-                        <input matInput [(ngModel)]="deptExpertQuestions[i]">
-                      </mat-form-field>
-                      <button mat-icon-button color="warn" type="button" (click)="removeDeptQuestion('expert', i)"><mat-icon>delete</mat-icon></button>
-                    </div>
-                    <button mat-stroked-button type="button" (click)="addDeptQuestion('expert')"><mat-icon>add</mat-icon> Add</button>
-                  </ng-container>
-                </ng-container>
-              </div>
-            </div>
-          </div>
-          <div class="text-end">
-            <button mat-button type="button" (click)="resetDepartmentForm()">Cancel</button>
-            <button mat-flat-button color="primary" type="button" (click)="saveDepartment()">Save Department</button>
-          </div>
-        </mat-card-content>
-      </mat-card>
+      <p class="text-muted small mb-3" *ngIf="!categories.length">
+        <a routerLink="/post-management/categories">Add a category</a> before creating departments.
+      </p>
 
       <mat-card class="pm-card pm-data-card mat-elevation-z0">
         <div class="pm-card-toolbar">
@@ -96,12 +35,7 @@
           <mat-form-field appearance="outline" class="pm-search-field" subscriptSizing="dynamic">
             <mat-label>Search</mat-label>
             <mat-icon matPrefix>search</mat-icon>
-            <input
-              matInput
-              [(ngModel)]="departmentSearch"
-              (ngModelChange)="onDepartmentSearchChange()"
-              placeholder="Department or category"
-            />
+            <input matInput [(ngModel)]="departmentSearch" (ngModelChange)="onDepartmentSearchChange()" placeholder="Department or category" />
           </mat-form-field>
         </div>
 
@@ -120,13 +54,15 @@
                 <td class="pm-row-num">{{ departmentPageIndex * departmentPageSize + i + 1 }}</td>
                 <td><span class="pm-cell-name">{{ dept.name }}</span></td>
                 <td><span class="pm-tag">{{ dept.categoryName || '—' }}</span></td>
-                <td class="text-end pm-actions">
-                  <button mat-icon-button class="pm-icon-btn pm-icon-btn-primary" type="button" matTooltip="Edit" (click)="editDepartment(dept)">
-                    <mat-icon>edit</mat-icon>
-                  </button>
-                  <button mat-icon-button class="pm-icon-btn" color="warn" type="button" matTooltip="Delete" (click)="deleteDepartment(dept)">
-                    <mat-icon>delete</mat-icon>
-                  </button>
+                <td class="text-end">
+                  <div class="dms-table-actions">
+                    <button class="btn btn-success btn-sm" type="button" matTooltip="Edit" (click)="editDepartment(dept)">
+                      <i-feather name="edit" class="small-icon"></i-feather>
+                    </button>
+                    <button class="btn btn-danger btn-sm" type="button" matTooltip="Delete" (click)="deleteDepartment(dept)">
+                      <i-feather name="trash-2" class="small-icon"></i-feather>
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -147,7 +83,11 @@
 
         <div class="pm-empty" *ngIf="!departments.length">
           <mat-icon>apartment</mat-icon>
-          <p>No departments yet. Click <strong>Add Department</strong> above.</p>
+          <p>No departments yet.</p>
+          <button type="button" class="dms-action-btn dms-action-btn--save mt-2" (click)="openDepartmentDialog()" [disabled]="!categories.length">
+            <i-feather name="plus"></i-feather>
+            Add Department
+          </button>
         </div>
         <div class="pm-empty" *ngIf="departments.length && !filteredDepartments.length">
           <mat-icon>search_off</mat-icon>

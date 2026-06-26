@@ -1,167 +1,195 @@
-<div class="d-flex">
-    <span mat-dialog-title class="dialog-title">{{data.workflowName | limitTo : '100'}} </span>
-    <button mat-icon-button class="ms-auto" (click)="onDocumentCancel()">
-        <mat-icon class="close-icon" color="warn">close</mat-icon>
-    </button>
+<div class="wf-dialog-head">
+  <span mat-dialog-title class="dialog-title">{{ data.workflowName | limitTo : '100' }}</span>
+  <button mat-icon-button class="ms-auto" (click)="onDocumentCancel()" aria-label="Close">
+    <mat-icon class="close-icon" color="warn">close</mat-icon>
+  </button>
 </div>
-<mat-dialog-content>
-    <div class="row">
-        <div class="col-sm-3">
-            <div class="ngx-graph-height">
-                <ngx-graph #graph class="chart-container" [layoutSettings]="{ orientation: 'TB' }" [links]="links"
-                    [nodes]="nodes" [layout]="'dagre'" [curve]="curve" [panOnZoom]="true" [autoCenter]="false"
-                    [autoZoom]="true">
-                    <ng-template #defsTemplate>
-                        <svg:marker id="arrow" viewBox="0 -5 10 10" refX="8" refY="0" markerWidth="4" markerHeight="4"
-                            orient="auto">
-                            <svg:path d="M0,-5L10,0L0,5" class="arrow-head" />
-                        </svg:marker>
-                    </ng-template>
-                    <ng-template #nodeTemplate let-node>
-                        <svg:g class="node">
-                            <svg:rect [attr.width]="node.dimension?.width || 100"
-                                [attr.height]="node.dimension?.height || 50" [attr.fill]="node.data?.color || '#ccc'">
-                            </svg:rect>
-                            <svg:text alignment-baseline="central" [attr.fill]="'#fff'" [attr.x]="10"
-                                [attr.y]="(node.dimension?.height || 50) / 2">
-                                {{node.label}}
-                            </svg:text>
-                        </svg:g>
-                    </ng-template>
-                    <ng-template #linkTemplate let-link>
-                        <svg:g class="edge" *ngIf="link.source && link.target">
-                            <svg:path class="line" stroke-width="2" marker-end="url(#arrow)"></svg:path>
-                            <svg:text class="edge-label" text-anchor="middle">
-                                <textPath [attr.fill]="link.status === 1 ? 'green' : 'black'" class="text-path"
-                                    [attr.href]="'#' + link.id" [style.dominant-baseline]="link.dominantBaseline"
-                                    startOffset="50%"> {{link.label}}
-                                </textPath>
-                            </svg:text>
-                        </svg:g>
-                    </ng-template>
-                </ngx-graph>
-            </div>
-        </div>
-        <div class="col-sm-9">
-            <div class="row">
-                <div class="col">
-                    <div class="card shadow mt-2">
-                        <div class="card-header">
-                            <span class="px-2 h5 font-weight-bold mb-0">{{"WORKFLOW_DETAILS" | translate}}</span>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-6">
-                                    <p class="h6"><strong>{{"NAME" | translate}}:</strong> {{data.workflowName}}</p>
-                                    <p *ngIf="data.workflowDescription" class="h6"><strong>{{"DESCRIPTION" |
-                                            translate}}:</strong>{{data.workflowDescription}}</p>
-                                    @if (data.createdBy) {
-                                    <p class="h6"><strong> {{"CREATED_BY" | translate}}:</strong> {{data.createdBy }}
-                                    </p> }
-                                    <p class="h6"><strong>{{"CREATED_DATE" | translate}}:</strong>
-                                        {{data.createdDate | utcToLocalTime:'full' }}
-                                    </p>
-                                </div>
-                                <div class="col-6">
-                                    <p class="h6"><strong>{{"DOCUMENT" | translate}}: </strong>
-                                        <a class="doc-link" (click)="onDocumentView()">{{data.documentName}}</a>
-                                    </p>
-                                    @if(data.initiatedDate) {
-                                    <p class="h6"><strong>{{"INITIATED_DATE" | translate}}:</strong>
-                                        {{data.initiatedDate | utcToLocalTime:'full' }}
-                                    </p> }
-                                    <p class="h6"><strong>{{"INITIATED_BY" | translate}}:</strong> {{data.initiatedBy }}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-6 col-sm-12" *ngIf="data?.pendingWorkflowTransitions.length > 0">
-                    <div class="row">
-                        <div class="col">
-                            <span class="px-2 h5 font-weight-bold mb-0 text-danger">{{"PENDING_TRANSITIONS" |
-                                translate}}</span>
-                        </div>
-                    </div>
-                    <div class="card shadow  mt-2" *ngFor="let transition of data?.pendingWorkflowTransitions">
-                        <div class="card-header d-flex align-items-center">
-                            <i-feather class="text-danger" name="clock"></i-feather>
-                            <div>
-                                <span class="px-2 h6 font-weight-bold mb-0">{{transition.name}}</span>
-                                <small class="text-danger"> {{"PENDING" | translate}}</small>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-left">
-                                <div class="text-center me-3">
-                                    <span class="h6 mb-1">{{transition.fromStepName}}</span>
-                                </div>
-                                <div class="text-center me-3 pt-3">
-                                    <i-feather class="text-danger" name="arrow-right"></i-feather>
-                                    <small class="d-block text-danger  font-size-8">{{"PENDING" | translate}}</small>
-                                </div>
-                                <div class="text-center">
-                                    <span class="h6 mb-1">{{transition.toStepName}}</span>
-                                </div>
-                            </div>
-                            <p class="h6" *ngIf="transition?.assignRoles"><strong>{{"ASSIGNED_TO_ROLES" |
-                                    translate}}:</strong> {{ transition.assignRoles }}
-                            </p>
-                            <p class="h6" *ngIf="transition?.assignUsers"><strong>{{"ASSIGNED_TO_USERS" |
-                                    translate}}:</strong> {{ transition.assignUsers }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-sm-12" *ngIf="data?.completedWorkflowTransitions.length > 0"
-                    [ngClass]="{'col-md-12': data?.pendingWorkflowTransitions.length == 0 }">
-                    <div class="row">
-                        <div class="col">
-                            <span class="px-2 h5 font-weight-bold mb-0 text-success">{{"COMPLETED_TRANSTIONS" |
-                                translate}}</span>
-                        </div>
-                    </div>
-                    <div class="card shadow  mt-2" *ngFor="let transition of data?.completedWorkflowTransitions">
-                        <div class="card-header d-flex align-items-center">
-                            <i-feather class="text-success" name="check-circle"></i-feather>
-                            <div>
-                                <span class="px-2 h5 font-weight-bold mb-0">{{transition.name}}</span>
-                                <small class="text-success">
-                                    {{"COMPLETED" | translate}}
-                                </small>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-left">
-                                <div class="text-center me-3">
-                                    <span class="h6 mb-1">{{transition.fromStepName}}</span>
-                                </div>
-                                <div class="text-center me-3 pt-3">
-                                    <i-feather class="text-success" name="arrow-right"></i-feather>
-                                    <small class="d-block text-success font-size-8">{{"COMPLETED" | translate}}</small>
-                                </div>
-                                <div class="text-center">
-                                    <span class="h6 mb-1">{{transition.toStepName}}</span>
-                                </div>
-                            </div>
-                            <p class="h6" *ngIf="transition.createdAt"><strong>{{"CREATED_DATE"}}:</strong> {{
-                                transition.createdAt | utcToLocalTime:'full' }}</p>
-                            <p class="h6" *ngIf="transition.createdDate"><strong>{{"COMPLETED_DATE" |
-                                    translate}}:</strong> {{
-                                transition.createdDate | utcToLocalTime:'full' }}</p>
-                            <p class="h6" *ngIf="transition.createdBy"><strong>{{"PERFORM_BY" | translate}}:</strong>
-                                {{ transition.createdBy}}
-                            </p>
-                            <p class="h6" *ngIf="transition.comment"><strong>{{"COMMENT" | translate}}:</strong> {{
-                                transition.comment }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+
+<mat-dialog-content class="wf-dialog-content">
+  <section class="wf-view__graph-card">
+    <div class="wf-view__graph-wrap ngx-graph-height">
+      <ngx-graph
+        #graph
+        class="chart-container"
+        [layoutSettings]="{ orientation: 'LR' }"
+        [links]="links"
+        [nodes]="nodes"
+        [layout]="'dagre'"
+        [curve]="curve"
+        [panOnZoom]="true"
+        [autoCenter]="true"
+        [autoZoom]="true"
+        [view]="[1000, 220]">
+        <ng-template #defsTemplate>
+          <svg:marker id="arrow" viewBox="0 -5 10 10" refX="8" refY="0" markerWidth="4" markerHeight="4" orient="auto">
+            <svg:path d="M0,-5L10,0L0,5" class="arrow-head" />
+          </svg:marker>
+        </ng-template>
+        <ng-template #nodeTemplate let-node>
+          <svg:g class="node">
+            <svg:rect
+              [attr.width]="node.dimension?.width || 128"
+              [attr.height]="node.dimension?.height || 44"
+              [attr.fill]="node.data?.color || '#6777ef'"
+              [attr.rx]="10"
+              [attr.ry]="10"
+              stroke="rgba(255,255,255,0.28)"
+              stroke-width="1">
+            </svg:rect>
+            <svg:text
+              alignment-baseline="central"
+              text-anchor="middle"
+              [attr.fill]="'#fff'"
+              [attr.x]="(node.dimension?.width || 128) / 2"
+              [attr.y]="(node.dimension?.height || 44) / 2"
+              font-size="12"
+              font-weight="600">
+              {{ node.label }}
+            </svg:text>
+          </svg:g>
+        </ng-template>
+        <ng-template #linkTemplate let-link>
+          <svg:g class="edge" *ngIf="link.source && link.target">
+            <svg:path class="line" stroke-width="2" marker-end="url(#arrow)"></svg:path>
+            <svg:text class="edge-label" text-anchor="middle">
+              <textPath
+                [attr.fill]="link.status === 1 ? '#16a34a' : '#64748b'"
+                class="text-path"
+                [attr.href]="'#' + link.id"
+                [style.dominant-baseline]="link.dominantBaseline"
+                startOffset="50%">
+                {{ link.label }}
+              </textPath>
+            </svg:text>
+          </svg:g>
+        </ng-template>
+      </ngx-graph>
     </div>
+  </section>
+
+  <section class="wf-view__panel wf-view__panel--details">
+    <header class="wf-view__panel-head">
+      <span class="material-icons-outlined" aria-hidden="true">info</span>
+      <h3>{{ 'WORKFLOW_DETAILS' | translate }}</h3>
+    </header>
+    <div class="wf-view__meta wf-view__meta--cols">
+      <div class="wf-view__meta-item">
+        <span class="wf-view__meta-label">{{ 'NAME' | translate }}</span>
+        <span class="wf-view__meta-value">{{ data.workflowName }}</span>
+      </div>
+      <div class="wf-view__meta-item" *ngIf="data.workflowDescription">
+        <span class="wf-view__meta-label">{{ 'DESCRIPTION' | translate }}</span>
+        <span class="wf-view__meta-value">{{ data.workflowDescription }}</span>
+      </div>
+      <div class="wf-view__meta-item" *ngIf="data.createdBy">
+        <span class="wf-view__meta-label">{{ 'CREATED_BY' | translate }}</span>
+        <span class="wf-view__meta-value">{{ data.createdBy }}</span>
+      </div>
+      <div class="wf-view__meta-item">
+        <span class="wf-view__meta-label">{{ 'CREATED_DATE' | translate }}</span>
+        <span class="wf-view__meta-value">{{ data.createdDate | utcToLocalTime:'full' }}</span>
+      </div>
+      <div class="wf-view__meta-item">
+        <span class="wf-view__meta-label">{{ 'DOCUMENT' | translate }}</span>
+        <a class="wf-view__doc-link wf-view__meta-value" (click)="onDocumentView()">{{ data.documentName }}</a>
+      </div>
+      <div class="wf-view__meta-item" *ngIf="data.initiatedDate">
+        <span class="wf-view__meta-label">{{ 'INITIATED_DATE' | translate }}</span>
+        <span class="wf-view__meta-value">{{ data.initiatedDate | utcToLocalTime:'full' }}</span>
+      </div>
+      <div class="wf-view__meta-item">
+        <span class="wf-view__meta-label">{{ 'INITIATED_BY' | translate }}</span>
+        <span class="wf-view__meta-value">{{ data.initiatedBy }}</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="wf-view__transitions-row">
+    <section class="wf-view__panel" *ngIf="data?.pendingWorkflowTransitions?.length > 0">
+      <header class="wf-view__panel-head">
+        <span class="material-icons-outlined" aria-hidden="true">schedule</span>
+        <h3>{{ 'PENDING_TRANSITIONS' | translate }}</h3>
+        <span class="wf-view__count">{{ data.pendingWorkflowTransitions.length }}</span>
+      </header>
+      <div class="wf-view__transition-list">
+        <article class="wf-transition-card" *ngFor="let transition of data.pendingWorkflowTransitions">
+          <div class="wf-transition-card__head">
+            <span class="wf-transition-card__icon wf-transition-card__icon--pending">
+              <i-feather name="clock"></i-feather>
+            </span>
+            <h4 class="wf-transition-card__title">{{ transition.name }}</h4>
+            <span class="wf-transition-card__badge wf-transition-card__badge--pending">{{ 'PENDING' | translate }}</span>
+          </div>
+          <div class="wf-transition-card__route">
+            <span class="wf-transition-card__step">{{ transition.fromStepName }}</span>
+            <span class="wf-transition-card__arrow">
+              <i-feather name="arrow-right"></i-feather>
+            </span>
+            <span class="wf-transition-card__step">{{ transition.toStepName }}</span>
+          </div>
+          <div class="wf-transition-card__details">
+            <div class="wf-transition-card__detail" *ngIf="transition?.assignRoles">
+              <strong>{{ 'ASSIGNED_TO_ROLES' | translate }}:</strong>
+              <div class="wf-transition-card__chips">
+                <span class="wf-transition-card__chip" *ngFor="let role of splitList(transition.assignRoles)">{{ role }}</span>
+              </div>
+            </div>
+            <div class="wf-transition-card__detail" *ngIf="transition?.assignUsers">
+              <strong>{{ 'ASSIGNED_TO_USERS' | translate }}:</strong>
+              <div class="wf-transition-card__chips">
+                <span class="wf-transition-card__chip" *ngFor="let user of splitList(transition.assignUsers)">{{ user }}</span>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section
+      class="wf-view__panel"
+      *ngIf="data?.completedWorkflowTransitions?.length > 0"
+      [class.wf-view__panel--full]="!data?.pendingWorkflowTransitions?.length">
+      <header class="wf-view__panel-head">
+        <span class="material-icons-outlined" aria-hidden="true">check_circle</span>
+        <h3>{{ 'COMPLETED_TRANSTIONS' | translate }}</h3>
+        <span class="wf-view__count">{{ data.completedWorkflowTransitions.length }}</span>
+      </header>
+      <div class="wf-view__transition-list">
+        <article class="wf-transition-card" *ngFor="let transition of data.completedWorkflowTransitions">
+          <div class="wf-transition-card__head">
+            <span class="wf-transition-card__icon wf-transition-card__icon--completed">
+              <i-feather name="check-circle"></i-feather>
+            </span>
+            <h4 class="wf-transition-card__title">{{ transition.name }}</h4>
+            <span class="wf-transition-card__badge wf-transition-card__badge--completed">{{ 'COMPLETED' | translate }}</span>
+          </div>
+          <div class="wf-transition-card__route">
+            <span class="wf-transition-card__step">{{ transition.fromStepName }}</span>
+            <span class="wf-transition-card__arrow">
+              <i-feather name="arrow-right"></i-feather>
+            </span>
+            <span class="wf-transition-card__step">{{ transition.toStepName }}</span>
+          </div>
+          <div class="wf-transition-card__details">
+            <p class="wf-transition-card__detail" *ngIf="transition.createdAt">
+              <strong>{{ 'CREATED_DATE' | translate }}:</strong>
+              {{ transition.createdAt | utcToLocalTime:'full' }}
+            </p>
+            <p class="wf-transition-card__detail" *ngIf="transition.createdDate">
+              <strong>{{ 'COMPLETED_DATE' | translate }}:</strong>
+              {{ transition.createdDate | utcToLocalTime:'full' }}
+            </p>
+            <p class="wf-transition-card__detail" *ngIf="transition.createdBy">
+              <strong>{{ 'PERFORM_BY' | translate }}:</strong>
+              {{ transition.createdBy }}
+            </p>
+            <p class="wf-transition-card__detail" *ngIf="transition.comment">
+              <strong>{{ 'COMMENT' | translate }}:</strong>
+              {{ transition.comment }}
+            </p>
+          </div>
+        </article>
+      </div>
+    </section>
+  </div>
 </mat-dialog-content>

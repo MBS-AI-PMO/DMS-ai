@@ -302,7 +302,14 @@ class DocumentController extends Controller
                 'message' => 'Document already exist.',
             ], 409);
         }
-        return  response()->json($this->documentRepository->updateDocument($request, $id), 200);
+
+        $result = $this->documentRepository->updateDocument($request, $id);
+
+        if ($result instanceof \Illuminate\Http\JsonResponse) {
+            return $result;
+        }
+
+        return response()->json($result, 200);
     }
 
     public function archiveDocument($id)

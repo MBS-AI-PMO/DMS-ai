@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Model;
+
 use Ramsey\Uuid\Uuid;
 use App\Traits\Uuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

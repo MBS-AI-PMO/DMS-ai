@@ -83,7 +83,7 @@ export class AddDocumentComponent extends BaseComponent implements OnInit {
     this.documentMetaTagsArray.push(this.buildDocumentMetaTag());
     this.getUsers();
     this.getRoles();
-    this.getCompanyProfile();
+    this.subscribeCompanyProfile();
     this.getLangDir();
     this.getAllAllowFileExtension();
   }
@@ -103,11 +103,14 @@ export class AddDocumentComponent extends BaseComponent implements OnInit {
     );
   }
 
-  getCompanyProfile() {
-    this.securityService.companyProfile.subscribe((profile) => {
-      if (profile) {
-        this.isS3Supported = profile.location == 's3';
+  subscribeCompanyProfile() {
+    this.sub$.sink = this.securityService.companyProfile.subscribe((profile) => {
+      if (!profile) {
+        return;
       }
+
+      this.isS3Supported = !!profile.isS3Supported;
+      this.documentForm.get('location')?.setValue(profile.location ?? 'local');
     });
   }
 
@@ -183,15 +186,6 @@ export class AddDocumentComponent extends BaseComponent implements OnInit {
         isAllowDownload: new UntypedFormControl(false),
       }),
     });
-    this.companyProfileSubscription();
-  }
-
-  companyProfileSubscription() {
-    this.securityService.companyProfile.subscribe((profile) => {
-      if (profile) {
-        this.documentForm.get('location').setValue(profile.location ?? 'local');
-      }
-    });
   }
 
   buildDocumentMetaTag(): FormGroup {
@@ -232,13 +226,23 @@ export class AddDocumentComponent extends BaseComponent implements OnInit {
   SaveDocument() {
     if (this.documentForm.valid) {
       const doc = this.buildDocumentObject();
-      this.documentService.addDocument(doc).subscribe((documentInfo) => {
-        this.addDocumentTrail(documentInfo as DocumentInfo);
-        this.toastrService.success(
-          this.translationService.getValue('DOCUMENT_SAVE_SUCCESSFULLY')
-        );
+      this.sub$.sink = this.documentService.addDocument(doc).subscribe({
+        next: (documentInfo) => {
+          this.addDocumentTrail(documentInfo as DocumentInfo);
+          this.toastrService.success(
+            this.translationService.getValue('DOCUMENT_SAVE_SUCCESSFULLY')
+          );
+        },
+        error: (err) => {
+          const message =
+            err?.messages?.[0] ||
+            err?.error?.message ||
+            this.translationService.getValue('ERROR');
+          this.toastrService.error(
+            typeof message === 'string' ? message : 'Error in saving data.'
+          );
+        },
       });
-      this;
     } else {
       this.documentForm.markAllAsTouched();
     }
@@ -252,7 +256,7 @@ export class AddDocumentComponent extends BaseComponent implements OnInit {
     this.sub$.sink = this.commonService
       .addDocumentAuditTrail(objDocumentAuditTrail)
       .subscribe(() => {
-        this.router.navigate(['/']);
+        this.router.navigate(['/assigned-documents']);
       });
   }
 

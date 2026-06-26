@@ -396,6 +396,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::group(['middleware' => ['hasToken:FILE_REQUEST_VIEW_FILE_REQUEST']], function () {
         Route::get('/proposal-management', [ProposalManagementController::class, 'index']);
+        Route::get('/proposal-management/dashboard', [ProposalManagementController::class, 'dashboard']);
         Route::post('/proposal-management/folders', [ProposalManagementController::class, 'createFolder']);
         Route::post('/proposal-management/files', [ProposalManagementController::class, 'uploadFile']);
         Route::get('/proposal-management/files/{id}/open', [ProposalManagementController::class, 'openFile']);

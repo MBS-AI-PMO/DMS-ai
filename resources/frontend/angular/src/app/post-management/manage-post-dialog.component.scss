@@ -1,0 +1,9 @@
+@import './post-management.component.scss';
+
+.pm-dialog-field {
+  margin-bottom: 0;
+
+  .mat-mdc-form-field-subscript-wrapper {
+    display: none;
+  }
+}

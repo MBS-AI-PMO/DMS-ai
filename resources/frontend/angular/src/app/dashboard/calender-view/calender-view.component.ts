@@ -9,7 +9,7 @@ import { ReminderDetailComponent } from '@shared/reminder-detail/reminder-detail
 @Component({
   selector: 'app-calender-view',
   templateUrl: './calender-view.component.html',
-  styleUrls: ['./calender-view.component.css'],
+  styleUrls: ['./calender-view.component.scss'],
 })
 export class CalenderViewComponent implements OnInit {
   view: CalendarView = CalendarView.Month;

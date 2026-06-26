@@ -25,7 +25,7 @@ export class AuthGuard {
         return false;
       }
 
-      const claimType: string = next.data['claimType'];
+      const claimType = next.data['claimType'] as string | string[] | undefined;
       if (claimType) {
         if (!this.securityService.hasClaim(claimType)) {
           this.toastr.error(`You don't have right to access this page`);
@@ -47,7 +47,7 @@ export class AuthGuard {
     // Get property name on security object to check
     // let claimType: string = next.data['claimType'];
     if (this.securityService.isLogin()) {
-      const claimType: string = next.data["claimType"];
+      const claimType = next.data['claimType'] as string | string[] | undefined;
       if (claimType) {
         if (!this.securityService.hasClaim(claimType)) {
           this.toastr.error(`You don't have right to access this page `);

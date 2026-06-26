@@ -40,58 +40,7 @@ class ProposalManagementController extends Controller
     public function index()
     {
         $userId = $this->getUserId();
-        $rootFolder = $this->ensureRootFolder($userId);
-
-        $folders = ProposalFolder::where('createdBy', $userId)
-            ->orderBy('name')
-            ->get();
-
-        $folderMap = $folders->keyBy('id');
-        $rootId = $rootFolder->id;
-
-        $files = ProposalFile::with('folder')
-            ->where('createdBy', $userId)
-            ->orderByDesc('createdDate')
-            ->get()
-            ->map(function (ProposalFile $file) use ($folderMap, $rootId) {
-                $folderPath = $this->buildFolderPathWithoutRoot($file->folderId, $folderMap, $rootId);
-                $fileName = $file->title ?: $file->originalName;
-
-                return [
-                    'id' => $file->id,
-                    'folderId' => $file->folderId,
-                    'title' => $fileName,
-                    'displayTitle' => $folderPath ? "{$folderPath} / {$fileName}" : $fileName,
-                    'originalName' => $file->originalName,
-                    'url' => $file->url,
-                    'createdDate' => $file->createdDate,
-                ];
-            })
-            ->values();
-
-        $filerequests = ProposalFileRequest::where('createdBy', $userId)
-            ->with('linkedFileRequest')
-            ->orderByDesc('createdDate')
-            ->get()
-            ->map(function (ProposalFileRequest $request) {
-                $status = $request->status;
-                if ($request->linkedFileRequest) {
-                    $status = $request->linkedFileRequest->fileRequestStatus === FileRequestStatusEnum::UPLOADED->value
-                        ? 'Uploaded'
-                        : 'Pending';
-                }
-
-                return [
-                    'id' => $request->id,
-                    'folderId' => $request->folderId,
-                    'fileRequestId' => $request->fileRequestId,
-                    'title' => $request->title,
-                    'description' => $request->description,
-                    'status' => $status,
-                    'createdDate' => $request->createdDate,
-                ];
-            })
-            ->values();
+        $dashboard = $this->buildFolderDashboardData($userId);
 
         $posts = ProposalPost::with(['candidates' => function ($query) {
             $query->orderByDesc('createdDate');
@@ -121,7 +70,74 @@ class ProposalManagementController extends Controller
             })
             ->values();
 
-        return response()->json([
+        return response()->json(array_merge($dashboard, [
+            'posts' => $posts,
+            'categories' => $this->listCategoriesData($userId),
+            'departments' => $this->listDepartmentsData($userId),
+        ]));
+    }
+
+    public function dashboard()
+    {
+        return response()->json($this->buildFolderDashboardData($this->getUserId()));
+    }
+
+    private function buildFolderDashboardData(string $userId): array
+    {
+        $rootFolder = $this->ensureRootFolder($userId);
+
+        $folders = ProposalFolder::where('createdBy', $userId)
+            ->orderBy('name')
+            ->get();
+
+        $folderMap = $folders->keyBy('id');
+        $rootId = $rootFolder->id;
+
+        $files = ProposalFile::with('folder')
+            ->where('createdBy', $userId)
+            ->orderByDesc('createdDate')
+            ->get()
+            ->map(function (ProposalFile $file) use ($folderMap, $rootId) {
+                $folderPath = $this->buildFolderPathWithoutRoot($file->folderId, $folderMap, $rootId);
+                $fileName = $file->title ?: $file->originalName;
+
+                return [
+                    'id' => $file->id,
+                    'folderId' => $file->folderId,
+                    'title' => $fileName,
+                    'displayTitle' => $folderPath ? "{$folderPath} / {$fileName}" : $fileName,
+                    'originalName' => $file->originalName,
+                    'url' => $file->url,
+                    'createdDate' => $this->formatApiDateTime($file->createdDate),
+                ];
+            })
+            ->values();
+
+        $filerequests = ProposalFileRequest::where('createdBy', $userId)
+            ->with('linkedFileRequest')
+            ->orderByDesc('createdDate')
+            ->get()
+            ->map(function (ProposalFileRequest $request) {
+                $status = $request->status;
+                if ($request->linkedFileRequest) {
+                    $status = $request->linkedFileRequest->fileRequestStatus === FileRequestStatusEnum::UPLOADED->value
+                        ? 'Uploaded'
+                        : 'Pending';
+                }
+
+                return [
+                    'id' => $request->id,
+                    'folderId' => $request->folderId,
+                    'fileRequestId' => $request->fileRequestId,
+                    'title' => $request->title,
+                    'description' => $request->description,
+                    'status' => $status,
+                    'createdDate' => $this->formatApiDateTime($request->createdDate),
+                ];
+            })
+            ->values();
+
+        return [
             'rootFolderId' => $rootFolder->id,
             'folders' => $folders->map(function (ProposalFolder $folder) {
                 return [
@@ -132,10 +148,7 @@ class ProposalManagementController extends Controller
             })->values(),
             'files' => $files,
             'filerequests' => $filerequests,
-            'posts' => $posts,
-            'categories' => $this->listCategoriesData($userId),
-            'departments' => $this->listDepartmentsData($userId),
-        ]);
+        ];
     }
 
     public function postBoard()

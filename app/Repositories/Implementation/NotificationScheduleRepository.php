@@ -428,33 +428,45 @@ class NotificationScheduleRepository extends BaseRepository implements Notificat
 
         if ($sendEmailSchduler->count() > 0) {
             foreach ($sendEmailSchduler as $sendEmail) {
-                if (!empty($sendEmail->email)  && $sendEmail->documentId != null) {
-                    $document =  $this->getDocument($sendEmail->documentId);
+                if (empty($sendEmail->email)) {
+                    continue;
+                }
 
-                    $fileupload = $document->url;
-                    $location = $document->location ?? 'local';
+                $sendEmailObject = [
+                    'to_address' => $sendEmail->email,
+                    'subject' => $sendEmail->subject,
+                    'message' => $sendEmail->message,
+                    'path' => null,
+                    'location' => null,
+                    'doc_url' => null,
+                    'file_name' => null,
+                ];
 
-                    $sendEmailObject = clone  $sendEmail;
+                if (!empty($sendEmail->documentId)) {
+                    $document = $this->getDocument($sendEmail->documentId);
+                    if ($document && !empty($document->url)) {
+                        $fileupload = $document->url;
+                        $location = $document->location ?? 'local';
 
-                    if (Storage::disk($location)->exists($fileupload)) {
-                        $filename = pathinfo($document->name, PATHINFO_FILENAME);
-                        $ext = pathinfo($document->url, PATHINFO_EXTENSION);
-                        $sendEmailObject['path'] = Storage::path($fileupload);
-                        $sendEmailObject['mime_type'] = Storage::mimeType($fileupload);
-                        $sendEmailObject['file_name'] = $filename . '.' . $ext;
-                        $sendEmailObject['location'] = $location;
-                        $sendEmailObject['doc_url'] = $document->url;
-                    }
-
-                    try {
-                        $sendEmailObject['to_address'] = $sendEmail->email;
-                        $this->emailRepository->sendEmail($sendEmailObject);
-                    } catch (\Exception $e) {
+                        if (Storage::disk($location)->exists($fileupload)) {
+                            $filename = pathinfo($document->name, PATHINFO_FILENAME);
+                            $ext = pathinfo($document->url, PATHINFO_EXTENSION);
+                            $sendEmailObject['path'] = Storage::path($fileupload);
+                            $sendEmailObject['mime_type'] = Storage::mimeType($fileupload);
+                            $sendEmailObject['file_name'] = $filename . '.' . $ext;
+                            $sendEmailObject['location'] = $location;
+                            $sendEmailObject['doc_url'] = $document->url;
+                        }
                     }
                 }
-                // }
-                $sendEmail->isSend = true;
-                $sendEmail->save();
+
+                try {
+                    $this->emailRepository->sendEmail($sendEmailObject);
+                    $sendEmail->isSend = true;
+                    $sendEmail->save();
+                } catch (\Exception $e) {
+                    // Keep isSend false so the scheduler can retry.
+                }
             }
         }
     }

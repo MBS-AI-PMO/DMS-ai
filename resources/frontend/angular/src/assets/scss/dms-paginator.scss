@@ -1,0 +1,188 @@
+// Global list pagination — Material mat-paginator (all modules)
+$dms-pag-primary: $theme-active-color;
+$dms-pag-primary-soft: #eef0fd;
+$dms-pag-border: #e8eaef;
+$dms-pag-text: #495057;
+$dms-pag-muted: #6c757d;
+$dms-pag-bg: #f8f9fc;
+
+@mixin dms-paginator-modern {
+  background: $dms-pag-bg !important;
+  border-top: 1px solid $dms-pag-border;
+  color: $dms-pag-muted;
+  font-size: 13px;
+  font-weight: 500;
+  height: auto !important;
+  min-height: 54px !important;
+  overflow: visible !important;
+  padding: 10px 16px !important;
+  position: relative;
+  z-index: 2;
+
+  .mat-mdc-paginator-container {
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+    justify-content: flex-end;
+    min-height: 36px;
+    padding: 0;
+  }
+
+  .mat-mdc-paginator-outer-container,
+  .mat-mdc-paginator-page-size,
+  .mat-mdc-paginator-range-actions,
+  .mat-mdc-paginator-page-size-select,
+  .mat-mdc-paginator-touch-target {
+    height: auto !important;
+  }
+
+  .mat-mdc-paginator-page-size {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-right: auto;
+  }
+
+  .mat-mdc-paginator-page-size-label {
+    color: $dms-pag-muted;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  .mat-mdc-paginator-page-size-select {
+    margin: 0;
+    width: auto;
+
+    .mat-mdc-form-field {
+      width: 76px;
+    }
+
+    .mat-mdc-text-field-wrapper {
+      background: #fff !important;
+      border: 1px solid #dce1e8;
+      border-radius: 9px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+      height: 36px !important;
+      padding: 0 10px !important;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .mat-mdc-text-field-wrapper:hover {
+      border-color: #c5cae9;
+    }
+
+    .mat-mdc-form-field-focus-overlay {
+      background: transparent;
+    }
+
+    .mat-mdc-form-field-flex {
+      align-items: center;
+      height: 36px !important;
+    }
+
+    .mat-mdc-form-field-infix {
+      min-height: unset !important;
+      padding: 0 !important;
+      width: auto;
+    }
+
+    .mdc-notched-outline,
+    .mdc-line-ripple,
+    .mat-mdc-form-field-subscript-wrapper {
+      display: none !important;
+    }
+
+    .mat-mdc-select-trigger {
+      height: 36px;
+    }
+
+    .mat-mdc-select-value {
+      color: $dms-pag-primary;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .mat-mdc-select-arrow {
+      color: $dms-pag-primary;
+    }
+  }
+
+  .mat-mdc-paginator-range-label {
+    color: $dms-pag-text;
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0 6px;
+    white-space: nowrap;
+  }
+
+  .mat-mdc-paginator-range-actions {
+    align-items: center;
+    display: flex;
+    gap: 4px;
+  }
+
+  .mat-mdc-icon-button.mat-mdc-button-base {
+    align-items: center;
+    background: #fff !important;
+    border: 1px solid $dms-pag-border !important;
+    border-radius: 9px !important;
+    color: $dms-pag-primary !important;
+    display: inline-flex !important;
+    height: 36px !important;
+    justify-content: center;
+    margin: 0 !important;
+    padding: 0 !important;
+    transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    width: 36px !important;
+
+    &:hover:not([disabled]) {
+      background: $dms-pag-primary-soft !important;
+      border-color: #c5cae9 !important;
+      box-shadow: 0 2px 8px rgba(103, 119, 239, 0.12);
+    }
+
+    &[disabled] {
+      background: #f1f3f6 !important;
+      border-color: #eceff3 !important;
+      color: #b0b8c4 !important;
+      opacity: 1 !important;
+    }
+
+    .mat-mdc-paginator-icon {
+      fill: currentColor;
+      height: 20px;
+      width: 20px;
+    }
+  }
+
+  .mat-mdc-form-field-flex {
+    height: 36px !important;
+  }
+
+  .mdc-text-field--outlined .mat-mdc-form-field-infix,
+  .mdc-text-field--no-label .mat-mdc-form-field-infix {
+    padding: 0 !important;
+  }
+}
+
+// All list paginators (override cramped grid-height rules from general.scss)
+.mat-mdc-paginator,
+.mat-mdc-paginator.pm-paginator,
+[class*='grid-height'] .mat-mdc-paginator {
+  @include dms-paginator-modern;
+}
+
+// Table footer row that hosts paginator
+.mat-mdc-footer-row,
+.mat-mdc-footer-cell {
+  background: $dms-pag-bg !important;
+  border-top: 1px solid $dms-pag-border;
+}
+
+.mat-mdc-footer-cell {
+  padding: 0 !important;
+}

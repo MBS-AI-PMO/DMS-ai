@@ -1,26 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewEncapsulation, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
 import { BaseComponent } from '../base.component';
 import { TranslationService } from '@core/services/translation.service';
-import { FeatherModule } from 'angular-feather';
-
-// Angular Material Imports
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatListModule } from '@angular/material/list';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatCardModule } from '@angular/material/card';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatSelectModule } from '@angular/material/select';
-import { MatOptionModule } from '@angular/material/core';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { forkJoin } from 'rxjs';
+import { forkJoin, timeout, throwError } from 'rxjs';
+import { catchError, finalize } from 'rxjs/operators';
 import { FileType } from '@core/domain-classes/file-type.enum';
 import { FileSizes } from '@core/domain-classes/file-sizes.enum';
 
@@ -57,45 +44,16 @@ interface ProposalFileRequest {
   createdDate: string;
 }
 
-interface ProposalFileViewModel extends ProposalFile {
-  displayLabel: string;
-}
-
-type CandidateStage = 'cv_received' | 'shortlisted' | 'interview_scheduled' | 'approved' | 'rejected' | 'selected';
-type InterviewLevel = 'basic' | 'intermediate' | 'advanced';
-
-interface ProposalCandidate {
-  id: string;
-  postId: string;
-  candidateName: string;
-  candidateCode?: string;
-  phone?: string;
-  email?: string;
-  cvOriginalName?: string;
-  hasCv: boolean;
-  stage: CandidateStage;
-  interviewLevel?: InterviewLevel;
-  interviewDate?: string;
-  analysisNotes?: string;
-  createdDate: string;
-}
-
-interface ProposalPost {
-  id: string;
-  title: string;
-  department?: string;
-  description?: string;
-  createdDate: string;
-  candidates: ProposalCandidate[];
-}
-
 interface ProposalDashboardData {
   rootFolderId: string;
   folders: ProposalFolder[];
   files: ProposalFile[];
-  fileRequests: ProposalFileRequest[];
-  posts: ProposalPost[];
+  fileRequests?: ProposalFileRequest[];
+  filerequests?: ProposalFileRequest[];
 }
+
+type ProposalAction = 'proposal' | 'subfolder' | null;
+type UploadPanel = 'upload' | 'request';
 
 @Component({
   selector: 'app-proposal-management',
@@ -104,35 +62,28 @@ interface ProposalDashboardData {
     CommonModule,
     FormsModule,
     TranslateModule,
-    FeatherModule,
-    MatButtonModule,
-    MatIconModule,
-    MatListModule,
-    MatMenuModule,
-    MatInputModule,
-    MatFormFieldModule,
-    MatCardModule,
-    MatTabsModule,
-    MatSelectModule,
-    MatOptionModule,
-    MatCheckboxModule
   ],
   templateUrl: './proposal-management.component.html',
   styleUrl: './proposal-management.component.scss',
+  encapsulation: ViewEncapsulation.Emulated,
 })
 export class ProposalManagementComponent extends BaseComponent implements OnInit {
   private readonly httpClient = inject(HttpClient);
   private readonly toastrService = inject(ToastrService);
   private readonly translationService = inject(TranslationService);
+  private readonly changeDetectorRef = inject(ChangeDetectorRef);
   private readonly fileRequestBaseUrl = `${window.location.protocol}//${window.location.host}/file-requests/preview/`;
 
   rootFolderId = '';
   folders: ProposalFolder[] = [];
   files: ProposalFile[] = [];
   fileRequests: ProposalFileRequest[] = [];
-  posts: ProposalPost[] = [];
   currentFolderId = '';
   loading = false;
+  savingSubfolder = false;
+  savingProposal = false;
+  uploading = false;
+  savingFileRequest = false;
 
   newProposalName = '';
   newSubfolderName = '';
@@ -147,189 +98,156 @@ export class ProposalManagementComponent extends BaseComponent implements OnInit
   newRequestIsLinkExpiryTime = false;
   newRequestLinkExpiryTime = '';
   uploadRows: Array<File | null> = [null];
-  activeAction: 'subfolder' | null = null;
-  selectedManagementTabIndex = 0;
-  selectedTabIndex = 0;
+  activeAction: ProposalAction = null;
+  uploadPanel: UploadPanel = 'upload';
   fileTypes: { key: string; value: number }[] = [];
   fileSizeOptions = Object.keys(FileSizes)
     .filter((key) => isNaN(Number(key)))
     .map((key) => FileSizes[key as keyof typeof FileSizes]);
 
-  selectedPostId = '';
-  newPostTitle = '';
-  newPostDepartment = '';
-  newPostDescription = '';
-  newCandidateName = '';
-  newCandidateCode = '';
-  newCandidatePhone = '';
-  newCandidateEmail = '';
-  newCandidateCv: File | null = null;
-  readonly candidateStages: CandidateStage[] = [
-    'cv_received',
-    'shortlisted',
-    'interview_scheduled',
-    'approved',
-    'rejected',
-    'selected',
-  ];
-  readonly interviewLevels: InterviewLevel[] = ['basic', 'intermediate', 'advanced'];
-
   ngOnInit(): void {
-    this.selectedManagementTabIndex = window.location.pathname.includes('post-management') ? 1 : 0;
     this.fileTypes = this.getEnumValues(FileType);
-    this.loadData();
+    this.loadData(true);
   }
 
-  loadData(): void {
-    this.loading = true;
-    this.sub$.sink = this.httpClient
-      .get<ProposalDashboardData>('proposal-management')
-      .subscribe({
-        next: (response) => {
-          this.rootFolderId = response.rootFolderId;
-          this.folders = response.folders;
-          this.files = response.files;
-          this.fileRequests = response.fileRequests;
-          this.posts = response.posts || [];
-          this.currentFolderId = this.currentFolderId || response.rootFolderId;
-          if (!this.folders.find((folder) => folder.id === this.currentFolderId)) {
-            this.currentFolderId = response.rootFolderId;
-          }
-          if (!this.selectedPostId && this.posts.length) {
-            this.selectedPostId = this.posts[0].id;
-          }
-          if (this.selectedPostId && !this.posts.find((post) => post.id === this.selectedPostId)) {
-            this.selectedPostId = this.posts[0]?.id || '';
-          }
-          this.loading = false;
-        },
-        error: () => {
-          this.loading = false;
-        },
-      });
-  }
-
-  createPost(): void {
-    if (!this.newPostTitle.trim()) {
-      return;
+  loadData(showFullPageLoader = false): void {
+    if (showFullPageLoader) {
+      this.loading = true;
     }
 
-    this.sub$.sink = this.httpClient
-      .post<ProposalPost>('proposal-management/posts', {
-        title: this.newPostTitle.trim(),
-        department: this.newPostDepartment.trim(),
-        description: this.newPostDescription.trim(),
-      })
-      .subscribe((post) => {
-        this.toastrService.success('Post created successfully');
-        this.newPostTitle = '';
-        this.newPostDepartment = '';
-        this.newPostDescription = '';
-        this.selectedPostId = post.id;
-        this.loadData();
-      });
-  }
+    this.sub$.add(
+      this.httpClient
+        .get<ProposalDashboardData>('proposal-management/dashboard')
+        .pipe(
+          timeout(30000),
+          catchError((err) => {
+            if (err?.name === 'TimeoutError') {
+              return throwError(() => ({
+                error: { message: 'Request timed out. Please check MySQL is running and try again.' },
+              }));
+            }
 
-  selectPost(postId: string): void {
-    this.selectedPostId = postId;
-  }
+            return throwError(() => err);
+          }),
+          finalize(() => {
+            this.loading = false;
+            this.changeDetectorRef.detectChanges();
+          })
+        )
+        .subscribe({
+          next: (response) => {
+            this.rootFolderId = response.rootFolderId;
+            this.folders = response.folders || [];
+            this.files = response.files || [];
+            this.fileRequests = response.fileRequests || response.filerequests || [];
+            this.currentFolderId = this.currentFolderId || response.rootFolderId;
 
-  onCandidateCvSelected(file: File | null): void {
-    this.newCandidateCv = file;
-  }
+            if (!this.folders.find((folder) => folder.id === this.currentFolderId)) {
+              this.currentFolderId = response.rootFolderId;
+            }
 
-  createCandidate(): void {
-    if (!this.selectedPostId || !this.newCandidateName.trim()) {
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('candidateName', this.newCandidateName.trim());
-    formData.append('candidateCode', this.newCandidateCode.trim());
-    formData.append('phone', this.newCandidatePhone.trim());
-    formData.append('email', this.newCandidateEmail.trim());
-    if (this.newCandidateCv) {
-      formData.append('cv', this.newCandidateCv);
-    }
-
-    this.sub$.sink = this.httpClient
-      .post(`proposal-management/posts/${this.selectedPostId}/candidates`, formData)
-      .subscribe(() => {
-        this.toastrService.success('Candidate added successfully');
-        this.resetCandidateForm();
-        this.loadData();
-      });
-  }
-
-  updateCandidate(candidate: ProposalCandidate, changes: Partial<ProposalCandidate>): void {
-    this.sub$.sink = this.httpClient
-      .put(`proposal-management/candidates/${candidate.id}`, {
-        stage: changes.stage || candidate.stage,
-        interviewLevel: changes.interviewLevel || candidate.interviewLevel,
-        interviewDate: changes.interviewDate || candidate.interviewDate,
-        analysisNotes: changes.analysisNotes ?? candidate.analysisNotes,
-      })
-      .subscribe(() => {
-        this.toastrService.success('Candidate updated successfully');
-        this.loadData();
-      });
-  }
-
-  openCandidateCv(candidate: ProposalCandidate): void {
-    if (!candidate.hasCv) {
-      return;
-    }
-
-    this.sub$.sink = this.httpClient
-      .get(`proposal-management/candidates/${candidate.id}/cv`, { responseType: 'blob' })
-      .subscribe((blob) => {
-        const fileUrl = window.URL.createObjectURL(blob);
-        window.open(fileUrl, '_blank');
-        setTimeout(() => window.URL.revokeObjectURL(fileUrl), 60_000);
-      });
+            this.changeDetectorRef.detectChanges();
+          },
+          error: (err) => {
+            this.handleApiError(err, 'Failed to load proposal data');
+          },
+        })
+    );
   }
 
   createSubfolder(): void {
-    if (!this.newSubfolderName.trim()) {
+    const folderName = this.newSubfolderName.trim();
+    if (!folderName) {
+      this.toastrService.error('Please enter folder name');
       return;
     }
 
-    this.sub$.sink = this.httpClient
-      .post('proposal-management/folders', {
-        name: this.newSubfolderName.trim(),
-        parentFolderId: this.currentFolderId || this.rootFolderId,
-      })
-      .subscribe(() => {
-        this.toastrService.success(this.translationService.getValue('FOLDER_CREATED_SUCCESSFULLY'));
-        this.newSubfolderName = '';
-        this.activeAction = null;
-        this.loadData();
-      });
+    const parentFolderId = this.getActiveFolderId();
+    if (!parentFolderId) {
+      this.toastrService.error('Folder context is missing. Please refresh the page.');
+      return;
+    }
+
+    if (this.savingSubfolder) {
+      return;
+    }
+
+    this.savingSubfolder = true;
+    this.sub$.add(
+      this.httpClient
+        .post('proposal-management/folders', {
+          name: folderName,
+          parentFolderId,
+        })
+        .subscribe({
+          next: () => {
+            this.savingSubfolder = false;
+            this.toastrService.success(this.translationService.getValue('FOLDER_CREATED_SUCCESSFULLY') || 'Folder created successfully');
+            this.newSubfolderName = '';
+            this.activeAction = null;
+            this.loadData();
+          },
+          error: (err) => {
+            this.savingSubfolder = false;
+            this.handleApiError(err, 'Failed to create folder');
+          },
+        })
+    );
   }
 
   createProposal(): void {
-    if (!this.newProposalName.trim()) {
+    const proposalName = this.newProposalName.trim();
+    if (!proposalName) {
+      this.toastrService.error('Please enter proposal name');
       return;
     }
 
-    this.sub$.sink = this.httpClient
-      .post('proposal-management/folders', {
-        name: this.newProposalName.trim(),
-        parentFolderId: this.rootFolderId,
-      })
-      .subscribe(() => {
-        this.toastrService.success(this.translationService.getValue('FOLDER_CREATED_SUCCESSFULLY'));
-        this.newProposalName = '';
-        this.loadData();
-      });
+    if (!this.rootFolderId) {
+      this.toastrService.error('Proposal root folder is missing. Please refresh the page.');
+      return;
+    }
+
+    if (this.savingProposal) {
+      return;
+    }
+
+    this.savingProposal = true;
+    this.sub$.add(
+      this.httpClient
+        .post('proposal-management/folders', {
+          name: proposalName,
+          parentFolderId: this.rootFolderId,
+        })
+        .subscribe({
+          next: () => {
+            this.savingProposal = false;
+            this.toastrService.success(this.translationService.getValue('FOLDER_CREATED_SUCCESSFULLY') || 'Folder created successfully');
+            this.newProposalName = '';
+            this.activeAction = null;
+            this.loadData();
+          },
+          error: (err) => {
+            this.savingProposal = false;
+            this.handleApiError(err, 'Failed to create proposal');
+          },
+        })
+    );
   }
 
   onFileSelectedForRow(file: File | null, rowIndex: number): void {
-    this.uploadRows[rowIndex] = file;
+    const rows = [...this.uploadRows];
+    rows[rowIndex] = file;
+    this.uploadRows = rows;
+    this.changeDetectorRef.markForCheck();
   }
 
   addUploadRow(): void {
-    this.uploadRows.push(null);
+    this.uploadRows = [...this.uploadRows, null];
+    this.changeDetectorRef.markForCheck();
+  }
+
+  trackUploadRow(index: number): number {
+    return index;
   }
 
   removeUploadRow(rowIndex: number): void {
@@ -344,24 +262,45 @@ export class ProposalManagementComponent extends BaseComponent implements OnInit
   uploadFile(): void {
     const filesToUpload = this.uploadRows.filter((file): file is File => !!file);
     if (!filesToUpload.length) {
+      this.toastrService.error('Please select a file to upload');
       return;
     }
 
+    const folderId = this.getActiveFolderId();
+    if (!folderId) {
+      this.toastrService.error('Folder context is missing. Please refresh the page.');
+      return;
+    }
+
+    if (this.uploading) {
+      return;
+    }
+
+    this.uploading = true;
     const uploadRequests = filesToUpload.map((selectedFile) => {
       const formData = new FormData();
       formData.append('file', selectedFile);
-      formData.append('folderId', this.currentFolderId || this.rootFolderId);
+      formData.append('folderId', folderId);
       return this.httpClient.post('proposal-management/files', formData);
     });
 
-    this.sub$.sink = forkJoin(uploadRequests).subscribe(() => {
-      this.toastrService.success(this.translationService.getValue('FILE_UPLOADED_SUCCESSFULLY'));
-      this.uploadRows = [null];
-      this.loadData();
-    });
+    this.sub$.add(
+      forkJoin(uploadRequests).subscribe({
+        next: () => {
+          this.uploading = false;
+          this.toastrService.success(this.translationService.getValue('FILE_UPLOADED_SUCCESSFULLY') || 'File uploaded successfully');
+          this.uploadRows = [null];
+          this.loadData();
+        },
+        error: (err) => {
+          this.uploading = false;
+          this.handleApiError(err, 'Failed to upload file');
+        },
+      })
+    );
   }
 
-  openFile(file: ProposalFileViewModel): void {
+  openFile(file: ProposalFile): void {
     this.sub$.sink = this.httpClient
       .get(`proposal-management/files/${file.id}/open`, { responseType: 'blob' })
       .subscribe((blob) => {
@@ -381,37 +320,62 @@ export class ProposalManagementComponent extends BaseComponent implements OnInit
 
   createFileRequest(): void {
     if (!this.newRequestTitle.trim()) {
+      this.toastrService.error('Please enter subject for file request');
       return;
     }
 
-    this.sub$.sink = this.httpClient
-      .post('proposal-management/file-requests', {
-        title: this.newRequestTitle.trim(),
-        description: this.newRequestDescription.trim(),
-        email: this.newRequestEmail?.trim() || null,
-        maxDocument: this.newRequestMaxDocument,
-        sizeInMb: this.newRequestSizeInMb,
-        fileExtension: this.newRequestFileTypes,
-        hasPassword: this.newRequestHasPassword,
-        password: this.newRequestHasPassword ? this.newRequestPassword : null,
-        linkExpiryTime: this.newRequestIsLinkExpiryTime ? this.newRequestLinkExpiryTime : null,
-        baseUrl: this.fileRequestBaseUrl,
-        folderId: this.currentFolderId || this.rootFolderId,
-      })
-      .subscribe(() => {
-        this.toastrService.success(this.translationService.getValue('FILE_REQUEST_CREATED_SUCCESSFULLY'));
-        this.newRequestTitle = '';
-        this.newRequestDescription = '';
-        this.newRequestEmail = '';
-        this.newRequestMaxDocument = 1;
-        this.newRequestSizeInMb = FileSizes.LessThan5MB;
-        this.newRequestFileTypes = [];
-        this.newRequestHasPassword = false;
-        this.newRequestPassword = '';
-        this.newRequestIsLinkExpiryTime = false;
-        this.newRequestLinkExpiryTime = '';
-        this.loadData();
-      });
+    const folderId = this.getActiveFolderId();
+    if (!folderId) {
+      this.toastrService.error('Folder context is missing. Please refresh the page.');
+      return;
+    }
+
+    if (this.savingFileRequest) {
+      return;
+    }
+
+    this.savingFileRequest = true;
+    this.sub$.add(
+      this.httpClient
+        .post('proposal-management/file-requests', {
+          title: this.newRequestTitle.trim(),
+          description: this.newRequestDescription.trim(),
+          email: this.newRequestEmail?.trim() || null,
+          maxDocument: this.newRequestMaxDocument,
+          sizeInMb: this.newRequestSizeInMb,
+          fileExtension: this.newRequestFileTypes,
+          hasPassword: this.newRequestHasPassword,
+          password: this.newRequestHasPassword ? this.newRequestPassword : null,
+          linkExpiryTime: this.newRequestIsLinkExpiryTime ? this.newRequestLinkExpiryTime : null,
+          baseUrl: this.fileRequestBaseUrl,
+          folderId,
+        })
+        .subscribe({
+          next: () => {
+            this.savingFileRequest = false;
+            this.toastrService.success(this.translationService.getValue('FILE_REQUEST_CREATED_SUCCESSFULLY') || 'File request created successfully');
+            this.resetFileRequestForm();
+            this.loadData();
+          },
+          error: (err) => {
+            this.savingFileRequest = false;
+            this.handleApiError(err, 'Failed to create file request');
+          },
+        })
+    );
+  }
+
+  resetFileRequestForm(): void {
+    this.newRequestTitle = '';
+    this.newRequestDescription = '';
+    this.newRequestEmail = '';
+    this.newRequestMaxDocument = 1;
+    this.newRequestSizeInMb = FileSizes.LessThan5MB;
+    this.newRequestFileTypes = [];
+    this.newRequestHasPassword = false;
+    this.newRequestPassword = '';
+    this.newRequestIsLinkExpiryTime = false;
+    this.newRequestLinkExpiryTime = '';
   }
 
   get isRootView(): boolean {
@@ -434,43 +398,23 @@ export class ProposalManagementComponent extends BaseComponent implements OnInit
       .sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  get currentFolderFiles(): ProposalFile[] {
-    return this.files.filter((file) => file.folderId === this.currentFolderId);
-  }
-
-  get visibleFiles(): ProposalFileViewModel[] {
-    if (!this.currentFolderId || this.isRootView) {
-      return [];
-    }
-
-    const folderTrail = this.getFolderTrailIds(this.currentFolderId);
-    return this.files
-      .filter((file) => folderTrail.includes(file.folderId))
-      .map((file) => ({
-        ...file,
-        displayLabel: this.buildFileLabel(file),
-      }));
+  get currentFolderDirectFiles(): ProposalFile[] {
+    return this.getFilesForFolder(this.currentFolderId);
   }
 
   get currentFolderFileRequests(): ProposalFileRequest[] {
-    return this.fileRequests.filter((fileRequest) => fileRequest.folderId === this.currentFolderId);
-  }
-
-  get selectedPost(): ProposalPost | null {
-    return this.posts.find((post) => post.id === this.selectedPostId) || null;
-  }
-
-  get selectedPostCandidates(): ProposalCandidate[] {
-    return this.selectedPost?.candidates || [];
+    return this.fileRequests
+      .filter((fileRequest) => fileRequest.folderId === this.currentFolderId)
+      .sort((a, b) => b.createdDate.localeCompare(a.createdDate));
   }
 
   get breadcrumbFolders(): ProposalFolder[] {
     const breadcrumb: ProposalFolder[] = [];
     let folder = this.currentFolder;
 
-    while (folder) {
+    while (folder && folder.id !== this.rootFolderId) {
       breadcrumb.unshift(folder);
-      if (!folder.parentFolderId) {
+      if (!folder.parentFolderId || folder.parentFolderId === this.rootFolderId) {
         break;
       }
       folder = this.folders.find((item) => item.id === folder?.parentFolderId) || null;
@@ -479,29 +423,71 @@ export class ProposalManagementComponent extends BaseComponent implements OnInit
     return breadcrumb;
   }
 
+  getFilesForFolder(folderId: string): ProposalFile[] {
+    return this.files
+      .filter((file) => file.folderId === folderId)
+      .sort((a, b) => b.createdDate.localeCompare(a.createdDate));
+  }
+
+  getFileDisplayLabel(file: ProposalFile, folder?: ProposalFolder | null): string {
+    if (folder) {
+      return `${folder.name} / ${file.title}`;
+    }
+
+    return file.displayTitle || file.title;
+  }
+
   openFolder(folderId: string): void {
     this.currentFolderId = folderId;
     this.activeAction = null;
+    this.uploadPanel = 'upload';
+    this.uploadRows = [null];
   }
 
   openParentFolder(): void {
     if (!this.currentFolder?.parentFolderId) {
       return;
     }
+
     this.currentFolderId = this.currentFolder.parentFolderId;
     this.activeAction = null;
+    this.uploadPanel = 'upload';
+    this.uploadRows = [null];
   }
 
-  showAction(action: 'subfolder'): void {
+  setUploadPanel(panel: UploadPanel): void {
+    this.uploadPanel = panel;
+  }
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  onFileDrop(event: DragEvent, rowIndex: number): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const file = event.dataTransfer?.files?.[0] || null;
+    this.onFileSelectedForRow(file, rowIndex);
+  }
+
+  showAction(action: Exclude<ProposalAction, null>): void {
     this.activeAction = action;
   }
 
-  getEnumValues(enumObj: any): { key: string; value: number }[] {
+  cancelAction(): void {
+    this.activeAction = null;
+    this.newProposalName = '';
+    this.newSubfolderName = '';
+  }
+
+  getEnumValues(enumObj: Record<string, number | string>): { key: string; value: number }[] {
     return Object.keys(enumObj)
       .filter((key) => isNaN(Number(key)))
       .map((key) => ({
         key,
-        value: enumObj[key],
+        value: enumObj[key] as number,
       }));
   }
 
@@ -509,74 +495,44 @@ export class ProposalManagementComponent extends BaseComponent implements OnInit
     if (sizeInMb === FileSizes.GreaterThan100MB) {
       return '> 100 MB';
     }
+
     return `< ${sizeInMb} MB`;
   }
 
-  getStageLabel(stage: CandidateStage): string {
-    const stageLabels: Record<CandidateStage, string> = {
-      cv_received: 'CV Received',
-      shortlisted: 'Shortlisted',
-      interview_scheduled: 'Interview Scheduled',
-      approved: 'Approved',
-      rejected: 'Rejected',
-      selected: 'Selected',
-    };
-    return stageLabels[stage];
+  private getActiveFolderId(): string {
+    return this.currentFolderId || this.rootFolderId;
   }
 
-  getStageBadgeClass(stage: CandidateStage): string {
-    const badgeClasses: Record<CandidateStage, string> = {
-      cv_received: 'bg-secondary',
-      shortlisted: 'bg-info',
-      interview_scheduled: 'bg-primary',
-      approved: 'bg-warning text-dark',
-      rejected: 'bg-danger',
-      selected: 'bg-success',
-    };
-    return badgeClasses[stage];
-  }
-
-  getInterviewLevelLabel(level?: InterviewLevel): string {
-    if (!level) {
-      return 'Not selected';
-    }
-    return level.charAt(0).toUpperCase() + level.slice(1);
-  }
-
-  resetCandidateForm(): void {
-    this.newCandidateName = '';
-    this.newCandidateCode = '';
-    this.newCandidatePhone = '';
-    this.newCandidateEmail = '';
-    this.newCandidateCv = null;
-  }
-
-  private getFolderTrailIds(folderId: string): string[] {
-    const result = [folderId];
-    const queue = [folderId];
-
-    while (queue.length) {
-      const currentId = queue.shift() as string;
-      const children = this.folders.filter((folder) => folder.parentFolderId === currentId);
-      children.forEach((child) => {
-        result.push(child.id);
-        queue.push(child.id);
-      });
+  private handleApiError(
+    error: {
+      error?: {
+        message?: string;
+        Message?: string;
+        errors?: Record<string, string[]>;
+      };
+      message?: string;
+      status?: number;
+    },
+    fallback: string
+  ): void {
+    const validationErrors = error?.error?.errors;
+    if (validationErrors) {
+      const messages = Object.values(validationErrors)
+        .flat()
+        .filter((message): message is string => !!message);
+      if (messages.length) {
+        this.toastrService.error(messages.join('\n'));
+        return;
+      }
     }
 
-    return result;
-  }
+    const message =
+      error?.error?.message ||
+      error?.error?.Message ||
+      (Array.isArray(error?.error) ? error.error[0] : undefined) ||
+      error?.message ||
+      fallback;
 
-  private buildFileLabel(file: ProposalFile): string {
-    if (file.folderId === this.currentFolderId) {
-      return file.displayTitle || file.title;
-    }
-
-    const parentFolder = this.folders.find((folder) => folder.id === file.folderId);
-    if (!parentFolder) {
-      return file.displayTitle || file.title;
-    }
-
-    return `${parentFolder.name}/${file.displayTitle || file.title}`;
+    this.toastrService.error(message);
   }
 }

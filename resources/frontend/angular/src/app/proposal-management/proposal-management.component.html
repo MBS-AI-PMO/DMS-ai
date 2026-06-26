@@ -1,305 +1,364 @@
-<section class="content">
-  <div class="content-block">
-    <div class="block-header">
-      <div class="breadcrumb-main">
-        <div class="row align-items-center">
-          <div class="col">
-            <span class="page-title">{{ "PROPOSAL_MANAGEMENT" | translate }}</span>
-          </div>
-          <div class="col-auto" *ngIf="isRootView">
-            <ul class="breadcrumb-list">
-              <li class="breadcrumb-item bcrumb-1">
-                <button mat-raised-button color="primary" (click)="showAction('subfolder')">
-                  <mat-icon>add</mat-icon>
-                  <span class="d-none d-sm-inline">{{ "ADD_NEW_PROPOSAL" | translate }}</span>
-                </button>
-              </li>
-            </ul>
-          </div>
+<section class="content dms-module proposal-page">
+  <div class="container-fluid">
+    <div class="content-block">
+      <div class="proposal-page-header">
+        <div>
+          <span class="page-title">Proposal Management</span>
+          <p class="proposal-page-subtitle">Organize proposals, upload files, and manage file requests</p>
+        </div>
+        <div class="proposal-page-actions" *ngIf="isRootView">
+          <button class="proposal-btn proposal-btn--primary" type="button" (click)="showAction('proposal')">
+            <span class="proposal-btn__label">Add New Proposal</span>
+          </button>
         </div>
       </div>
-    </div>
 
-    <div class="row">
-      <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
-        <div class="card">
-          <div class="body">
-            <!-- Root View: Proposals Level -->
-            <div *ngIf="isRootView">
-              
-              <!-- Create Proposal Action Panel -->
-              <mat-card class="mb-4 action-card mat-elevation-z1" *ngIf="activeAction === 'subfolder'">
-                <mat-card-content>
-                  <div class="row align-items-center">
-                    <div class="col-md-5">
-                      <mat-form-field appearance="outline" class="w-100 mb-0">
-                        <mat-label>{{ "PROPOSAL_NAME" | translate }}</mat-label>
-                        <input matInput [(ngModel)]="newProposalName" placeholder="Enter proposal name">
-                      </mat-form-field>
+      <div class="proposal-shell">
+        <div class="proposal-loading" *ngIf="loading">
+          <div class="spinner-border text-primary" role="status"></div>
+          <p>Loading proposals...</p>
+        </div>
+
+        <!-- Root view -->
+        <div *ngIf="!loading && isRootView">
+          <div class="proposal-inline-form" *ngIf="activeAction === 'proposal'">
+            <div class="proposal-inline-form__icon">📋</div>
+            <div class="proposal-inline-form__body">
+              <label>New Proposal</label>
+              <input
+                class="form-control"
+                [(ngModel)]="newProposalName"
+                [ngModelOptions]="{ standalone: true }"
+                placeholder="Enter proposal name"
+                (keyup.enter)="createProposal()" />
+            </div>
+            <div class="proposal-inline-form__actions">
+              <button class="proposal-btn proposal-btn--primary" type="button" [disabled]="savingProposal" (click)="createProposal()">
+                <span class="proposal-btn__label">Save</span>
+              </button>
+              <button class="proposal-btn proposal-btn--ghost" type="button" [disabled]="savingProposal" (click)="cancelAction()">
+                <span class="proposal-btn__label">Cancel</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="proposal-folder-grid" *ngIf="proposalFolders.length > 0">
+            <button
+              type="button"
+              class="proposal-folder-tile"
+              *ngFor="let folder of proposalFolders"
+              (click)="openFolder(folder.id)">
+              <span class="proposal-folder-tile__icon">📁</span>
+              <span class="proposal-folder-tile__name" [title]="folder.name">{{ folder.name }}</span>
+              <span class="proposal-folder-tile__meta">{{ getFilesForFolder(folder.id).length }} files</span>
+            </button>
+          </div>
+
+          <div class="proposal-empty" *ngIf="proposalFolders.length === 0 && activeAction !== 'proposal'">
+            <div class="proposal-empty__icon">📂</div>
+            <h3>No proposals yet</h3>
+            <p>Create your first proposal folder to get started.</p>
+            <button class="proposal-btn proposal-btn--primary" type="button" (click)="showAction('proposal')">
+              <span class="proposal-btn__label">Add New Proposal</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Inside folder -->
+        <div class="proposal-folder-view" *ngIf="!loading && !isRootView">
+          <div class="proposal-toolbar">
+            <div class="proposal-toolbar__nav">
+              <button class="proposal-btn proposal-btn--ghost proposal-btn--icon" type="button" (click)="openParentFolder()" title="Go back">
+                <span class="proposal-btn__label">← Back</span>
+              </button>
+              <nav class="proposal-breadcrumb" aria-label="Folder path">
+                <button type="button" class="proposal-breadcrumb__link" (click)="openFolder(rootFolderId)">Root</button>
+                <ng-container *ngFor="let folder of breadcrumbFolders; let last = last">
+                  <span class="proposal-breadcrumb__sep">/</span>
+                  <button *ngIf="!last" type="button" class="proposal-breadcrumb__link" (click)="openFolder(folder.id)">
+                    {{ folder.name }}
+                  </button>
+                  <span *ngIf="last" class="proposal-breadcrumb__current">{{ folder.name }}</span>
+                </ng-container>
+              </nav>
+            </div>
+            <div class="proposal-toolbar__actions">
+              <button
+                class="proposal-btn"
+                [class.proposal-btn--outline]="activeAction !== 'subfolder'"
+                [class.proposal-btn--primary]="activeAction === 'subfolder'"
+                type="button"
+                (click)="activeAction === 'subfolder' ? cancelAction() : showAction('subfolder')">
+                <span class="proposal-btn__label">{{ activeAction === 'subfolder' ? 'Close Form' : 'Create Sub Folder' }}</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="proposal-inline-form proposal-inline-form--compact" *ngIf="activeAction === 'subfolder'">
+            <div class="proposal-inline-form__icon">📁</div>
+            <div class="proposal-inline-form__body">
+              <label>Subfolder name</label>
+              <input
+                class="form-control"
+                [(ngModel)]="newSubfolderName"
+                [ngModelOptions]="{ standalone: true }"
+                placeholder="Enter folder name"
+                (keyup.enter)="createSubfolder()" />
+            </div>
+            <div class="proposal-inline-form__actions">
+              <button class="proposal-btn proposal-btn--primary" type="button" [disabled]="savingSubfolder" (click)="createSubfolder()">
+                <span class="proposal-btn__label">Save</span>
+              </button>
+              <button class="proposal-btn proposal-btn--ghost" type="button" [disabled]="savingSubfolder" (click)="cancelAction()">
+                <span class="proposal-btn__label">Cancel</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="proposal-layout">
+            <!-- Left: Upload & requests -->
+            <div class="proposal-layout__primary">
+              <div class="proposal-card">
+                <div class="proposal-card__header">
+                  <div>
+                    <h2 class="proposal-card__title">Upload &amp; Requests</h2>
+                    <p class="proposal-card__subtitle">Add files or send a file request from this folder</p>
+                  </div>
+                </div>
+
+                <div class="proposal-segmented">
+                  <button
+                    type="button"
+                    class="proposal-segmented__btn"
+                    [class.proposal-segmented__btn--active]="uploadPanel === 'upload'"
+                    (click)="setUploadPanel('upload')">
+                    Upload File
+                  </button>
+                  <button
+                    type="button"
+                    class="proposal-segmented__btn"
+                    [class.proposal-segmented__btn--active]="uploadPanel === 'request'"
+                    (click)="setUploadPanel('request')">
+                    File Request
+                  </button>
+                </div>
+
+                <div class="proposal-card__body" *ngIf="uploadPanel === 'upload'">
+                  <div
+                    class="proposal-dropzone"
+                    *ngFor="let uploadRow of uploadRows; let rowIndex = index; trackBy: trackUploadRow"
+                    (dragover)="onDragOver($event)"
+                    (drop)="onFileDrop($event, rowIndex)">
+                    <div class="proposal-dropzone__icon">⬆</div>
+                    <p class="proposal-dropzone__title">Drag &amp; drop file here</p>
+                    <p class="proposal-dropzone__hint">PDF, Word, Excel, PowerPoint, images</p>
+                    <label class="proposal-btn proposal-btn--outline proposal-btn--sm">
+                      <span class="proposal-btn__label">Browse Files</span>
+                      <input
+                        type="file"
+                        class="proposal-dropzone__input"
+                        accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png"
+                        (change)="onFileSelectedForRow(($any($event.target).files && $any($event.target).files.length) ? $any($event.target).files[0] : null, rowIndex)" />
+                    </label>
+                    <p class="proposal-dropzone__file" *ngIf="uploadRows[rowIndex]">
+                      Selected: <strong>{{ uploadRows[rowIndex]?.name }}</strong>
+                    </p>
+                    <button
+                      class="proposal-btn proposal-btn--outline-danger proposal-btn--sm"
+                      type="button"
+                      *ngIf="uploadRows.length > 1"
+                      (click)="removeUploadRow(rowIndex)">
+                      <span class="proposal-btn__label">Remove</span>
+                    </button>
+                  </div>
+
+                  <div class="proposal-card__footer">
+                    <button class="proposal-btn proposal-btn--outline" type="button" [disabled]="uploading" (click)="addUploadRow()">
+                      <span class="proposal-btn__label">Add More</span>
+                    </button>
+                    <button class="proposal-btn proposal-btn--primary" type="button" [disabled]="uploading" (click)="uploadFile()">
+                      <span class="proposal-btn__label">Upload</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="proposal-card__body" *ngIf="uploadPanel === 'request'">
+                  <div class="proposal-form-grid">
+                    <div class="form-group">
+                      <label>Subject</label>
+                      <input class="form-control" [(ngModel)]="newRequestTitle" [ngModelOptions]="{ standalone: true }" placeholder="File request subject" />
                     </div>
-                    <div class="col-md-7">
-                      <button mat-raised-button color="primary" class="me-2" (click)="createProposal()">
-                        {{ "SAVE" | translate }}
-                      </button>
-                      <button mat-button (click)="activeAction = null">
-                        {{ "CANCEL" | translate }}
-                      </button>
+                    <div class="form-group">
+                      <label>Email</label>
+                      <input class="form-control" type="email" [(ngModel)]="newRequestEmail" [ngModelOptions]="{ standalone: true }" placeholder="email@example.com" />
+                    </div>
+                    <div class="form-group proposal-form-grid--full">
+                      <label>Description</label>
+                      <textarea class="form-control" rows="3" [(ngModel)]="newRequestDescription" [ngModelOptions]="{ standalone: true }" placeholder="Description"></textarea>
+                    </div>
+                    <div class="form-group">
+                      <label>Max Documents</label>
+                      <input class="form-control" type="number" min="1" [(ngModel)]="newRequestMaxDocument" [ngModelOptions]="{ standalone: true }" />
+                    </div>
+                    <div class="form-group">
+                      <label>Max File Size</label>
+                      <select class="form-control" [(ngModel)]="newRequestSizeInMb" [ngModelOptions]="{ standalone: true }">
+                        <option *ngFor="let size of fileSizeOptions" [ngValue]="size">{{ getFileSizeLabel(size) }}</option>
+                      </select>
+                    </div>
+                    <div class="form-group proposal-form-grid--full">
+                      <label>Allowed Extensions</label>
+                      <select class="form-control" [(ngModel)]="newRequestFileTypes" [ngModelOptions]="{ standalone: true }" multiple size="5">
+                        <option *ngFor="let fileType of fileTypes" [ngValue]="fileType.value">{{ fileType.key }}</option>
+                      </select>
+                      <small class="proposal-hint">Hold Ctrl to select multiple</small>
+                    </div>
+                    <div class="form-group">
+                      <label class="proposal-check">
+                        <input type="checkbox" [(ngModel)]="newRequestHasPassword" [ngModelOptions]="{ standalone: true }" />
+                        Password required
+                      </label>
+                      <input
+                        *ngIf="newRequestHasPassword"
+                        class="form-control mt-2"
+                        type="text"
+                        [(ngModel)]="newRequestPassword"
+                        [ngModelOptions]="{ standalone: true }"
+                        placeholder="Password" />
+                    </div>
+                    <div class="form-group">
+                      <label class="proposal-check">
+                        <input type="checkbox" [(ngModel)]="newRequestIsLinkExpiryTime" [ngModelOptions]="{ standalone: true }" />
+                        Set expiry date
+                      </label>
+                      <input
+                        *ngIf="newRequestIsLinkExpiryTime"
+                        class="form-control mt-2"
+                        type="datetime-local"
+                        [(ngModel)]="newRequestLinkExpiryTime"
+                        [ngModelOptions]="{ standalone: true }" />
                     </div>
                   </div>
-                </mat-card-content>
-              </mat-card>
-
-              <!-- Proposal Folders Grid -->
-              <div class="folder-grid mt-2">
-                <mat-card class="folder-card mat-elevation-z2" *ngFor="let folder of proposalFolders" (click)="openFolder(folder.id)">
-                  <div class="folder-icon">
-                    <mat-icon>folder</mat-icon>
+                  <div class="proposal-card__footer">
+                    <button class="proposal-btn proposal-btn--warning" type="button" [disabled]="savingFileRequest" (click)="createFileRequest()">
+                      <span class="proposal-btn__label">Create File Request</span>
+                    </button>
+                    <button class="proposal-btn proposal-btn--ghost" type="button" [disabled]="savingFileRequest" (click)="resetFileRequestForm()">
+                      <span class="proposal-btn__label">Reset</span>
+                    </button>
                   </div>
-                  <div class="folder-name" [title]="folder.name">{{ folder.name }}</div>
-                </mat-card>
-              </div>
-              
-              <div class="text-muted mt-3" *ngIf="proposalFolders.length === 0">
-                <i>{{ "NO_DATA_FOUND" | translate }}</i>
+                </div>
               </div>
             </div>
 
-            <!-- Subfolder View: Documents and Requests -->
-            <div *ngIf="!isRootView">
-              
-              <!-- Navigation Header -->
-              <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-                <div class="d-flex align-items-center">
-                  <button mat-icon-button (click)="openParentFolder()" matTooltip="Go Back" class="me-2">
-                     <mat-icon>arrow_back</mat-icon>
-                  </button>
-                  <div class="breadcrumb-path text-muted">
-                    <span class="cursor-pointer hover-primary" (click)="openFolder(rootFolderId)">Root</span>
-                    <ng-container *ngFor="let folder of breadcrumbFolders; let last = last">
-                      <span class="mx-2">/</span>
-                      <span [ngClass]="{'font-weight-bold text-dark': last}">{{ folder.name }}</span>
-                    </ng-container>
+            <!-- Right: Folder contents -->
+            <div class="proposal-layout__secondary">
+              <div class="proposal-card">
+                <div class="proposal-card__header">
+                  <div>
+                    <h2 class="proposal-card__title">Subfolders</h2>
+                    <p class="proposal-card__subtitle">{{ childFolders.length }} folder(s)</p>
+                  </div>
+                </div>
+                <div class="proposal-card__body">
+                  <div class="proposal-mini-grid" *ngIf="childFolders.length > 0">
+                    <button type="button" class="proposal-mini-folder" *ngFor="let folder of childFolders" (click)="openFolder(folder.id)">
+                      <span class="proposal-mini-folder__icon">📁</span>
+                      <span class="proposal-mini-folder__name" [title]="folder.name">{{ folder.name }}</span>
+                      <span class="proposal-mini-folder__count">{{ getFilesForFolder(folder.id).length }} files</span>
+                    </button>
+                  </div>
+                  <div class="proposal-empty proposal-empty--inline" *ngIf="childFolders.length === 0">
+                    <p>No subfolders in this location</p>
                   </div>
                 </div>
               </div>
 
-              <!-- Action Buttons -->
-              <div class="action-buttons mb-4">
-                <button mat-stroked-button color="primary" class="me-2" (click)="showAction('subfolder')">
-                  <mat-icon>create_new_folder</mat-icon> {{ "CREATE_SUB_FOLDER" | translate }}
-                </button>
-              </div>
-
-              <!-- Create Subfolder Action Panel -->
-              <mat-card class="mb-4 action-card mat-elevation-z1" *ngIf="activeAction === 'subfolder'">
-                <mat-card-content>
-                  <div class="row align-items-center">
-                    <div class="col-md-5">
-                      <mat-form-field appearance="outline" class="w-100 mb-0">
-                        <mat-label>{{ "CREATE_SUB_FOLDER" | translate }}</mat-label>
-                        <input matInput [(ngModel)]="newSubfolderName" placeholder="Enter folder name">
-                      </mat-form-field>
-                    </div>
-                    <div class="col-md-7">
-                      <button mat-raised-button color="primary" class="me-2" (click)="createSubfolder()">
-                        {{ "SAVE" | translate }}
-                      </button>
-                      <button mat-button (click)="activeAction = null">
-                        {{ "CANCEL" | translate }}
-                      </button>
-                    </div>
-                  </div>
-                </mat-card-content>
-              </mat-card>
-
-              <mat-card class="mb-4 action-card mat-elevation-z1">
-                <mat-card-content>
-                  <mat-tab-group [(selectedIndex)]="selectedTabIndex" animationDuration="0ms">
-                    <mat-tab [label]="'UPLOAD_FILE' | translate">
-                      <div class="tab-content-wrap">
-                        <div class="upload-row d-flex align-items-center mb-2" *ngFor="let uploadRow of uploadRows; let rowIndex = index">
-                          <input
-                            type="file"
-                            class="form-control file-input-custom me-2"
-                            (change)="onFileSelectedForRow(($any($event.target).files && $any($event.target).files.length) ? $any($event.target).files[0] : null, rowIndex)" />
-                          <button
-                            mat-icon-button
-                            color="warn"
-                            type="button"
-                            (click)="removeUploadRow(rowIndex)"
-                            [disabled]="uploadRows.length === 1 && !uploadRows[0]">
-                            <mat-icon>remove_circle</mat-icon>
-                          </button>
-                        </div>
-                        <div class="d-flex align-items-center">
-                          <button mat-stroked-button color="primary" class="me-2" type="button" (click)="addUploadRow()">
-                            <mat-icon>add</mat-icon> {{ "ADD" | translate }}
-                          </button>
-                          <button mat-raised-button class="bg-success text-white" type="button" (click)="uploadFile()">
-                            {{ "UPLOAD" | translate }}
-                          </button>
-                        </div>
-                      </div>
-                    </mat-tab>
-                    <mat-tab [label]="'FILE_REQUEST' | translate">
-                      <div class="tab-content-wrap">
-                        <div class="row">
-                          <div class="col-md-6">
-                            <mat-form-field appearance="outline" class="w-100 mb-2">
-                              <mat-label>{{ 'SUBJECT' | translate }}</mat-label>
-                              <input matInput [(ngModel)]="newRequestTitle">
-                            </mat-form-field>
-                            <mat-form-field appearance="outline" class="w-100 mb-0">
-                              <mat-label>{{ 'DESCRIPTION' | translate }}</mat-label>
-                              <textarea matInput rows="2" [(ngModel)]="newRequestDescription"></textarea>
-                            </mat-form-field>
-                          </div>
-                          <div class="col-md-6">
-                            <mat-form-field appearance="outline" class="w-100 mb-2">
-                              <mat-label>{{ 'EMAIL' | translate }}</mat-label>
-                              <input matInput type="email" [(ngModel)]="newRequestEmail">
-                            </mat-form-field>
-                            <div class="row">
-                              <div class="col-md-6">
-                                <mat-form-field appearance="outline" class="w-100 mb-2">
-                                  <mat-label>{{ 'MAXIMUM_DOCUMENT_UPLOAD' | translate }}</mat-label>
-                                  <input matInput type="number" min="1" [(ngModel)]="newRequestMaxDocument">
-                                </mat-form-field>
-                              </div>
-                              <div class="col-md-6">
-                                <mat-form-field appearance="outline" class="w-100 mb-2">
-                                  <mat-label>{{ 'MAXIMUM_FILE_SIZE_UPLOAD' | translate }}</mat-label>
-                                  <mat-select [(ngModel)]="newRequestSizeInMb">
-                                    <mat-option *ngFor="let size of fileSizeOptions" [value]="size">
-                                      {{ getFileSizeLabel(size) }}
-                                    </mat-option>
-                                  </mat-select>
-                                </mat-form-field>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <div class="row mt-1">
-                          <div class="col-md-4">
-                            <mat-form-field appearance="outline" class="w-100 mb-2">
-                              <mat-label>{{ 'ALLOW_FILE_EXTENSION' | translate }}</mat-label>
-                              <mat-select [(ngModel)]="newRequestFileTypes" multiple>
-                                <mat-option *ngFor="let fileType of fileTypes" [value]="fileType.value">
-                                  {{ fileType.key | translate }}
-                                </mat-option>
-                              </mat-select>
-                            </mat-form-field>
-                          </div>
-                          <div class="col-md-4">
-                            <mat-checkbox color="primary" [(ngModel)]="newRequestHasPassword">
-                              {{ "IS_PASSWORD_REQUIRED" | translate }}
-                            </mat-checkbox>
-                            <mat-form-field appearance="outline" class="w-100 mt-2" *ngIf="newRequestHasPassword">
-                              <mat-label>{{ "PASSWORD" | translate }}</mat-label>
-                              <input matInput type="text" [(ngModel)]="newRequestPassword">
-                            </mat-form-field>
-                          </div>
-                          <div class="col-md-4">
-                            <mat-checkbox color="primary" [(ngModel)]="newRequestIsLinkExpiryTime">
-                              {{ "IS_LINK_VALID_UNTIL" | translate }}
-                            </mat-checkbox>
-                            <mat-form-field appearance="outline" class="w-100 mt-2" *ngIf="newRequestIsLinkExpiryTime">
-                              <mat-label>{{ "LINK_EXPIRATION" | translate }}</mat-label>
-                              <input matInput type="datetime-local" [(ngModel)]="newRequestLinkExpiryTime">
-                            </mat-form-field>
-                          </div>
-                        </div>
-                        <div class="d-flex justify-content-end">
-                          <button mat-raised-button class="bg-warning text-dark me-2" type="button" (click)="createFileRequest()">
-                            {{ "CREATE_FILE_REQUEST" | translate }}
-                          </button>
-                          <button mat-button type="button" (click)="newRequestTitle=''; newRequestDescription=''; newRequestEmail=''; newRequestMaxDocument=1; newRequestSizeInMb=5; newRequestFileTypes=[]; newRequestHasPassword=false; newRequestPassword=''; newRequestIsLinkExpiryTime=false; newRequestLinkExpiryTime=''">
-                            {{ "CANCEL" | translate }}
-                          </button>
-                        </div>
-                      </div>
-                    </mat-tab>
-                  </mat-tab-group>
-                </mat-card-content>
-              </mat-card>
-
-              <!-- Content Area -->
-              <div class="row mt-4">
-                
-                <!-- Folders Column -->
-                <div class="col-md-6">
-                  <h6 class="section-title border-bottom pb-2 mb-3">
-                    <mat-icon class="align-middle me-1 fs-5">folder</mat-icon> {{ "FOLDER" | translate }}
-                  </h6>
-                  <div class="folder-grid">
-                    <mat-card class="folder-card small mat-elevation-z1" *ngFor="let folder of childFolders" (click)="openFolder(folder.id)">
-                      <div class="folder-icon">
-                        <mat-icon>folder</mat-icon>
-                      </div>
-                      <div class="folder-name" [title]="folder.name">{{ folder.name }}</div>
-                    </mat-card>
-                  </div>
-                  <div class="text-muted mt-2" *ngIf="childFolders.length === 0">
-                    <i>{{ "NO_DATA_FOUND" | translate }}</i>
+              <div class="proposal-card">
+                <div class="proposal-card__header">
+                  <div>
+                    <h2 class="proposal-card__title">Files in this folder</h2>
+                    <p class="proposal-card__subtitle" *ngIf="currentFolder">{{ currentFolder.name }} · {{ currentFolderDirectFiles.length }} file(s)</p>
                   </div>
                 </div>
-
-                <!-- Files and Requests Column -->
-                <div class="col-md-6">
-                  <!-- Uploaded Files -->
-                  <h6 class="section-title border-bottom pb-2 mb-3">
-                    <mat-icon class="align-middle me-1 fs-5">insert_drive_file</mat-icon> {{ "UPLOADED_FILES" | translate }}
-                  </h6>
-                  <mat-list class="custom-list mb-4">
-                    <mat-list-item *ngFor="let file of visibleFiles" class="list-item-hover">
-                      <mat-icon matListItemIcon class="text-muted">description</mat-icon>
-                      <div matListItemTitle>{{ file.displayLabel }}</div>
-                      <button
-                        mat-icon-button
-                        type="button"
-                        matListItemMeta
-                        matTooltip="View"
-                        (click)="openFile(file)">
-                        <mat-icon>visibility</mat-icon>
+                <div class="proposal-card__body">
+                  <div class="proposal-file-list" *ngIf="currentFolderDirectFiles.length > 0">
+                    <div class="proposal-file-item" *ngFor="let file of currentFolderDirectFiles">
+                      <div class="proposal-file-item__icon">📄</div>
+                      <div class="proposal-file-item__info">
+                        <span class="proposal-file-item__name" [title]="file.title">{{ file.title }}</span>
+                      </div>
+                      <button class="proposal-btn proposal-btn--ghost proposal-btn--sm" type="button" (click)="openFile(file)">
+                        <span class="proposal-btn__label">View</span>
                       </button>
-                    </mat-list-item>
-                    <div class="text-muted p-2" *ngIf="visibleFiles.length === 0">
-                       <i>{{ "NO_DATA_FOUND" | translate }}</i>
                     </div>
-                  </mat-list>
+                  </div>
+                  <div class="proposal-empty proposal-empty--inline" *ngIf="currentFolderDirectFiles.length === 0">
+                    <p>No files uploaded here yet</p>
+                  </div>
+                </div>
+              </div>
 
-                  <!-- File Requests -->
-                  <h6 class="section-title border-bottom pb-2 mb-3">
-                    <mat-icon class="align-middle me-1 fs-5">move_to_inbox</mat-icon> {{ "FILE_REQUEST" | translate }}
-                  </h6>
-                  <mat-list class="custom-list">
-                    <mat-list-item *ngFor="let request of currentFolderFileRequests" class="list-item-hover">
-                      <mat-icon matListItemIcon class="text-warning">assignment</mat-icon>
-                      <div matListItemTitle>{{ request.title }}</div>
-                      <div matListItemLine class="text-muted d-flex align-items-center">
-                        <span class="badge rounded-pill" [ngClass]="request.status === 'Uploaded' ? 'bg-success' : 'bg-warning text-dark'">
+              <div class="proposal-card" *ngIf="childFolders.length > 0">
+                <div class="proposal-card__header">
+                  <div>
+                    <h2 class="proposal-card__title">Files in subfolders</h2>
+                    <p class="proposal-card__subtitle">Grouped by folder</p>
+                  </div>
+                </div>
+                <div class="proposal-card__body proposal-subfolder-files">
+                  <div class="proposal-subfolder-group" *ngFor="let folder of childFolders">
+                    <div class="proposal-subfolder-group__title">
+                      <span>📁 {{ folder.name }}</span>
+                      <span class="proposal-badge">{{ getFilesForFolder(folder.id).length }}</span>
+                    </div>
+                    <div class="proposal-file-list" *ngIf="getFilesForFolder(folder.id).length > 0">
+                      <div class="proposal-file-item proposal-file-item--compact" *ngFor="let file of getFilesForFolder(folder.id)">
+                        <div class="proposal-file-item__icon">📄</div>
+                        <div class="proposal-file-item__info">
+                          <span class="proposal-file-item__name" [title]="getFileDisplayLabel(file, folder)">{{ getFileDisplayLabel(file, folder) }}</span>
+                        </div>
+                        <button class="proposal-btn proposal-btn--ghost proposal-btn--sm" type="button" (click)="openFile(file)">
+                          <span class="proposal-btn__label">View</span>
+                        </button>
+                      </div>
+                    </div>
+                    <p class="proposal-hint" *ngIf="getFilesForFolder(folder.id).length === 0">No files in this subfolder</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="proposal-card">
+                <div class="proposal-card__header">
+                  <div>
+                    <h2 class="proposal-card__title">File Requests</h2>
+                    <p class="proposal-card__subtitle">{{ currentFolderFileRequests.length }} request(s)</p>
+                  </div>
+                </div>
+                <div class="proposal-card__body">
+                  <div class="proposal-request-list" *ngIf="currentFolderFileRequests.length > 0">
+                    <div class="proposal-request-item" *ngFor="let request of currentFolderFileRequests">
+                      <div class="proposal-request-item__main">
+                        <span class="proposal-request-item__title" [title]="request.title">{{ request.title }}</span>
+                        <span class="proposal-status" [class.proposal-status--done]="request.status === 'Uploaded'">
                           {{ request.status }}
                         </span>
                       </div>
                       <button
-                        mat-icon-button
+                        class="proposal-btn proposal-btn--ghost proposal-btn--sm"
                         type="button"
-                        matListItemMeta
-                        matTooltip="View"
                         [disabled]="!request.fileRequestId"
                         (click)="openFileRequest(request)">
-                        <mat-icon>visibility</mat-icon>
+                        <span class="proposal-btn__label">View</span>
                       </button>
-                    </mat-list-item>
-                    <div class="text-muted p-2" *ngIf="currentFolderFileRequests.length === 0">
-                      <i>{{ "NO_DATA_FOUND" | translate }}</i>
                     </div>
-                  </mat-list>
+                  </div>
+                  <div class="proposal-empty proposal-empty--inline" *ngIf="currentFolderFileRequests.length === 0">
+                    <p>No file requests in this folder</p>
+                  </div>
                 </div>
-
               </div>
             </div>
-
           </div>
         </div>
       </div>

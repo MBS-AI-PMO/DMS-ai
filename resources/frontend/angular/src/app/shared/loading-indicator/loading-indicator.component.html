@@ -1,5 +1,11 @@
-<div class="spinner-container" *ngIf="isSpinnerVisible">
-  <div class="spinner-border" role="status">
-      <span class="visually-hidden">Loading...</span>
+<div class="dms-loader-overlay" *ngIf="isSpinnerVisible">
+  <div class="dms-loader" role="status" aria-label="Loading">
+    <div class="dms-loader__orbits">
+      <span class="dms-loader__orbit dms-loader__orbit--1"></span>
+      <span class="dms-loader__orbit dms-loader__orbit--2"></span>
+      <span class="dms-loader__orbit dms-loader__orbit--3"></span>
+      <span class="dms-loader__core"></span>
+    </div>
+    <span class="dms-loader__label">Loading</span>
   </div>
 </div>

@@ -1,4 +1,4 @@
-<section class="content">
+<section class="content dms-module">
     <div class="content-block">
         <div class="block-header">
             <div class="breadcrumb-main">
@@ -13,8 +13,40 @@
         </div>
         <div class="row mt-3">
             <div class="col-md-12">
-                <mat-tab-group mat-stretch-tabs="false" mat-align-tabs="start">
-                    <mat-tab class="nav-tabs" *hasClaim="'SETTING_MANAGE_PROFILE'" label="{{'GENERAL' | translate}}">
+                <ul class="nav nav-tabs profile-settings-tabs mb-3">
+                    <li class="nav-item" *ngIf="canManageProfile">
+                        <button type="button" class="nav-link" [class.active]="activeTab === 'general'"
+                            (click)="setActiveTab('general')">
+                            {{ 'GENERAL' | translate }}
+                        </button>
+                    </li>
+                    <li class="nav-item" *ngIf="canManageStorage">
+                        <button type="button" class="nav-link" [class.active]="activeTab === 'storage'"
+                            (click)="setActiveTab('storage')">
+                            {{ 'STORAGE' | translate }}
+                        </button>
+                    </li>
+                    <li class="nav-item" *ngIf="canManageOpenAiKey">
+                        <button type="button" class="nav-link" [class.active]="activeTab === 'openai'"
+                            (click)="setActiveTab('openai')">
+                            {{ 'OPEN_AI_API_KEY' | translate }}
+                        </button>
+                    </li>
+                    <li class="nav-item" *ngIf="canManageGeminiKey">
+                        <button type="button" class="nav-link" [class.active]="activeTab === 'gemini'"
+                            (click)="setActiveTab('gemini')">
+                            {{ 'GOOGLE_GEMINI_API_KEY' | translate }}
+                        </button>
+                    </li>
+                    <li class="nav-item" *ngIf="canChangePdfSettings">
+                        <button type="button" class="nav-link" [class.active]="activeTab === 'pdf'"
+                            (click)="setActiveTab('pdf')">
+                            {{ 'PDF_SIGNATURE' | translate }}
+                        </button>
+                    </li>
+                </ul>
+
+                <div *ngIf="activeTab === 'general' && canManageProfile">
                         <div class="card tab-card">
                             <div class="body">
                                 <div class="row">
@@ -102,8 +134,9 @@
                                 </div>
                             </div>
                         </div>
-                    </mat-tab>
-                    <mat-tab label="{{'STORAGE' | translate}}" *hasClaim="'SETTINGS_STORAGE_SETTINGS'">
+                </div>
+
+                <div *ngIf="activeTab === 'storage' && canManageStorage">
                         <div class="card tab-card">
                             <div class="body">
                                 <div class="row">
@@ -186,8 +219,9 @@
                                 </div>
                             </div>
                         </div>
-                    </mat-tab>
-                    <mat-tab label="{{'OPEN_AI_API_KEY' | translate}}" *hasClaim="'SETTINGS_MANAGE_OPEN_AI_API_KEY'">
+                </div>
+
+                <div *ngIf="activeTab === 'openai' && canManageOpenAiKey">
                         <div class="card tab-card">
                             <div class="body">
                                 <div class="row">
@@ -218,9 +252,9 @@
                                 </div>
                             </div>
                         </div>
-                    </mat-tab>
-                    <mat-tab label="{{'GOOGLE_GEMINI_API_KEY' | translate}}"
-                        *hasClaim="'SETTINGS_MANAGE_GEMINI_API_KEY'">
+                </div>
+
+                <div *ngIf="activeTab === 'gemini' && canManageGeminiKey">
                         <div class="card tab-card">
                             <div class="body">
                                 <div class="row">
@@ -252,8 +286,9 @@
                                 </div>
                             </div>
                         </div>
-                    </mat-tab>
-                    <mat-tab label="{{'PDF_SIGNATURE' | translate}}" *hasClaim="'SETTINGS_CHANGE_PDF_SETTINGS'">
+                </div>
+
+                <div *ngIf="activeTab === 'pdf' && canChangePdfSettings">
                         <div class="card tab-card pt-3">
                             <div class="body">
                                 <div class="row">
@@ -275,8 +310,7 @@
                                 </div>
                             </div>
                         </div>
-                    </mat-tab>
-                </mat-tab-group>
+                </div>
             </div>
         </div>
     </div>

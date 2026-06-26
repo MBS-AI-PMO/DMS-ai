@@ -26,6 +26,7 @@ import { MyWorkflow, NextTransition, VisualWorkflowInstance } from '@core/domain
 import { WorkflowStatusColorDirective } from '../workflow-status-color.directive';
 import { WorkflowTransition } from '@core/domain-classes/workflow-transition';
 import { VisualWorkflowGraphComponent } from '../visual-workflow-graph/visual-workflow-graph.component';
+import { DMS_WORKFLOW_VIEW_DIALOG_CONFIG } from '../workflow-view-dialog.config';
 import { DocumentWorkflowService } from '../manage-workflow/document-workflow.service';
 import { BasePreviewComponent } from '@shared/base-preview/base-preview.component';
 import { DocumentInfo } from '@core/domain-classes/document-info';
@@ -136,7 +137,7 @@ export class ManageCurrentWorkflowComponent extends BaseComponent
           data.documentId = workflowInstance.documentId;
           data.documentName = workflowInstance.documentName;
           this.dialog.open(VisualWorkflowGraphComponent, {
-            width: '90vw',
+            ...DMS_WORKFLOW_VIEW_DIALOG_CONFIG,
             data: Object.assign({}, data),
           });
         }

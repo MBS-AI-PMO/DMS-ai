@@ -54,6 +54,13 @@ export class VisualWorkflowGraphComponent implements AfterViewInit {
     this.dialogRef.close();
   }
 
+  splitList(value?: string): string[] {
+    if (!value) {
+      return [];
+    }
+    return value.split(',').map((item) => item.trim()).filter(Boolean);
+  }
+
   onDocumentView() {
     this.documentService.getDocument(this.data.documentId).subscribe((document: DocumentInfo) => {
       const urls = document.url.split('.');

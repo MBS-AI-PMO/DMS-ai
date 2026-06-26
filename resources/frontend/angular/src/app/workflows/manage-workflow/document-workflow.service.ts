@@ -18,7 +18,7 @@ export class DocumentWorkflowService {
     private commonHttpErrorService: CommonHttpErrorService) { }
 
   addDocumentWorkflow(workflow: DocumentWorkflow): Observable<DocumentWorkflow | CommonError> {
-    const url = `documentWorkflow`;
+    const url = `documentworkflow`;
     return this.httpClient.post<DocumentWorkflow>(url, workflow)
       .pipe(catchError(this.commonHttpErrorService.handleError));
   }
@@ -30,19 +30,19 @@ export class DocumentWorkflowService {
   }
 
   getRunningVisualWorkflow(documentWorkflowId: string): Observable<VisualWorkflowInstance | CommonError> {
-    const url = `documentWorkflow/${documentWorkflowId}/visualWorkflow`;
+    const url = `documentworkflow/${documentWorkflowId}/visualWorkflow`;
     return this.httpClient.get<VisualWorkflowInstance>(url)
       .pipe(catchError(this.commonHttpErrorService.handleError));
   }
 
   performNextTransition(nextTransition: NextTransition): Observable<void | CommonError> {
-    const url = `documentWorkflow/performNextTransition`;
+    const url = `documentworkflow/performNextTransition`;
     return this.httpClient.post<void>(url, nextTransition)
       .pipe(catchError(this.commonHttpErrorService.handleError));
   }
 
   getAllWorkflowInstances(resource: WorkflowsResource): Observable<HttpResponse<DocumentWorkflow[]> | CommonError> {
-    const url = 'documentWorkflow';
+    const url = 'documentworkflow';
     const customParams = new HttpParams()
       .set('fields', resource.fields)
       .set('orderBy', resource.orderBy)
@@ -61,7 +61,7 @@ export class DocumentWorkflowService {
   }
 
   cancelWOrkflow(id, comment): Observable<void | CommonError> {
-    const url = `documentWorkflow/${id}/cancel`;
+    const url = `documentworkflow/${id}/cancel`;
     return this.httpClient.post<void>(url, {
       comment: comment
     })

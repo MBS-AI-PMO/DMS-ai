@@ -1,5 +1,6 @@
 import { HttpResponse } from '@angular/common/http';
 import { AfterViewInit, Component, ElementRef, inject, OnInit, ViewChild } from '@angular/core';
+import { Router } from '@angular/router';
 import { MatSort } from '@angular/material/sort';
 import { ResponseHeader } from '@core/domain-classes/document-header';
 import { DocumentInfo } from '@core/domain-classes/document-info';
@@ -36,6 +37,11 @@ import { SendEmailComponent } from 'src/app/document/send-email/send-email.compo
 import { CommonDialogService } from '@core/common-dialog/common-dialog.service';
 import { Direction } from '@angular/cdk/bidi';
 import { DocumentDeleteDialogComponent } from 'src/app/document-delete-dialog/document-delete-dialog.component';
+import { DMS_CONFIRM_DIALOG_CONFIG } from '@core/common-dialog/confirm-dialog.config';
+import {
+  DMS_DOCUMENT_COMMENT_DIALOG_CONFIG,
+  DMS_DOCUMENT_EDIT_DIALOG_CONFIG,
+} from '@core/common-dialog/form-dialog.config';
 import { DocumentShareableLink } from '@core/domain-classes/document-shareable-link';
 import { SharableLinkComponent } from 'src/app/document/sharable-link/sharable-link.component';
 import { ClientStore } from 'src/app/client/client-store';
@@ -45,6 +51,7 @@ import { DocumentWorkflow } from '@core/domain-classes/document-workflow';
 import { DocumentWorkflowDialogComponent } from 'src/app/document/document-workflow-dialog/document-workflow-dialog.component';
 import { VisualWorkflowInstance } from '@core/domain-classes/visual-workflow-instance';
 import { VisualWorkflowGraphComponent } from 'src/app/workflows/visual-workflow-graph/visual-workflow-graph.component';
+import { DMS_WORKFLOW_VIEW_DIALOG_CONFIG } from 'src/app/workflows/workflow-view-dialog.config';
 import { DocumentWorkflowService } from 'src/app/workflows/manage-workflow/document-workflow.service';
 import { DocumentSignatureComponent } from '@shared/document-signature/document-signature.component';
 import { AiDocumentSummaryComponent } from 'src/app/open-ai/ai-document-summary/ai-document-summary.component';
@@ -80,6 +87,7 @@ export class DocumentLibraryListComponent extends BaseComponent implements OnIni
   @ViewChild('metatag') metatag: ElementRef;
   selection = new SelectionModel<DocumentInfo>(true, []);
   direction: Direction;
+  actionDocument: DocumentInfo | null = null;
   documentStatusStore = inject(DocumentStatusStore);
   categoryStore = inject(CategoryStore);
   public clientStore = inject(ClientStore);
@@ -94,7 +102,8 @@ export class DocumentLibraryListComponent extends BaseComponent implements OnIni
     private toastrService: ToastrService,
     private dialog: MatDialog,
     private commonDialogService: CommonDialogService,
-    private documentWorkflowService: DocumentWorkflowService
+    private documentWorkflowService: DocumentWorkflowService,
+    private router: Router
   ) {
     super();
     this.documentResource = new DocumentResource();
@@ -250,7 +259,10 @@ export class DocumentLibraryListComponent extends BaseComponent implements OnIni
     }
   }
 
-  addReminder(documentInfo: DocumentInfo) {
+  addReminder(documentInfo: DocumentInfo | null) {
+    if (!documentInfo) {
+      return;
+    }
     this.dialog.open(DocumentReminderComponent, {
       data: documentInfo,
       width: '80vw',
@@ -311,10 +323,12 @@ export class DocumentLibraryListComponent extends BaseComponent implements OnIni
       .subscribe(() => { });
   }
 
-  addComment(document: DocumentInfo) {
+  addComment(document: DocumentInfo | null) {
+    if (!document) {
+      return;
+    }
     const dialogRef = this.dialog.open(DocumentCommentComponent, {
-      width: '800px',
-      maxHeight: '70vh',
+      ...DMS_DOCUMENT_COMMENT_DIALOG_CONFIG,
       data: Object.assign({}, document),
     });
 
@@ -325,14 +339,27 @@ export class DocumentLibraryListComponent extends BaseComponent implements OnIni
     });
   }
 
-  editDocument(documentInfo: DocumentInfo) {
+  setActionDocument(document: DocumentInfo): void {
+    this.actionDocument = document;
+  }
+
+  openDocumentDetails(): void {
+    if (this.actionDocument?.id) {
+      void this.router.navigate(['/document-details', this.actionDocument.id]);
+    }
+  }
+
+  editDocument(documentInfo: DocumentInfo | null) {
+    if (!documentInfo) {
+      return;
+    }
     const documentCategories: DocumentCategory = {
       document: documentInfo,
       categories: this.categoryStore.categories(),
       clients: this.clientStore.clients(),
     };
     const dialogRef = this.dialog.open(DocumentEditComponent, {
-      width: '700px',
+      ...DMS_DOCUMENT_EDIT_DIALOG_CONFIG,
       data: Object.assign({}, documentCategories),
     });
 
@@ -343,7 +370,10 @@ export class DocumentLibraryListComponent extends BaseComponent implements OnIni
     });
   }
 
-  onVersionHistoryClick(document: DocumentInfo): void {
+  onVersionHistoryClick(document: DocumentInfo | null): void {
+    if (!document) {
+      return;
+    }
     const documentInfo = this.clonerService.deepClone<DocumentInfo>(document);
     this.sub$.sink = this.documentService
       .getDocumentVersion(document.id)
@@ -366,7 +396,10 @@ export class DocumentLibraryListComponent extends BaseComponent implements OnIni
 
   }
 
-  manageDocumentPermission(documentInfo: DocumentInfo) {
+  manageDocumentPermission(documentInfo: DocumentInfo | null) {
+    if (!documentInfo) {
+      return;
+    }
     this.dialog.open(DocumentPermissionListComponent, {
       data: documentInfo,
       width: '80vw',
@@ -374,7 +407,10 @@ export class DocumentLibraryListComponent extends BaseComponent implements OnIni
     });
   }
 
-  uploadNewVersion(document: DocumentInfo) {
+  uploadNewVersion(document: DocumentInfo | null) {
+    if (!document) {
+      return;
+    }
     const dialogRef = this.dialog.open(DocumentUploadNewVersionComponent, {
       width: '800px',
       maxHeight: '70vh',
@@ -388,7 +424,10 @@ export class DocumentLibraryListComponent extends BaseComponent implements OnIni
     });
   }
 
-  sendEmail(documentInfo: DocumentInfo) {
+  sendEmail(documentInfo: DocumentInfo | null) {
+    if (!documentInfo) {
+      return;
+    }
     this.dialog.open(SendEmailComponent, {
       data: documentInfo,
       width: '80vw',
@@ -396,7 +435,10 @@ export class DocumentLibraryListComponent extends BaseComponent implements OnIni
     });
   }
 
-  archiveDocument(document: DocumentInfo) {
+  archiveDocument(document: DocumentInfo | null) {
+    if (!document) {
+      return;
+    }
     this.sub$.sink = this.commonDialogService
       .deleteConformationDialog(
         this.translationService.getValue('ARE_YOU_SURE_YOU_WANT_TO_ARCHIVE'),
@@ -422,10 +464,14 @@ export class DocumentLibraryListComponent extends BaseComponent implements OnIni
       });
   }
 
-  deleteDocument(document: DocumentInfo) {
+  deleteDocument(document: DocumentInfo | null) {
+    if (!document) {
+      return;
+    }
     const dialogRef = this.dialog.open(DocumentDeleteDialogComponent, {
-      width: '50vw',
-      maxHeight: '70vh',
+      ...DMS_CONFIRM_DIALOG_CONFIG,
+      width: '480px',
+      maxHeight: '85vh',
     });
 
     dialogRef.afterClosed().subscribe((isTrue: boolean) => {
@@ -446,7 +492,10 @@ export class DocumentLibraryListComponent extends BaseComponent implements OnIni
     });
   }
 
-  onCreateShareableLink(document: DocumentInfo) {
+  onCreateShareableLink(document: DocumentInfo | null) {
+    if (!document) {
+      return;
+    }
     this.sub$.sink = this.documentService
       .getDocumentShareableLink(document.id)
       .subscribe((link: DocumentShareableLink) => {
@@ -457,7 +506,10 @@ export class DocumentLibraryListComponent extends BaseComponent implements OnIni
       });
   }
 
-  manageWorkflowInstance(documentInfo: DocumentInfo) {
+  manageWorkflowInstance(documentInfo: DocumentInfo | null) {
+    if (!documentInfo) {
+      return;
+    }
     const document = {
       document: documentInfo,
     };
@@ -490,7 +542,7 @@ export class DocumentLibraryListComponent extends BaseComponent implements OnIni
           data.documentId = workflowInstance.id;
           data.documentName = workflowInstance.name;
           this.dialog.open(VisualWorkflowGraphComponent, {
-            minWidth: '90vw',
+            ...DMS_WORKFLOW_VIEW_DIALOG_CONFIG,
             data: Object.assign({}, data),
           });
         },
@@ -498,7 +550,10 @@ export class DocumentLibraryListComponent extends BaseComponent implements OnIni
       });
   }
 
-  signDocument(document: DocumentInfo) {
+  signDocument(document: DocumentInfo | null) {
+    if (!document) {
+      return;
+    }
     const dialogRef = this.dialog.open(DocumentSignatureComponent, {
       width: '60vw',
       data: Object.assign({}, document),
@@ -510,14 +565,20 @@ export class DocumentLibraryListComponent extends BaseComponent implements OnIni
     });
   }
 
-  generateSummary(document: DocumentInfo) {
+  generateSummary(document: DocumentInfo | null) {
+    if (!document) {
+      return;
+    }
     this.dialog.open(AiDocumentSummaryComponent, {
       width: '60vw',
       data: Object.assign({}, document),
     });
   }
 
-  watermarkDocument(document: DocumentInfo) {
+  watermarkDocument(document: DocumentInfo | null) {
+    if (!document) {
+      return;
+    }
     const dialogRef = this.dialog.open(DocumentWatermarkComponent, {
       width: '500px',
       data: Object.assign({}, document),

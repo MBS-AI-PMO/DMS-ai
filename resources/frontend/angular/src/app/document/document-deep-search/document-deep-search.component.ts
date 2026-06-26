@@ -28,6 +28,11 @@ import { DocumentVersionHistoryComponent } from '../document-version-history/doc
 import { DocumentService } from '../document.service';
 import { SendEmailComponent } from '../send-email/send-email.component';
 import { DocumentDeleteDialogComponent } from 'src/app/document-delete-dialog/document-delete-dialog.component';
+import { DMS_CONFIRM_DIALOG_CONFIG } from '@core/common-dialog/confirm-dialog.config';
+import {
+  DMS_DOCUMENT_COMMENT_DIALOG_CONFIG,
+  DMS_DOCUMENT_EDIT_DIALOG_CONFIG,
+} from '@core/common-dialog/form-dialog.config';
 import { SharableLinkComponent } from '../sharable-link/sharable-link.component';
 import { DocumentShareableLink } from '@core/domain-classes/document-shareable-link';
 
@@ -143,8 +148,9 @@ export class DocumentDeepSearchComponent
 
   deleteDocument(document: DocumentInfo) {
     const dialogRef = this.dialog.open(DocumentDeleteDialogComponent, {
-      width: '50vw',
-      maxHeight: '70vh',
+      ...DMS_CONFIRM_DIALOG_CONFIG,
+      width: '480px',
+      maxHeight: '85vh',
     });
 
     dialogRef.afterClosed().subscribe((isTrue: boolean) => {
@@ -172,7 +178,7 @@ export class DocumentDeepSearchComponent
       clients:[]
     };
     const dialogRef = this.dialog.open(DocumentEditComponent, {
-      width: '700px',
+      ...DMS_DOCUMENT_EDIT_DIALOG_CONFIG,
       data: Object.assign({}, documentCategories),
     });
 
@@ -185,8 +191,7 @@ export class DocumentDeepSearchComponent
 
   addComment(document: Document) {
     const dialogRef = this.dialog.open(DocumentCommentComponent, {
-      width: '800px',
-      maxHeight: '70vh',
+      ...DMS_DOCUMENT_COMMENT_DIALOG_CONFIG,
       data: Object.assign({}, document),
     });
 

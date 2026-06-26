@@ -1,13 +1,152 @@
-<section class="content">
-    <div class="container-fluid">
-        <div>
-            <app-document-by-category-chart></app-document-by-category-chart>
-        </div>
-         <div *hasClaim="'WORKFLOW_VIEW_MY_WORKFLOWS'">
-            <app-my-workflow></app-my-workflow>
-        </div>
-        <div>
-            <app-calender-view></app-calender-view>
-        </div>
+<section class="content dashboard-page dms-module">
+  <div class="content-block">
+    <div class="block-header dashboard-header">
+      <div class="dashboard-header__text">
+        <h1 class="dashboard-title">{{ 'DASHBOARD' | translate }}</h1>
+        <p class="dashboard-subtitle">{{ 'DOCUMENTS_BY_CATEGORY' | translate }}</p>
+      </div>
+      <button type="button" class="btn btn-sm dashboard-refresh-btn" (click)="loadDashboardData()"
+        [disabled]="isLoading">
+        <i-feather name="refresh-cw" class="small-icon"></i-feather>
+      </button>
     </div>
+
+    <div class="dashboard-stats" *ngIf="!isLoading; else statsLoading">
+      <article class="stat-card stat-card--primary" (click)="navigateTo('/documents')">
+        <div class="stat-card__icon">
+          <i-feather name="file-text"></i-feather>
+        </div>
+        <div class="stat-card__body">
+          <span class="stat-card__value">{{ stats.totalDocuments }}</span>
+          <span class="stat-card__label">{{ 'ALL_DOCUMENTS' | translate }}</span>
+        </div>
+      </article>
+
+      <article class="stat-card stat-card--secondary" (click)="navigateTo('/categories')">
+        <div class="stat-card__icon">
+          <i-feather name="folder"></i-feather>
+        </div>
+        <div class="stat-card__body">
+          <span class="stat-card__value">{{ stats.totalCategories }}</span>
+          <span class="stat-card__label">{{ 'DOCUMENT_CATEGORIES' | translate }}</span>
+        </div>
+      </article>
+
+      <article class="stat-card stat-card--accent" *hasClaim="'WORKFLOW_VIEW_MY_WORKFLOWS'"
+        (click)="navigateTo('/current-workflow')">
+        <div class="stat-card__icon">
+          <i-feather name="git-merge"></i-feather>
+        </div>
+        <div class="stat-card__body">
+          <span class="stat-card__value">{{ stats.activeWorkflows }}</span>
+          <span class="stat-card__label">{{ 'MY_WORKFLOWS' | translate }}</span>
+        </div>
+      </article>
+
+      <article class="stat-card stat-card--dark">
+        <div class="stat-card__icon">
+          <i-feather name="award"></i-feather>
+        </div>
+        <div class="stat-card__body">
+          <span class="stat-card__value stat-card__value--text">{{ stats.topCategory }}</span>
+          <span class="stat-card__label">{{ 'DOCUMENT_CATEGORY' | translate }}</span>
+        </div>
+      </article>
+    </div>
+
+    <ng-template #statsLoading>
+      <div class="dashboard-stats dashboard-stats--loading">
+        <div class="stat-card stat-card--skeleton" *ngFor="let i of [1, 2, 3, 4]"></div>
+      </div>
+    </ng-template>
+
+    <div class="dashboard-section" *ngIf="hasPostManagementSection && !isLoading">
+      <div class="dashboard-section__header">
+        <h2 class="dashboard-section__title">{{ 'POST_MANAGEMENT' | translate }}</h2>
+        <p class="dashboard-section__subtitle">{{ 'DASHBOARD_POST_OVERVIEW' | translate }}</p>
+      </div>
+
+      <div class="dashboard-stats dashboard-stats--post">
+        <article class="stat-card stat-card--primary" *hasClaim="'POST_MANAGEMENT_VIEW'"
+          (click)="navigateTo('/post-management')">
+          <div class="stat-card__icon">
+            <i-feather name="briefcase"></i-feather>
+          </div>
+          <div class="stat-card__body">
+            <span class="stat-card__value">{{ postStats.totalPosts }}</span>
+            <span class="stat-card__label">{{ 'JOB_POSTS' | translate }}</span>
+          </div>
+        </article>
+
+        <article class="stat-card stat-card--secondary" *hasClaim="'POST_MANAGEMENT_VIEW'"
+          (click)="navigateTo('/post-management/categories')">
+          <div class="stat-card__icon">
+            <i-feather name="layers"></i-feather>
+          </div>
+          <div class="stat-card__body">
+            <span class="stat-card__value">{{ postStats.totalPostCategories }}</span>
+            <span class="stat-card__label">{{ 'POST_CATEGORIES' | translate }}</span>
+          </div>
+        </article>
+
+        <article class="stat-card stat-card--accent" *hasClaim="'POST_MANAGEMENT_VIEW'"
+          (click)="navigateTo('/post-management/departments')">
+          <div class="stat-card__icon">
+            <i-feather name="grid"></i-feather>
+          </div>
+          <div class="stat-card__body">
+            <span class="stat-card__value">{{ postStats.totalDepartments }}</span>
+            <span class="stat-card__label">{{ 'POST_DEPARTMENTS' | translate }}</span>
+          </div>
+        </article>
+
+        <article class="stat-card stat-card--dark stat-card--link" *hasClaim="'POST_MANAGEMENT_VIEW'"
+          (click)="navigateTo('/post-management')">
+          <div class="stat-card__icon">
+            <i-feather name="user-plus"></i-feather>
+          </div>
+          <div class="stat-card__body">
+            <span class="stat-card__value">{{ postStats.totalApplications }}</span>
+            <span class="stat-card__label">{{ 'POST_APPLICATIONS' | translate }}</span>
+          </div>
+        </article>
+
+        <article class="stat-card stat-card--primary" *hasClaim="'ALL_CANDIDATES_VIEW'"
+          (click)="navigateTo('/all-candidates')">
+          <div class="stat-card__icon">
+            <i-feather name="users"></i-feather>
+          </div>
+          <div class="stat-card__body">
+            <span class="stat-card__value">{{ postStats.totalCandidates }}</span>
+            <span class="stat-card__label">{{ 'ALL_CANDIDATES' | translate }}</span>
+          </div>
+        </article>
+
+        <article class="stat-card stat-card--secondary" *hasClaim="'INTERVIEWS_VIEW_ASSIGNED'"
+          (click)="navigateTo('/assigned-interviews')">
+          <div class="stat-card__icon">
+            <i-feather name="calendar"></i-feather>
+          </div>
+          <div class="stat-card__body">
+            <span class="stat-card__value">{{ postStats.assignedInterviews }}</span>
+            <span class="stat-card__label">{{ 'ASSIGNED_INTERVIEWS' | translate }}</span>
+          </div>
+        </article>
+      </div>
+    </div>
+
+    <div class="dashboard-grid">
+      <div class="dashboard-grid__chart">
+        <app-document-by-category-chart [chartData]="categoryData"
+          [loading]="isLoading"></app-document-by-category-chart>
+      </div>
+      <div class="dashboard-grid__calendar">
+        <app-calender-view></app-calender-view>
+      </div>
+    </div>
+
+    <div class="dashboard-workflow" *hasClaim="'WORKFLOW_VIEW_MY_WORKFLOWS'">
+      <app-my-workflow></app-my-workflow>
+    </div>
+  </div>
 </section>

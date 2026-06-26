@@ -8,6 +8,7 @@ import { DocumentAuditTrail } from '@core/domain-classes/document-audit-trail';
 import { DocumentInfo } from '@core/domain-classes/document-info';
 import { DocumentOperation } from '@core/domain-classes/document-operation';
 import { SendEmail } from '@core/domain-classes/send-email';
+import { CommonError } from '@core/error-handler/common-error';
 import { CommonService } from '@core/services/common.service';
 import { TranslationService } from '@core/services/translation.service';
 import { ToastrService } from 'ngx-toastr';
@@ -62,13 +63,23 @@ export class SendEmailComponent extends BaseComponent implements OnInit {
     }
     this.sub$.sink = this.emailSendService
       .sendEmail(this.buildObject())
-      .subscribe(
-        () => {
-          this.addDocumentTrail();
+      .subscribe({
+        next: () => {
           this.toastrService.success(
             this.translationService.getValue('EMAIL_SENT_SUCCESSFULLY')
           );
-        });
+          this.addDocumentTrail();
+        },
+        error: (err: CommonError) => {
+          const message =
+            err?.messages?.[0] ||
+            (err?.error as { message?: string })?.message ||
+            this.translationService.getValue('ERROR');
+          this.toastrService.error(
+            typeof message === 'string' ? message : 'Error sending email.'
+          );
+        },
+      });
   }
 
   buildObject() {
@@ -88,8 +99,13 @@ export class SendEmailComponent extends BaseComponent implements OnInit {
     };
     this.sub$.sink = this.commonService
       .addDocumentAuditTrail(objDocumentAuditTrail)
-      .subscribe(() => {
-        this.dialogRef.close();
+      .subscribe({
+        next: () => {
+          this.dialogRef.close();
+        },
+        error: () => {
+          this.dialogRef.close();
+        },
       });
   }
 }

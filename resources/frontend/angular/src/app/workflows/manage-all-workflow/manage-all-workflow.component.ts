@@ -14,6 +14,7 @@ import { CommonDialogService } from '@core/common-dialog/common-dialog.service';
 import { TranslationService } from '@core/services/translation.service';
 import { MatDialog } from '@angular/material/dialog';
 import { VisualWorkflowGraphComponent } from '../visual-workflow-graph/visual-workflow-graph.component';
+import { DMS_WORKFLOW_VIEW_DIALOG_CONFIG } from '../workflow-view-dialog.config';
 import { MyWorkflow, NextTransition, VisualWorkflowInstance } from '@core/domain-classes/visual-workflow-instance';
 import { OverlayPanel } from '@shared/overlay-panel/overlay-panel.service';
 import { MatTooltipModule, TooltipPosition } from '@angular/material/tooltip';
@@ -280,7 +281,7 @@ export class ManageAllWorkflowComponent extends BaseComponent implements OnInit,
           data.documentId = workflowInstance.documentId;
           data.documentName = workflowInstance.documentName;
           this.dialog.open(VisualWorkflowGraphComponent, {
-            width: '90vw',
+            ...DMS_WORKFLOW_VIEW_DIALOG_CONFIG,
             data: Object.assign({}, data),
           });
         }

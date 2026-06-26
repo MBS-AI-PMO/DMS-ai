@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { Observable, BehaviorSubject, EMPTY } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { tap, catchError, delay } from 'rxjs/operators';
 import { AuthToken, UserAuth } from '../domain-classes/user-auth';
@@ -30,6 +30,7 @@ export class SecurityService {
     return this._companyProfile$;
   }
   private isRefreshingToken = false;
+  private tokenRefreshScheduled = false;
 
   public get Token(): AuthToken {
     if (this._token) {
@@ -59,9 +60,12 @@ export class SecurityService {
     const authStr = this.licenseValidatorService.getAuthObject();
     const tokenStr = this.licenseValidatorService.getBearerToken();
     if (authStr && tokenStr) {
-      setTimeout(() => {
-        this.refreshToken();
-      }, 1000);
+      if (!this.tokenRefreshScheduled) {
+        this.tokenRefreshScheduled = true;
+        setTimeout(() => {
+          this.refreshToken();
+        }, 1000);
+      }
       return true;
     }
     return false;
@@ -116,9 +120,9 @@ export class SecurityService {
     }, diffTime);
   }
 
-  refresh(): Observable<UserAuth | CommonError | null> {
+  refresh(): Observable<UserAuth | CommonError> {
     if (this.isRefreshingToken) {
-      return null;
+      return EMPTY;
     }
     this.isRefreshingToken = true;
     return this.http
@@ -144,12 +148,21 @@ export class SecurityService {
     this._companyProfile$.next(companyProfile);
   }
 
+  getCompanyProfileSnapshot(): CompanyProfile | null {
+    return this._companyProfile$.value;
+  }
+
   resetSecurityObject(): void {
     localStorage.removeItem(this.licenseValidatorService.keyValues.authObj);
     localStorage.removeItem(this.licenseValidatorService.keyValues.bearerToken);
     this.securityObject$.next(null);
     this._token = null;
     this._claims = null;
+    this.tokenRefreshScheduled = false;
+    if (this.clearTimeOutData) {
+      clearTimeout(this.clearTimeOutData);
+      this.clearTimeOutData = null;
+    }
     this.router.navigate(['/login']);
   }
 

@@ -31,14 +31,16 @@ export class CompanyProfileResolver implements Resolve<CompanyProfile> {
       take(1),
       mergeMap((companyProfile: CompanyProfile) => {
         if (companyProfile) {
+          const assetPath = (path: string) =>
+            path ? `${environment.apiUrl}${path.replace(/\\/g, '/')}` : path;
           if (companyProfile.logoUrl) {
-            companyProfile.logoUrl = `${environment.apiUrl}${companyProfile.logoUrl}`;
+            companyProfile.logoUrl = assetPath(companyProfile.logoUrl);
           }
           if (companyProfile.bannerUrl) {
-            companyProfile.bannerUrl = `${environment.apiUrl}${companyProfile.bannerUrl}`;
+            companyProfile.bannerUrl = assetPath(companyProfile.bannerUrl);
           }
           if (companyProfile.smallLogoUrl) {
-            companyProfile.smallLogoUrl = `${environment.apiUrl}${companyProfile.smallLogoUrl}`;
+            companyProfile.smallLogoUrl = assetPath(companyProfile.smallLogoUrl);
           }
           this.securityService.updateProfile(companyProfile);
           if (companyProfile.languages) {

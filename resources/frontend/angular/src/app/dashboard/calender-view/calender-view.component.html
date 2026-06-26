@@ -1,40 +1,39 @@
-<div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
-  <div class="card">
-    <div class="header">
-      <span class="page-title">{{ "REMINDERS" | translate }}
-        <app-page-help-text code="REMINDERS"></app-page-help-text>
-      </span>
+<div class="calendar-panel">
+  <div class="calendar-panel__header">
+    <h2 class="calendar-panel__title">
+      {{ 'REMINDERS' | translate }}
+      <app-page-help-text code="REMINDERS"></app-page-help-text>
+    </h2>
+  </div>
+
+  <div class="calendar-panel__toolbar">
+    <h3 class="calendar-panel__month">{{ viewDate | calendarDate:(view + 'ViewTitle'):'en' }}</h3>
+    <div class="calendar-nav">
+      <button [disabled]="isProcessing" class="calendar-nav__btn" mwlCalendarPreviousView [view]="view"
+        [(viewDate)]="viewDate" (viewDateChange)="viewDateChange($event)">
+        <i-feather name="chevron-left" class="small-icon"></i-feather>
+      </button>
+      <button [disabled]="isProcessing" class="calendar-nav__btn calendar-nav__btn--today"
+        (viewDateChange)="viewDateChange($event)" mwlCalendarToday [(viewDate)]="viewDate">
+        {{ 'TODAY' | translate }}
+      </button>
+      <button [disabled]="isProcessing" class="calendar-nav__btn" mwlCalendarNextView [view]="view"
+        [(viewDate)]="viewDate" (viewDateChange)="viewDateChange($event)">
+        <i-feather name="chevron-right" class="small-icon"></i-feather>
+      </button>
     </div>
-    <div class="body">
-      <div class="row text-center">
-        <div class="col-md-4">
-          <div class="header">
-            <h2>{{ viewDate | calendarDate:(view + 'ViewTitle'):'en' }}</h2>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="btn-group">
-            <button [disabled]="isProcessing" class="btn btn-primary" mwlCalendarPreviousView [view]="view"
-              [(viewDate)]="viewDate" (viewDateChange)="viewDateChange($event)">
-              {{'PREVIOUS' | translate}}
-            </button>
-            <button [disabled]="isProcessing" class="btn btn-outline-secondary"
-              (viewDateChange)="viewDateChange($event)" mwlCalendarToday [(viewDate)]="viewDate">
-              {{'TODAY' | translate}}
-            </button>
-            <button [disabled]="isProcessing" class="btn btn-primary" mwlCalendarNextView [view]="view"
-              [(viewDate)]="viewDate" (viewDateChange)="viewDateChange($event)">
-              {{'NEXT' | translate}}
-            </button>
-          </div>
-        </div>
-      </div>
-      <div [ngSwitch]="view">
-        <mwl-calendar-month-view *ngSwitchCase="CalendarView.Month" [viewDate]="viewDate" [events]="events"
-          [activeDayIsOpen]="activeDayIsOpen" (dayClicked)="dayClicked($event.day)"
-          (eventClicked)="handleEvent('Clicked', $event.event)">
-        </mwl-calendar-month-view>
-      </div>
+  </div>
+
+  <div class="calendar-panel__body" [class.calendar-panel__body--loading]="isProcessing">
+    <div class="calendar-loading" *ngIf="isProcessing">
+      <div class="calendar-loading__spinner"></div>
+    </div>
+
+    <div [ngSwitch]="view">
+      <mwl-calendar-month-view *ngSwitchCase="CalendarView.Month" [viewDate]="viewDate" [events]="events"
+        [activeDayIsOpen]="activeDayIsOpen" (dayClicked)="dayClicked($event.day)"
+        (eventClicked)="handleEvent('Clicked', $event.event)">
+      </mwl-calendar-month-view>
     </div>
   </div>
 </div>

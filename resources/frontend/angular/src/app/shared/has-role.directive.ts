@@ -6,10 +6,10 @@ import { SecurityService } from '../core/security/security.service';
 })
 export class HasRoleDirective {
   @Input() set hasRole(roleNames: string | string[]) {
+    this.viewContainer.clear();
+
     if (this.securityService.hasRole(roleNames)) {
       this.viewContainer.createEmbeddedView(this.templateRef);
-    } else {
-      this.viewContainer.clear();
     }
   }
 

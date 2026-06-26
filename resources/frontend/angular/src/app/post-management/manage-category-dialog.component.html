@@ -1,0 +1,49 @@
+<div class="dms-form-dialog__shell">
+  <div class="dms-form-dialog__header">
+    <div class="dms-form-dialog__heading">
+      <h2 class="dms-form-dialog__title">{{ editingCategoryId ? 'Edit Category' : 'Add Category' }}</h2>
+    </div>
+    <button type="button" class="dms-form-dialog__close" (click)="close()" aria-label="Close">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content class="dms-form-dialog__body">
+    <div class="dms-form-dialog__form-card">
+      <div class="dms-form-dialog__field dms-form-dialog__field--full">
+        <label class="form-label" for="categoryName">Category name</label>
+        <input id="categoryName" class="form-control" [(ngModel)]="categoryName" placeholder="IT, HR, Sales">
+      </div>
+
+      <div class="pm-dept-section mt-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="fw-semibold">Departments</span>
+          <button type="button" class="dms-action-btn dms-action-btn--cancel" (click)="addDepartmentRow()">
+            <i-feather name="plus"></i-feather>
+            Add department
+          </button>
+        </div>
+        <p class="text-muted small mb-3">Add one or more departments under this category.</p>
+
+        <div class="pm-dept-row" *ngFor="let row of departmentRows; let i = index; trackBy: trackByIndex">
+          <input class="form-control" [(ngModel)]="departmentRows[i].name" [placeholder]="'Department ' + (i + 1)">
+          <button mat-icon-button color="warn" type="button" matTooltip="Remove" (click)="removeDepartmentRow(i)"
+            [disabled]="departmentRows.length === 1 && !row.name">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+  </mat-dialog-content>
+
+  <div mat-dialog-actions class="dms-form-dialog__actions">
+    <button type="button" class="dms-form-dialog__btn dms-form-dialog__btn--cancel" (click)="close()">
+      <i-feather name="x-circle"></i-feather>
+      Cancel
+    </button>
+    <button type="button" class="dms-form-dialog__btn dms-form-dialog__btn--save" (click)="saveCategory()" cdkFocusInitial>
+      <i-feather name="save"></i-feather>
+      Save
+    </button>
+  </div>
+</div>

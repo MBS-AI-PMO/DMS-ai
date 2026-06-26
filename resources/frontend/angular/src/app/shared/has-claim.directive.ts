@@ -1,5 +1,5 @@
 import { Directive, Input, TemplateRef, ViewContainerRef } from '@angular/core';
-import { SecurityService } from '../core/security/security.service';
+import { SecurityService } from '@core/security/security.service';
 
 @Directive({
   // tslint:disable-next-line: directive-selector
@@ -7,12 +7,10 @@ import { SecurityService } from '../core/security/security.service';
 })
 export class HasClaimDirective {
   @Input() set hasClaim(claimType: any) {
+    this.viewContainer.clear();
+
     if (this.securityService.hasClaim(claimType)) {
-      // Add template to DOM
       this.viewContainer.createEmbeddedView(this.templateRef);
-    } else {
-      // Remove template from DOM
-      this.viewContainer.clear();
     }
   }
 

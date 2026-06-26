@@ -4,10 +4,6 @@ import { ForgotPasswordComponent } from './forgot-password.component';
 import { ReactiveFormsModule } from '@angular/forms';
 import { ForgotPasswordRoutingModule } from './forgot-password-routing.module';
 import { TranslateModule } from '@ngx-translate/core';
-import { MatButtonModule } from '@angular/material/button';
-
-
-
 @NgModule({
   declarations: [
     ForgotPasswordComponent
@@ -17,7 +13,6 @@ import { MatButtonModule } from '@angular/material/button';
     ReactiveFormsModule,
     ForgotPasswordRoutingModule,
     TranslateModule,
-    MatButtonModule
   ]
 })
 export class ForgotPasswordModule { }

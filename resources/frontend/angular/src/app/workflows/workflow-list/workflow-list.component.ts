@@ -21,6 +21,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { SharedModule } from '@shared/shared.module';
 import { FeatherModule } from 'angular-feather';
 import { WorkflowGraphComponent } from '../workflow-graph/workflow-graph.component';
+import { DMS_WORKFLOW_VIEW_DIALOG_CONFIG } from '../workflow-view-dialog.config';
 
 @Component({
   selector: 'app-workflow-list',
@@ -74,10 +75,8 @@ export class WorkflowListComponent extends BaseComponent implements OnInit, OnDe
   viewVisualWorkflow(workflow: Workflow): void {
     this.workflowService.getvisualWorkflow(workflow.id).subscribe({
       next: (data: VisualWorkflowInstance) => {
-        const screenWidth = window.innerWidth;
-        const dialogWidth = screenWidth < 768 ? '90vw' : '90vw';
         this.dialog.open(WorkflowGraphComponent, {
-          maxWidth: dialogWidth,
+          ...DMS_WORKFLOW_VIEW_DIALOG_CONFIG,
           data: { ...data },
         });
       },

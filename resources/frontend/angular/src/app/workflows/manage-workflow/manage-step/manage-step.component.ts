@@ -18,6 +18,7 @@ import { TranslationService } from '@core/services/translation.service';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { SharedModule } from '@shared/shared.module';
 import { WorkflowStore } from '../workflow-store';
+import { getWorkflowSteps, normalizeWorkflow } from '../workflow-normalizer';
 
 @Component({
   selector: 'app-manage-step',
@@ -50,9 +51,9 @@ export class ManageStepComponent implements OnInit {
 
   stepFormGroup: FormGroup;
   currentStep = 1;
-  currentWorkflow = this.workflowStore.currentWorkflow();
-  workflowSteps = this.currentWorkflow?.workflowSteps;
-  isWorkflowSetup = this.currentWorkflow?.isWorkflowSetup;
+  currentWorkflow: ReturnType<typeof normalizeWorkflow>;
+  workflowSteps: WorkflowStep[] = [];
+  isWorkflowSetup = false;
 
   get steps(): FormArray {
     return this.stepFormGroup.get('steps') as FormArray;
@@ -73,15 +74,26 @@ export class ManageStepComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.currentWorkflow = normalizeWorkflow(this.workflowStore.currentWorkflow());
+    this.workflowSteps = getWorkflowSteps(this.currentWorkflow);
+    this.isWorkflowSetup = this.currentWorkflow?.isWorkflowSetup ?? false;
+
     this.createStepFormGroup();
-    if (this.workflowSteps && this.workflowSteps?.length === 0) {
-      this.addStep(this.currentWorkflow.isWorkflowSetup, null);
-      this.addStep(this.currentWorkflow.isWorkflowSetup, null);
-    } else {
-      this.workflowSteps.forEach((step: WorkflowStep) => {
-        this.addStep(this.currentWorkflow.isWorkflowSetup, step);
-      });
+    this.initializeStepFields();
+  }
+
+  private initializeStepFields(): void {
+    const existingSteps = this.workflowSteps ?? [];
+
+    if (existingSteps.length === 0) {
+      this.addStep(this.isWorkflowSetup, null);
+      this.addStep(this.isWorkflowSetup, null);
+      return;
     }
+
+    existingSteps.forEach((step: WorkflowStep) => {
+      this.addStep(this.isWorkflowSetup, step);
+    });
   }
 
   goToWorkflowTransitions() {
@@ -141,13 +153,14 @@ export class ManageStepComponent implements OnInit {
       this.stepFormGroup.markAllAsTouched();
       return;
     }
-    if (this.steps.value.length < 2) {
+    const stepValues = this.steps.getRawValue();
+    if (stepValues.length < 2) {
       this.toastrService.error(
         this.translationService.getValue('PLEASE_ADD_AT_LEAST_TWO_STEPS_TO_THE_WORKFLOW'),
       );
       return;
     }
-    const stepsData: WorkflowStep[] = this.steps.value.map((step: any) => ({
+    const stepsData: WorkflowStep[] = stepValues.map((step: any) => ({
       ...step,
       workflowId: this.currentWorkflow.id,
     }));

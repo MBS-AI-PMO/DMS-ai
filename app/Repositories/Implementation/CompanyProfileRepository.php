@@ -115,20 +115,24 @@ class CompanyProfileRepository extends BaseRepository implements CompanyProfileR
         $model = $this->model->first();
         $logo = '';
         $banner = '';
-        if ($request['imageData']) {
-            $logo = $this->saveCompanyProfileImage($request['imageData']);
+        $imageData = $request['imageData'] ?? null;
+        $bannerData = $request['bannerData'] ?? null;
+        $smallLogoData = $request['smallLogoData'] ?? null;
+
+        if ($imageData) {
+            $logo = $this->saveCompanyProfileImage($imageData);
         } else {
             $logo = $model->logoUrl;
         }
 
-        if ($request['bannerData']) {
-            $banner = $this->saveCompanyProfileImage($request['bannerData']);
+        if ($bannerData) {
+            $banner = $this->saveCompanyProfileImage($bannerData);
         } else {
             $banner = $model->bannerUrl;
         }
 
-        if ($request['smallLogoData']) {
-            $smallLogo = $this->saveCompanyProfileImage($request['smallLogoData']);
+        if ($smallLogoData) {
+            $smallLogo = $this->saveCompanyProfileImage($smallLogoData);
         } else {
             $smallLogo = $model->smallLogoUrl;
         }
@@ -263,7 +267,13 @@ class CompanyProfileRepository extends BaseRepository implements CompanyProfileR
     {
         $model = $this->model->first();
         if ($model == null) {
-            return response()->json([]);
+            return response()->json([
+                'location' => 'local',
+                'amazonS3key' => env('AWS_ACCESS_KEY_ID'),
+                'amazonS3secret' => env('AWS_SECRET_ACCESS_KEY'),
+                'amazonS3region' => env('AWS_DEFAULT_REGION'),
+                'amazonS3bucket' => env('AWS_BUCKET'),
+            ]);
         }
 
         return response()->json([
@@ -367,8 +377,8 @@ class CompanyProfileRepository extends BaseRepository implements CompanyProfileR
                 return '';
             }
 
-            // Return a clean public URL path
-            return 'images' . DIRECTORY_SEPARATOR . $imageName;
+            // Return a clean public URL path (always forward slashes for URLs)
+            return 'images/' . $imageName;
         } catch (\Exception $e) {
             return '';
         }

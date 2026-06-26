@@ -1,5 +1,5 @@
 import { CommonModule, NgFor, NgIf } from '@angular/common';
-import { Component, Inject, inject } from '@angular/core';
+import { Component, Inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -25,20 +25,28 @@ import { CustomColor } from '@core/domain-classes/custom-color';
 export class WorkflowGraphComponent {
   nodes: Node[] = [];
   links: Link[] = [];
-  curve = curveMonotoneX; // Choose your curve type
+  curve = curveMonotoneX;
   customColors = [];
 
-  constructor(public dialogRef: MatDialogRef<WorkflowGraphComponent>,
+  constructor(
+    public dialogRef: MatDialogRef<WorkflowGraphComponent>,
     @Inject(MAT_DIALOG_DATA) public data: VisualWorkflowInstance,
     private clonerService: ClonerService,
-    public overlay: OverlayPanel,) {
+    public overlay: OverlayPanel,
+  ) {
     this.nodes = this.clonerService.deepClone<Node[]>(data.nodes);
     this.links = this.clonerService.deepClone<Link[]>(data.links);
     this.customColors = this.clonerService.deepClone<CustomColor[]>(data.customColors);
   }
 
+  splitList(value?: string): string[] {
+    if (!value) {
+      return [];
+    }
+    return value.split(',').map((item) => item.trim()).filter(Boolean);
+  }
+
   onDocumentCancel(): void {
     this.dialogRef.close();
   }
-
 }

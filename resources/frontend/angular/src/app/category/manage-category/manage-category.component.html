@@ -1,38 +1,43 @@
-<div class="d-flex">
-  <span mat-dialog-title class="dialog-title">{{'MANAGE_DOCUMENT_CATEGORY' | translate}}
-    <app-page-help-text [code]="'DOCUMENT_CATEGORIES'"></app-page-help-text></span>
-</div>
-<mat-dialog-content>
-  <form [formGroup]="categoryForm" novalidate>
-    <div class="row">
-      <div class="col-sm-12">
-        <label class="form-label" for="categoryName">{{'NAME' | translate}}</label>
-        <input formControlName="name" type="text" class="form-control" id="categoryName">
-        <div *ngIf="categoryForm.get('name').hasError('required') && categoryForm.get('name').touched">
-          <div class="text-danger">
-            {{'CATEGORY_NAME_IS_REQUIRED' | translate}}
+<div class="dms-form-dialog__shell">
+  <div class="dms-form-dialog__header">
+    <div class="dms-form-dialog__heading">
+      <h2 class="dms-form-dialog__title">{{ 'MANAGE_DOCUMENT_CATEGORY' | translate }}</h2>
+      <app-page-help-text [code]="'DOCUMENT_CATEGORIES'"></app-page-help-text>
+    </div>
+    <button type="button" class="dms-form-dialog__close" (click)="onCancel()" [attr.aria-label]="'CANCEL' | translate">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content class="dms-form-dialog__body">
+    <div class="dms-form-dialog__form-card">
+      <form [formGroup]="categoryForm" novalidate>
+        <div class="dms-form-dialog__form-grid">
+          <div class="dms-form-dialog__field dms-form-dialog__field--full">
+            <label class="form-label" for="categoryName">{{ 'NAME' | translate }}</label>
+            <input formControlName="name" type="text" class="form-control" id="categoryName">
+            <div *ngIf="categoryForm.get('name').hasError('required') && categoryForm.get('name').touched" class="text-danger">
+              {{ 'CATEGORY_NAME_IS_REQUIRED' | translate }}
+            </div>
+          </div>
+
+          <div class="dms-form-dialog__field dms-form-dialog__field--full">
+            <label class="form-label" for="description">{{ 'DESCRIPTION' | translate }}</label>
+            <textarea formControlName="description" id="description" class="form-control" rows="4"></textarea>
           </div>
         </div>
-      </div>
+      </form>
     </div>
-    <div class="row">
-      <div class="col-sm-12">
-        <label class="form-label" for="description">{{'DESCRIPTION' | translate}}</label>
-        <textarea formControlName="description" name="description" type="text" class="form-control">
-            </textarea>
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-md-12 mt-3">
-        <button (click)="saveCategory()" type="submit" class="btn btn-success btn-sm m-r-10">
-          <i-feather name="save" class="small-icon"></i-feather>
-          {{'SAVE' | translate}}
-        </button>
-        <button type="button" class="btn btn-danger btn-sm" (click)="onCancel()"> <i-feather name="x-circle"
-            class="small-icon"></i-feather>
-          {{'CANCEL' | translate}}
-        </button>
-      </div>
-    </div>
-  </form>
-</mat-dialog-content>
+  </mat-dialog-content>
+
+  <div mat-dialog-actions class="dms-form-dialog__actions">
+    <button type="button" class="dms-form-dialog__btn dms-form-dialog__btn--cancel" (click)="onCancel()">
+      <i-feather name="x-circle"></i-feather>
+      {{ 'CANCEL' | translate }}
+    </button>
+    <button type="button" class="dms-form-dialog__btn dms-form-dialog__btn--save" (click)="saveCategory()">
+      <i-feather name="save"></i-feather>
+      {{ 'SAVE' | translate }}
+    </button>
+  </div>
+</div>

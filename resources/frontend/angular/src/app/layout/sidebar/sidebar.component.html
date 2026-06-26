@@ -1,64 +1,62 @@
 <div>
   <aside id="leftsidebar" class="sidebar" (mouseenter)="mouseHover()" (mouseleave)="mouseOut()">
-    <div class="menu">
-      <ng-scrollbar [style.height]="listMaxHeight + 'px'" visibility="hover">
-        <ul id="sidebarnav" class="list">
-          <ng-container *ngFor="let sidebarItem of sidebarItems">
-            <ng-container *ngIf="sidebarItem.roles?.length">
-              <li *hasRole="sidebarItem.roles" [routerLinkActiveOptions]="{exact: true}"
-                [routerLinkActive]="sidebarItem.submenu.length !== 0 ? 'active' : 'active-top'">
-                <div class="header" *ngIf="sidebarItem.groupTitle === true">{{sidebarItem.title | translate}}</div>
-                <a [routerLink]="sidebarItem.class === '' ? [sidebarItem.path] : null" *ngIf="!sidebarItem.groupTitle;"
-                  [ngClass]="[sidebarItem.class]" class="menu-top"
-                  (click)="callToggleMenu($event, sidebarItem.submenu.length)">
-                  <i-feather [name]="sidebarItem.icon" class="sidebarIcon"></i-feather>
-                  <span class="hide-menu">{{sidebarItem.title | translate}}
-                  </span>
-                </a>
-              </li>
-            </ng-container>
-
-            <ng-container *ngIf="!sidebarItem.roles?.length && sidebarItem.claims.length === 0">
-              <li [routerLinkActiveOptions]="{exact: true}"
-                [routerLinkActive]="sidebarItem.submenu.length !== 0 ? 'active' : 'active-top'">
-                <div class="header" *ngIf="sidebarItem.groupTitle === true">{{sidebarItem.title | translate}}</div>
-                <a [routerLink]="sidebarItem.class === '' ? [sidebarItem.path] : null" *ngIf="!sidebarItem.groupTitle;"
-                  [ngClass]="[sidebarItem.class]" class="menu-top"
-                  (click)="callToggleMenu($event, sidebarItem.submenu.length)">
-                  <i-feather [name]="sidebarItem.icon" class="sidebarIcon"></i-feather>
-                  <span class="hide-menu">{{sidebarItem.title | translate}}
-                  </span>
-                </a>
-              </li>
-            </ng-container>
-
-            <ng-container *ngIf="!sidebarItem.roles?.length && sidebarItem.claims.length > 0">
-              <li *hasClaim="sidebarItem.claims" [routerLinkActiveOptions]="{exact: true}"
-                [routerLinkActive]="sidebarItem.submenu.length !== 0 ? 'active' : 'active-top'">
-                <div class="header" *ngIf="sidebarItem.groupTitle === true">{{sidebarItem.title | translate}}</div>
-                <a [routerLink]="sidebarItem.class === '' ? [sidebarItem.path] : null" *ngIf="!sidebarItem.groupTitle;"
-                  [ngClass]="[sidebarItem.class]" class="menu-top"
-                  (click)="callToggleMenu($event, sidebarItem.submenu.length)">
-                  <i-feather [name]="sidebarItem.icon" class="sidebarIcon"></i-feather>
-                  <span class="hide-menu">{{sidebarItem.title | translate}}
-                  </span>
-                </a>
-                <ul class="ml-menu" *ngIf="sidebarItem.submenu.length > 0">
-                  <ng-container *ngFor="let sidebarSubItem1 of sidebarItem.submenu">
-                    <li *hasClaim="sidebarSubItem1.claims" [routerLinkActive]="sidebarSubItem1.submenu.length > 0 ? '' : 'active'">
-                      <a [routerLink]="sidebarSubItem1.submenu.length > 0 ? null : [sidebarSubItem1.path]"
-                        (click)="callToggleMenu($event,sidebarSubItem1.submenu.length)"
-                        [ngClass]="[sidebarSubItem1.class]">
-                        {{sidebarSubItem1.title | translate}}
-                      </a>
-                    </li>
-                  </ng-container>
-                </ul>
-              </li>
-            </ng-container>
+    <div class="sidebar-menu-divider" aria-hidden="true"></div>
+    <div class="menu sidebar-menu-scroll" [style.max-height.px]="listMaxHeight">
+      <ul id="sidebarnav" class="list">
+        <ng-container *ngFor="let sidebarItem of sidebarItems">
+          <ng-container *ngIf="sidebarItem.roles?.length">
+            <li *hasRole="sidebarItem.roles"
+              [class.active]="sidebarItem.submenu.length > 0 && isParentMenuExpanded(sidebarItem)"
+              [class.active-top]="sidebarItem.submenu.length === 0 && isLinkActive(sidebarItem.path)">
+              <div class="header" *ngIf="sidebarItem.groupTitle === true">{{sidebarItem.title | translate}}</div>
+              <a [routerLink]="sidebarItem.class === '' ? getRouterLink(sidebarItem.path) : null" *ngIf="!sidebarItem.groupTitle;"
+                [ngClass]="[sidebarItem.class]" class="menu-top"
+                (click)="onMenuToggle($event, sidebarItem)">
+                <i-feather [name]="sidebarItem.icon" class="sidebarIcon"></i-feather>
+                <span class="hide-menu">{{sidebarItem.title | translate}}</span>
+              </a>
+            </li>
           </ng-container>
-        </ul>
-      </ng-scrollbar>
+
+          <ng-container *ngIf="!sidebarItem.roles?.length && sidebarItem.claims.length === 0">
+            <li [class.active-top]="isLinkActive(sidebarItem.path)">
+              <div class="header" *ngIf="sidebarItem.groupTitle === true">{{sidebarItem.title | translate}}</div>
+              <a [routerLink]="sidebarItem.class === '' ? getRouterLink(sidebarItem.path) : null" *ngIf="!sidebarItem.groupTitle;"
+                [ngClass]="[sidebarItem.class]" class="menu-top"
+                (click)="onMenuToggle($event, sidebarItem)">
+                <i-feather [name]="sidebarItem.icon" class="sidebarIcon"></i-feather>
+                <span class="hide-menu">{{sidebarItem.title | translate}}</span>
+              </a>
+            </li>
+          </ng-container>
+
+          <ng-container *ngIf="!sidebarItem.roles?.length && sidebarItem.claims.length > 0">
+            <li *hasClaim="sidebarItem.claims"
+              [class.active]="sidebarItem.submenu.length > 0 && isParentMenuExpanded(sidebarItem)"
+              [class.active-top]="sidebarItem.submenu.length === 0 && isLinkActive(sidebarItem.path)">
+              <div class="header" *ngIf="sidebarItem.groupTitle === true">{{sidebarItem.title | translate}}</div>
+              <a [routerLink]="sidebarItem.class === '' ? getRouterLink(sidebarItem.path) : null" *ngIf="!sidebarItem.groupTitle;"
+                [ngClass]="[sidebarItem.class]" class="menu-top"
+                (click)="onMenuToggle($event, sidebarItem)">
+                <i-feather [name]="sidebarItem.icon" class="sidebarIcon"></i-feather>
+                <span class="hide-menu">{{sidebarItem.title | translate}}</span>
+              </a>
+              <ul class="ml-menu" *ngIf="sidebarItem.submenu.length > 0">
+                <ng-container *ngFor="let sidebarSubItem1 of sidebarItem.submenu">
+                  <li *hasClaim="sidebarSubItem1.claims"
+                    [class.active]="isLinkActive(sidebarSubItem1.path)">
+                    <a [routerLink]="sidebarSubItem1.submenu.length > 0 ? null : getRouterLink(sidebarSubItem1.path)"
+                      (click)="onMenuToggle($event, sidebarSubItem1)"
+                      [ngClass]="[sidebarSubItem1.class]">
+                      {{sidebarSubItem1.title | translate}}
+                    </a>
+                  </li>
+                </ng-container>
+              </ul>
+            </li>
+          </ng-container>
+        </ng-container>
+      </ul>
     </div>
   </aside>
 </div>

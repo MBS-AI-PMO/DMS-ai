@@ -185,6 +185,7 @@ export class BulkDocumentUploadComponent extends BaseComponent implements OnInit
   companyProfileSubscription() {
     this.securityService.companyProfile.subscribe((profile) => {
       if (profile) {
+        this.isS3Supported = !!profile.isS3Supported;
         this.documentForm.get('location').setValue(profile.location ?? 'local');
       }
     });

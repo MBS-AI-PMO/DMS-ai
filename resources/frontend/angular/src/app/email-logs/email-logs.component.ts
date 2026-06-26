@@ -20,6 +20,7 @@ import { EmailLogDetailsComponent } from './email-log-details/email-log-details.
 import { EmailLogService } from './email-log.service';
 import { TranslationService } from '@core/services/translation.service';
 import { LogsRetentionSettingsComponent } from '../logs-retention-settings/logs-retention-settings.component';
+import { DMS_FORM_DIALOG_CONFIG, DMS_FORM_DIALOG_LARGE_CONFIG } from '@core/common-dialog/form-dialog.config';
 
 @Component({
   selector: 'app-email-logs',
@@ -152,9 +153,7 @@ export class EmailLogsComponent extends BaseComponent implements OnInit, AfterVi
 
   openEmailLogDetails(emailLog: EmailLogs) {
     this.dialog.open(EmailLogDetailsComponent, {
-      minWidth: '60vw',
-      maxWidth: '80vw',
-      maxHeight: '80vh',
+      ...DMS_FORM_DIALOG_LARGE_CONFIG,
       data: Object.assign({}, emailLog),
     });
   }
@@ -176,8 +175,7 @@ export class EmailLogsComponent extends BaseComponent implements OnInit, AfterVi
 
   manageLogsRetention() {
     this.dialog.open(LogsRetentionSettingsComponent, {
-      width: '35vw',
-      maxHeight: '70vh',
+      ...DMS_FORM_DIALOG_CONFIG,
       data: { type: 'email-log-setting' },
     });
   }

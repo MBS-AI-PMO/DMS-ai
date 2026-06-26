@@ -1,75 +1,65 @@
-<div class="d-flex">
-  <span mat-dialog-title class="dialog-title">{{'SEND_EMAIL' | translate}}
-    <app-page-help-text code="SEND_EMAIL"></app-page-help-text>
-  </span>
-  <button mat-icon-button class="close-button ms-auto" (click)="closeDialog()">
-    <mat-icon class="close-icon" color="warn">close</mat-icon>
-  </button>
-</div>
+<div class="dms-form-dialog__shell">
+  <div class="dms-form-dialog__header">
+    <div class="dms-form-dialog__heading">
+      <h2 class="dms-form-dialog__title">{{ 'SEND_EMAIL' | translate }}</h2>
+      <app-page-help-text code="SEND_EMAIL"></app-page-help-text>
+    </div>
+    <button type="button" class="dms-form-dialog__close" (click)="closeDialog()" [attr.aria-label]="'CANCEL' | translate">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
 
-<div mat-dialog-content>
-  <form [formGroup]="emailForm">
-    <div class="card mb-0">
-      <div class="body pb-0">
-        <div class="row">
-          <div class="col-md-12 p-b-1">
-            <div class="input-group">
-              <span class="input-group-text" id="toAddress">
-                {{'TO' | translate}}
-              </span>
-              <input formControlName="toAddress" type="text" class="form-control" placeholder="{{'EMAIL' | translate}}"
-                aria-label="To" aria-describedby="toAddress">
+  <mat-dialog-content class="dms-form-dialog__body">
+    <div class="dms-form-dialog__form-card">
+      <form [formGroup]="emailForm">
+        <div class="dms-form-dialog__form-grid">
+          <div class="dms-form-dialog__field dms-form-dialog__field--full">
+            <label class="form-label">{{ 'TO' | translate }}</label>
+            <input formControlName="toAddress" type="email" class="form-control" placeholder="{{ 'EMAIL' | translate }}">
+            <div class="text-danger" *ngIf="emailForm.get('toAddress').touched && emailForm.get('toAddress').hasError('required')">
+              {{ 'TO_ADDRESS_IS_REQUIRED' | translate }}
             </div>
-            <div class="text-danger"
-              *ngIf="emailForm.get('toAddress').touched && emailForm.get('toAddress').hasError('required')">
-              {{'TO_ADDRESS_IS_REQUIRED' | translate}}
-            </div>
-            <div class="text-danger"
-              *ngIf="emailForm.get('toAddress').touched && emailForm.get('toAddress').hasError('email')">
-              {{'EMAIL_IS_NOT_PROPER_FORMAT' | translate}}
+            <div class="text-danger" *ngIf="emailForm.get('toAddress').touched && emailForm.get('toAddress').hasError('email')">
+              {{ 'EMAIL_IS_NOT_PROPER_FORMAT' | translate }}
             </div>
           </div>
-          <div class="col-md-12 pb-1">
-            <div class="input-group">
-              <span class="input-group-text" id="subject">
-                {{'SUBJECT' | translate}}
-              </span>
-              <input formControlName="subject" type="text" class="form-control" placeholder="{{'SUBJECT' | translate}}"
-                aria-label="To" aria-describedby="subject">
-            </div>
-            <div class="text-danger"
-              *ngIf="emailForm.get('subject').touched  && emailForm.get('subject').hasError('required')">
-              {{'SUBJECT_IS_REQUIRED' | translate}}
+
+          <div class="dms-form-dialog__field dms-form-dialog__field--full">
+            <label class="form-label">{{ 'SUBJECT' | translate }}</label>
+            <input formControlName="subject" type="text" class="form-control" placeholder="{{ 'SUBJECT' | translate }}">
+            <div class="text-danger" *ngIf="emailForm.get('subject').touched && emailForm.get('subject').hasError('required')">
+              {{ 'SUBJECT_IS_REQUIRED' | translate }}
             </div>
           </div>
-          <div class="col-md-12">
-            <div class="form-group">
-              <label class="font-weight-bold">
-                {{'BODY' | translate}}
-              </label>
-              <div class="NgxEditor__Wrapper">
-                <ckeditor [editor]="editor" [config]="{ toolbar: [ 'heading', '|', 'bold', 'italic' ] }"
-                  formControlName="body"></ckeditor>
-              </div>
-              <div class="text-danger"
-                *ngIf="emailForm.get('body').touched && emailForm.get('body').hasError('required')">
-                {{'BODY_IS_REQUIRED' | translate}}
-              </div>
+
+          <div class="dms-form-dialog__field dms-form-dialog__field--full">
+            <label class="form-label">{{ 'BODY' | translate }}</label>
+            <div class="NgxEditor__Wrapper">
+              <ckeditor [editor]="editor" [config]="{ toolbar: [ 'heading', '|', 'bold', 'italic' ] }"
+                formControlName="body"></ckeditor>
+            </div>
+            <div class="text-danger" *ngIf="emailForm.get('body').touched && emailForm.get('body').hasError('required')">
+              {{ 'BODY_IS_REQUIRED' | translate }}
             </div>
           </div>
-          <div class="col-md-12 p-b-1">
-            <span class="input-group-text">
-              {{'ATTACHMENT_DOCUMENT' | translate}} :: {{data?.name}}
-            </span>
-          </div>
-          <div>
-            <button (click)="sendEmail()" type="submit" class="btn btn-success">
-              <i-feather name="send" class="small-icon"></i-feather>
-              {{'SEND' | translate}}
-            </button>
+
+          <div class="dms-form-dialog__field dms-form-dialog__field--full">
+            <label class="form-label">{{ 'ATTACHMENT_DOCUMENT' | translate }}</label>
+            <div class="dms-form-dialog__readonly-file">{{ data?.name }}</div>
           </div>
         </div>
-      </div>
+      </form>
     </div>
-  </form>
+  </mat-dialog-content>
+
+  <div mat-dialog-actions class="dms-form-dialog__actions">
+    <button type="button" class="dms-form-dialog__btn dms-form-dialog__btn--cancel" (click)="closeDialog()">
+      <i-feather name="x-circle"></i-feather>
+      {{ 'CANCEL' | translate }}
+    </button>
+    <button type="button" class="dms-form-dialog__btn dms-form-dialog__btn--save" (click)="sendEmail()">
+      <i-feather name="send"></i-feather>
+      {{ 'SEND' | translate }}
+    </button>
+  </div>
 </div>

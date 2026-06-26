@@ -1,23 +1,15 @@
 import { Injectable } from '@angular/core';
-import { MatDialogConfig, MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
 import { Observable } from 'rxjs';
 import { CommonDialogComponent } from './common-dialog.component';
 import { TranslationService } from '@core/services/translation.service';
 import { CommonDialogCommentComponent } from '@core/common-dialog-comment/common-dialog-comment.component';
+import { DMS_CONFIRM_DIALOG_CONFIG } from './confirm-dialog.config';
+
 @Injectable()
 export class CommonDialogService {
-  dialogConfig: MatDialogConfig = {
-    disableClose: false,
-    maxWidth: '80vw',
-    minWidth: '35vw',
-    height: '',
-    position: {
-      top: '',
-      bottom: '',
-      left: '',
-      right: '',
-    },
-  };
+  dialogConfig: MatDialogConfig = { ...DMS_CONFIRM_DIALOG_CONFIG };
+
   constructor(
     public dialog: MatDialog,
     private translationService: TranslationService
@@ -26,6 +18,7 @@ export class CommonDialogService {
       (direction) => (this.dialogConfig.direction = direction)
     );
   }
+
   deleteConformationDialog(
     primaryMessage: string,
     secondaryMessage?: string

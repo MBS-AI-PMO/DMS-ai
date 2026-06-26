@@ -55,7 +55,7 @@ class EmailRepository  implements EmailRepositoryInterface
         $mail->AltBody = $attribute['message'];
 
         $emaillogattachments = [];
-        if ($attribute['path'] != null) {
+        if (!empty($attribute['path'])) {
             $file_contents = Storage::disk($attribute['location'])->get($attribute['doc_url']);
             $mail->addStringAttachment($file_contents, $attribute['file_name']);
 

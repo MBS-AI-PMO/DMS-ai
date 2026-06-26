@@ -12,6 +12,7 @@ import { TranslationService } from '@core/services/translation.service';
 import { ToastrService } from 'ngx-toastr';
 import { BaseComponent } from 'src/app/base.component';
 import { ChangePasswordComponent } from '../change-password/change-password.component';
+import { DMS_FORM_DIALOG_CONFIG } from '@core/common-dialog/form-dialog.config';
 import { UserService } from '../user.service';
 
 @Component({
@@ -86,7 +87,7 @@ export class MyProfileComponent extends BaseComponent implements OnInit {
 
   changePassword(): void {
     this.dialog.open(ChangePasswordComponent, {
-      width: '350px',
+      ...DMS_FORM_DIALOG_CONFIG,
       data: Object.assign({}, this.user),
     });
   }

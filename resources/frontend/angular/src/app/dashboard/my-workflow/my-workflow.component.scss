@@ -1,51 +1,159 @@
+.workflow-panel {
+  background: #fff;
+  border: 1px solid #e8eaef;
+  border-radius: 16px;
+  box-shadow: 0 4px 18px rgba(44, 48, 59, 0.06);
+  overflow: hidden;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.15rem 1.25rem;
+    border-bottom: 1px solid #f0f2f7;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #2c303b;
+  }
+
+  &__badge {
+    min-width: 28px;
+    height: 28px;
+    padding: 0 0.5rem;
+    border-radius: 999px;
+    background: #eef0fd;
+    color: #6777ef;
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__body {
+    padding: 0.25rem 0.5rem 0.5rem;
+  }
+}
+
+.workflow-table-wrap {
+  ::ng-deep {
+    .mat-mdc-header-row {
+      background: #fafbff;
+    }
+
+    .mat-mdc-header-cell {
+      color: #6c757d;
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .mat-mdc-row:hover {
+      background: #fafbff;
+    }
+  }
+}
+
+.workflow-view-btn {
+  background: #eef0fd;
+  border: 1px solid #d8ddf8;
+  color: #6777ef;
+  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background: #6777ef;
+    color: #fff;
+    border-color: #6777ef;
+  }
+}
+
+.workflow-name {
+  font-weight: 500;
+  color: #2c303b;
+}
+
+.workflow-doc-link {
+  font-weight: 500;
+}
+
+.workflow-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2rem 1rem;
+  color: #6c757d;
+
+  &__icon {
+    width: 36px;
+    height: 36px;
+    color: #6777ef;
+    opacity: 0.75;
+  }
+}
+
 .transition-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px; // Adjust the spacing between items as needed
+  gap: 8px;
 }
 
-.transition-item {
-  background-color: #f1f1f1; // Optional: Add background color for better visibility
-  padding: 4px 8px; // Optional: Add padding for better spacing
-  border-radius: 4px; // Optional: Add border radius for rounded corners
+.workflow-transition-btn {
+  border-radius: 8px !important;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: none;
 }
 
 .workflow_approved {
   color: #000 !important;
-  background-color: #28a745 !important; // success green
+  background-color: #28a745 !important;
 }
 
 .workflow_rejected {
   color: #fff !important;
-  background-color: #dc3545 !important; // secondary gray
+  background-color: #dc3545 !important;
 }
 
 .workflow_pending {
   color: #000 !important;
-  background-color: #ffc107 !important; // secondary gray
+  background-color: #ffc107 !important;
 }
 
 .workflow_inprogress {
   color: #fff !important;
-  background-color: #6777ef !important; // secondary gray
+  background-color: #6777ef !important;
 }
 
 .workflow_onhold {
   color: #000 !important;
-  background-color: #6c757d !important; // secondary gray
+  background-color: #6c757d !important;
 }
 
 .workflow_cancelled {
   color: #fff !important;
-  background-color: #343a40 !important; // secondary gray
+  background-color: #343a40 !important;
 }
 
 .workflow_escalated {
   color: #fff !important;
-  background-color: #fd7e14 !important; // secondary gray
+  background-color: #fd7e14 !important;
 }
 
 .workflow_completed {
   color: #fff !important;
-  background-color: #198754 !important; // secondary gray
+  background-color: #198754 !important;
 }

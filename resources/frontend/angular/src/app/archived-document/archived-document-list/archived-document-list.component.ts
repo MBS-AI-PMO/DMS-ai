@@ -37,10 +37,12 @@ import { ToastrService } from 'ngx-toastr';
 import { DocumentService } from 'src/app/document/document.service';
 import { MatDialog } from '@angular/material/dialog';
 import { DocumentDeleteDialogComponent } from 'src/app/document-delete-dialog/document-delete-dialog.component';
+import { DMS_CONFIRM_DIALOG_CONFIG } from '@core/common-dialog/confirm-dialog.config';
 import { Direction } from '@angular/cdk/bidi';
 import { DocumentStatusStore } from 'src/app/document-status/store/document-status.store';
 import { CategoryStore } from 'src/app/category/store/category-store';
 import { ArchiveDocumentRetensionPeriodDialogComponent } from '../archive-document-retension-period-dialog/archive-document-retension-period-dialog.component';
+import { DMS_FORM_DIALOG_CONFIG } from '@core/common-dialog/form-dialog.config';
 
 @Component({
   selector: 'app-archived-document-list',
@@ -219,8 +221,9 @@ export class ArchivedDocumentListComponent
 
   deleteDocument(id: string) {
     const dialogRef = this.dialog.open(DocumentDeleteDialogComponent, {
-      width: '20vw',
-      maxHeight: '70vh',
+      ...DMS_CONFIRM_DIALOG_CONFIG,
+      width: '480px',
+      maxHeight: '85vh',
     });
 
     dialogRef.afterClosed().subscribe((isTrue) => {
@@ -270,8 +273,7 @@ export class ArchivedDocumentListComponent
 
   onArchiveDocument() {
     this.dialog.open(ArchiveDocumentRetensionPeriodDialogComponent, {
-      width: '35vw',
-      maxHeight: '70vh',
+      ...DMS_FORM_DIALOG_CONFIG,
     });
   }
 }

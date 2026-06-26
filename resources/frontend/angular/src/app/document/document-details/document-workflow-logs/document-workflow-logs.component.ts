@@ -16,6 +16,7 @@ import { Observable, Subject, debounceTime, distinctUntilChanged, merge, tap } f
 import { BaseComponent } from 'src/app/base.component';
 import { DocumentWorkflowService } from 'src/app/workflows/manage-workflow/document-workflow.service';
 import { VisualWorkflowGraphComponent } from 'src/app/workflows/visual-workflow-graph/visual-workflow-graph.component';
+import { DMS_WORKFLOW_VIEW_DIALOG_CONFIG } from 'src/app/workflows/workflow-view-dialog.config';
 import { WorkflowLogDataSource } from 'src/app/workflows/workflow-logs/workflow-log-datasource';
 import { WorkflowLogService } from 'src/app/workflows/workflow-logs/workflow-log.service';
 
@@ -176,7 +177,7 @@ export class DocumentWorkflowLogsComponent extends BaseComponent implements OnCh
         data.documentId = workflowLog.documentId;
         data.documentName = workflowLog.documentName;
         this.dialog.open(VisualWorkflowGraphComponent, {
-          width: '90vw',
+          ...DMS_WORKFLOW_VIEW_DIALOG_CONFIG,
           data: { ...data },
         });
       },

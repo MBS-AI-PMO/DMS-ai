@@ -1,27 +1,37 @@
-<div class="d-flex">
-    <h2 mat-dialog-title class="confirm-dialog-title text-danger">
-        {{'ARE_YOU_SURE_YOU_WANT_TO_DELETE' | translate}}?
-    </h2>
-    <button mat-icon-button class="close-button ms-auto" (click)="clickHandler(false)">
-        <mat-icon class="close-icon" color="warn">close</mat-icon>
+<div class="dms-confirm">
+  <div class="dms-confirm__header">
+    <span aria-hidden="true"></span>
+    <button type="button" class="dms-confirm__close" (click)="clickHandler(false)" [attr.aria-label]="'CANCEL' | translate">
+      <mat-icon>close</mat-icon>
     </button>
-</div>
-<mat-dialog-content class="confirm-dialog-content">
-    <div class="text-danger m-l-10">{{'DELETE_DOCUMENT_WARNING' | translate}}</div>
-    <div class="m-l-25 m-t-15">
-        <li>{{'VERSION_HISTORY' | translate}}</li>
-        <li>{{'META_TAGS' | translate}}</li>
-        <li>{{'COMMENT' | translate}}</li>
-        <li>{{'NOTIFICATIONS' | translate}}</li>
-        <li>{{'REMINDERS' | translate}}</li>
-        <li>{{'PERMISSIONS' | translate}}</li>
+  </div>
+
+  <div class="dms-confirm__body">
+    <div class="dms-confirm__icon-wrap" aria-hidden="true">
+      <i-feather name="trash-2" class="dms-confirm__icon-feather"></i-feather>
     </div>
-</mat-dialog-content>
-<div mat-dialog-actions class="m-l-10">
-    <button class="btn btn-success btn-sm m-r-10" (click)="clickHandler(true)">
-        <i-feather name="check" class="small-icon"></i-feather>
-        {{'YES' | translate}}</button>
-    <button class="btn btn-danger btn-sm" (click)="clickHandler(false)">
-        <i-feather name="x-circle" class="small-icon"></i-feather>
-        {{'CANCEL' | translate}}</button>
+    <h2 class="dms-confirm__title">{{ 'ARE_YOU_SURE_YOU_WANT_TO_DELETE' | translate }}?</h2>
+    <p class="dms-confirm__subtitle">{{ 'DELETE_DOCUMENT_WARNING' | translate }}</p>
+  </div>
+
+  <mat-dialog-content class="dms-confirm__content">
+    <ul class="dms-confirm__list">
+      <li>{{ 'VERSION_HISTORY' | translate }}</li>
+      <li>{{ 'META_TAGS' | translate }}</li>
+      <li>{{ 'COMMENT' | translate }}</li>
+      <li>{{ 'NOTIFICATIONS' | translate }}</li>
+      <li>{{ 'REMINDERS' | translate }}</li>
+      <li>{{ 'PERMISSIONS' | translate }}</li>
+    </ul>
+  </mat-dialog-content>
+
+  <div mat-dialog-actions class="dms-confirm__actions">
+    <button type="button" class="dms-confirm__btn dms-confirm__btn--cancel" (click)="clickHandler(false)">
+      {{ 'CANCEL' | translate }}
+    </button>
+    <button type="button" class="dms-confirm__btn dms-confirm__btn--confirm" (click)="clickHandler(true)">
+      <i-feather name="check"></i-feather>
+      {{ 'YES' | translate }}
+    </button>
+  </div>
 </div>

@@ -44,6 +44,7 @@ export class ManageDocumentStatusComponent {
   }
 
   ngOnInit(): void {
+    this.isEditMode = !!this.data?.id;
     this.createDocumentStatusForm();
   }
 

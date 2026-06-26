@@ -1,16 +1,16 @@
-<div class="d-flex">
-  <span mat-dialog-title class="dialog-title">
-    {{ "ADD_REMINDER" | translate }} :: {{data?.name}}
-    <app-page-help-text [code]="'ADD_REMINDER'"></app-page-help-text>
-  </span>
-  <button mat-icon-button class="close-button ms-auto" (click)="closeDialog()">
-    <mat-icon class="close-icon" color="warn">close</mat-icon>
-  </button>
-</div>
+<div class="dms-form-dialog__shell">
+  <div class="dms-form-dialog__header">
+    <div class="dms-form-dialog__heading">
+      <h2 class="dms-form-dialog__title">{{ 'ADD_REMINDER' | translate }} — {{ data?.name }}</h2>
+      <app-page-help-text [code]="'ADD_REMINDER'"></app-page-help-text>
+    </div>
+    <button type="button" class="dms-form-dialog__close" (click)="onCancel()" [attr.aria-label]="'CANCEL' | translate">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
 <form [formGroup]="reminderForm">
-  <div mat-dialog-content>
-    <div class="row">
-      <div class="col-sm-12">
+  <mat-dialog-content class="dms-form-dialog__body">
+    <div class="dms-form-dialog__form-card">
         <div class="row">
           <div class="col-md-12">
             <label class="form-label" for="subject"> {{'SUBJECT' | translate}}</label>
@@ -209,17 +209,18 @@
             <owl-date-time #dt4></owl-date-time>
           </div>
         </div>
-      </div>
     </div>
-    <div class="m-t-10">
-      <button (click)="createReminder()" type="submit" class="btn btn-success btn-sm m-r-10">
-        <i-feather name="save" class="small-icon"></i-feather>
-        {{'SAVE' | translate}}
-      </button>
-      <button type="button" class="btn btn-danger btn-sm m-r-10" (click)="onCancel()">
-        <i-feather name="x-circle" class="small-icon"></i-feather>
-        {{'CANCEL' | translate}}
-      </button>
-    </div>
+  </mat-dialog-content>
+
+  <div mat-dialog-actions class="dms-form-dialog__actions">
+    <button type="button" class="dms-form-dialog__btn dms-form-dialog__btn--cancel" (click)="onCancel()">
+      <i-feather name="x-circle"></i-feather>
+      {{ 'CANCEL' | translate }}
+    </button>
+    <button type="button" class="dms-form-dialog__btn dms-form-dialog__btn--save" (click)="createReminder()">
+      <i-feather name="save"></i-feather>
+      {{ 'SAVE' | translate }}
+    </button>
   </div>
 </form>
+</div>

@@ -31,14 +31,23 @@ export class DocumentManageComponent extends BaseComponent {
   }
 
   saveDocument(document: DocumentInfo) {
-    this.sub$.sink = this.documentService.addDocument(document).subscribe(
-      (documentInfo: DocumentInfo) => {
+    this.sub$.sink = this.documentService.addDocument(document).subscribe({
+      next: (documentInfo: DocumentInfo) => {
         this.addDocumentTrail(documentInfo);
         this.toastrService.success(
           this.translationService.getValue('DOCUMENT_SAVE_SUCCESSFULLY')
         );
       },
-    );
+      error: (err) => {
+        const message =
+          err?.messages?.[0] ||
+          err?.error?.message ||
+          this.translationService.getValue('ERROR');
+        this.toastrService.error(
+          typeof message === 'string' ? message : 'Error in saving data.'
+        );
+      },
+    });
   }
   addDocumentTrail(documentInfo: DocumentInfo) {
     const objDocumentAuditTrail: DocumentAuditTrail = {

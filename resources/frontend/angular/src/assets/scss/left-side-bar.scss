@@ -14,22 +14,30 @@
 .overlay-open {
   .sidebar {
     margin-left: 0;
-    z-index: 99999999;
+    z-index: 1001 !important;
   }
 }
 
 .sidebar {
-  @include transition(all 0.5s);
+  @include transition(all 0.4s cubic-bezier(0.4, 0, 0.2, 1));
   font-family: $sidebar-font-family;
-  background: $theme-navbar-brand;
+  background:
+    linear-gradient(180deg, rgba(103, 119, 239, 0.08) 0%, transparent 18%),
+    linear-gradient(185deg, #1e2229 0%, $theme-navbar-brand 42%, #252a33 100%);
   width: 260px;
-  overflow: hidden;
+  overflow: visible;
   display: inline-block;
-  height: calc(100vh - 60px);
+  height: 100vh;
   position: fixed;
-  top: 60px;
+  top: 0;
   left: 0;
-  z-index: 999 !important;
+  z-index: 998 !important;
+  padding-top: 60px;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 22px;
+  box-shadow:
+    4px 0 28px rgba(0, 0, 0, 0.18),
+    inset -1px 0 0 rgba(255, 255, 255, 0.04);
 
   .user-info {
     padding: 13px 15px 12px 15px;
@@ -81,31 +89,32 @@
 
   .menu {
     position: relative;
-    overflow-y: auto;
-    height: 100vh;
+    height: calc(100vh - 60px);
+    overflow: hidden;
+    z-index: 1;
+
+    &.sidebar-menu-scroll {
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
 
     .list {
       list-style: none;
       padding-left: 0;
+      padding-right: 0.15rem;
 
       li {
         cursor: pointer;
 
         &.active {
-          .menu-top {
-            background-color:$theme-sidebar-menu-active;
-          }
-
-          > :first-child {
-            span {
-              font-weight: 500;
-            }
+          > :first-child span {
+            font-weight: 500;
           }
         }
 
         &.active-top {
-          .menu-top {
-            background-color: $theme-sidebar-menu-active;
+          > :first-child span {
+            font-weight: 600;
           }
         }
       }
@@ -230,9 +239,9 @@
         display: block;
         overflow: hidden;
         line-height: 2rem;
-        padding: 4px 9px 4px 18px;
-        margin: 3px 9px 0px 9px;
-        border-radius: 0.5rem;
+        padding: 6px 12px 6px 16px;
+        margin: 2px 8px 0;
+        border-radius: 12px;
         text-decoration: none !important;
 
         &:hover,
@@ -568,32 +577,14 @@
   .menu .list {
     li {
       a:hover {
-        color: $theme-active-color;
-      }
-
-      &.active {
-        background-color: $theme-menu-list-active;
-
-        .sidebarIcon .feather {
-          color: $theme-white;
-        }
-
-        > :first-child {
-
-          i,
-          span {
-            color: $theme-white;
-          }
-        }
+        color: $theme-white;
       }
     }
 
     .active .menu-toggle {
-      background: #f0f3fb;
-      color: $theme-active-color;
+      background: rgba(255, 255, 255, 0.08);
+      color: $theme-white;
     }
-
-    .ml-menu .active a {}
   }
 }
 

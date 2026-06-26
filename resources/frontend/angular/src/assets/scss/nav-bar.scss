@@ -167,6 +167,9 @@
   padding: 8px;
   width: 260px;
   @include transition(all 0.5s);
+  min-height: 60px;
+  display: flex;
+  align-items: center;
 
   .bars {
     float: left;

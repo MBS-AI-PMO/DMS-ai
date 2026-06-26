@@ -26,6 +26,7 @@ import { WorkflowLog } from '@core/domain-classes/workflow-log';
 import { VisualWorkflowInstance } from '@core/domain-classes/visual-workflow-instance';
 import { MatDialog } from '@angular/material/dialog';
 import { VisualWorkflowGraphComponent } from '../visual-workflow-graph/visual-workflow-graph.component';
+import { DMS_WORKFLOW_VIEW_DIALOG_CONFIG } from '../workflow-view-dialog.config';
 import { DocumentWorkflowService } from '../manage-workflow/document-workflow.service';
 
 @Component({
@@ -194,7 +195,7 @@ export class WorkflowLogsComponent extends BaseComponent implements OnInit, Afte
         data.documentId = workflowLog.documentId;
         data.documentName = workflowLog.documentName;
         this.dialog.open(VisualWorkflowGraphComponent, {
-          width: '90vw',
+          ...DMS_WORKFLOW_VIEW_DIALOG_CONFIG,
           data: { ...data },
         });
       },

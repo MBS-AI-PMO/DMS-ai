@@ -81,7 +81,7 @@ export class AddDocumentComponent extends BaseComponent implements OnInit {
   getCompanyProfile() {
     this.securityService.companyProfile.subscribe((profile) => {
       if (profile) {
-        this.isS3Supported = profile.location == 's3';
+        this.isS3Supported = !!profile.isS3Supported;
       }
     });
   }

@@ -1,4 +1,5 @@
 import { Component, Inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import {
   MAT_DIALOG_DATA,
@@ -16,7 +17,7 @@ export interface CandidateRejectionReasonDialogData {
 @Component({
   selector: 'app-candidate-rejection-reason-dialog',
   standalone: true,
-  imports: [MatButtonModule, MatDialogModule, MatIconModule],
+  imports: [CommonModule, MatButtonModule, MatDialogModule, MatIconModule],
   template: `
     <h2 mat-dialog-title>
       <mat-icon class="dialog-title-icon">info</mat-icon>

@@ -7,7 +7,8 @@ import { WorkflowsResource } from '@core/domain-classes/workflows-resource';
 import { CommonError } from '@core/error-handler/common-error';
 import { CommonHttpErrorService } from '@core/error-handler/common-http-error.service';
 import { Observable } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
+import { normalizeWorkflow, normalizeWorkflows } from './workflow-normalizer';
 
 @Injectable({
   providedIn: 'root'
@@ -21,25 +22,37 @@ export class WorkflowService {
   getWorkflows(): Observable<Workflow[] | CommonError> {
     const url = 'workflow';
     return this.httpClient.get<Workflow[]>(url)
-      .pipe(catchError(this.commonHttpErrorService.handleError));
+      .pipe(
+        map((workflows) => normalizeWorkflows(workflows ?? [])),
+        catchError(this.commonHttpErrorService.handleError)
+      );
   }
 
   getWorkflow(id: string): Observable<Workflow | CommonError> {
     const url = `workflow/${id}`;
     return this.httpClient.get<Workflow>(url)
-      .pipe(catchError(this.commonHttpErrorService.handleError));
+      .pipe(
+        map((workflow) => normalizeWorkflow(workflow) as Workflow),
+        catchError(this.commonHttpErrorService.handleError)
+      );
   }
 
   addWorkflow(workflow: Workflow): Observable<Workflow | CommonError> {
     const url = `workflow`;
     return this.httpClient.post<Workflow>(url, workflow)
-      .pipe(catchError(this.commonHttpErrorService.handleError));
+      .pipe(
+        map((created) => normalizeWorkflow(created) as Workflow),
+        catchError(this.commonHttpErrorService.handleError)
+      );
   }
 
   updateWorkflow(workflow: Workflow): Observable<Workflow | CommonError> {
     const url = `workflow/${workflow.id}`;
     return this.httpClient.put<Workflow>(url, workflow)
-      .pipe(catchError(this.commonHttpErrorService.handleError));
+      .pipe(
+        map((updated) => normalizeWorkflow(updated) as Workflow),
+        catchError(this.commonHttpErrorService.handleError)
+      );
   }
 
   deleteWorkflow(id: string): Observable<Workflow | CommonError> {

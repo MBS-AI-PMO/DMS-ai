@@ -1,0 +1,649 @@
+// DMS unified UI — theme: #6777ef primary, #2c303b dark
+$dms-primary: $theme-active-color;
+$dms-primary-soft: #eef0fd;
+$dms-primary-border: #d8ddf8;
+$dms-dark: $theme-navbar-brand;
+$dms-border: #e8eaef;
+$dms-text: #2c303b;
+$dms-muted: #6c757d;
+$dms-bg: #f8f9fc;
+$dms-card-shadow: 0 4px 18px rgba(44, 48, 59, 0.06);
+$dms-radius: 14px;
+$dms-radius-sm: 10px;
+
+.dms-module {
+  .block-header {
+    border: none;
+    margin-bottom: 1.25rem;
+    padding: 0;
+
+    .page-title {
+      color: $dms-text;
+      font-size: 1.35rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .breadcrumb-main {
+      width: 100%;
+    }
+
+    .breadcrumb-main > .row {
+      align-items: center;
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 1rem;
+      justify-content: space-between;
+      margin-left: 0;
+      margin-right: 0;
+      width: 100%;
+
+      > [class*='col'] {
+        flex: 0 1 auto;
+        max-width: none;
+        padding-left: 0;
+        padding-right: 0;
+        width: auto;
+      }
+
+      > [class*='col']:first-child,
+      > .col:not(.col-auto) {
+        align-items: center;
+        display: flex;
+        flex: 1 1 auto;
+        flex-wrap: nowrap;
+        gap: 0.35rem;
+        min-width: 0;
+      }
+
+      > .col-auto,
+      > [class*='col-auto'] {
+        flex: 0 0 auto;
+        margin-left: auto;
+      }
+
+      > .col-md-6:only-child,
+      > .col:only-child {
+        flex: 1 1 100%;
+        max-width: 100%;
+      }
+    }
+
+    app-page-help-text {
+      display: inline-flex;
+      flex-shrink: 0;
+      vertical-align: middle;
+    }
+  }
+
+  .dms-page-header,
+  .block-header .breadcrumb-main {
+    align-items: center;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 1rem;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+    width: 100%;
+  }
+
+  .dms-page-header__text {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+
+  .dms-page-title,
+  .page-title {
+    align-items: center;
+    color: $dms-text;
+    display: inline-flex;
+    flex-wrap: nowrap;
+    font-size: 1.35rem;
+    font-weight: 600;
+    gap: 0.35rem;
+    letter-spacing: -0.02em;
+    line-height: 1.3;
+    margin: 0;
+    max-width: 100%;
+    white-space: nowrap;
+  }
+
+  .dms-page-subtitle {
+    color: $dms-muted;
+    font-size: 0.875rem;
+    margin: 0.35rem 0 0;
+    white-space: normal;
+  }
+
+  .dms-page-actions,
+  .breadcrumb-list {
+    align-items: center;
+    display: flex;
+    flex: 0 0 auto;
+    flex-shrink: 0;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    list-style: none;
+    margin: 0;
+    margin-left: auto;
+    padding: 0;
+  }
+
+  @media (max-width: 767.98px) {
+    .block-header .breadcrumb-main > .row,
+    .dms-page-header {
+      flex-wrap: wrap;
+    }
+
+    .block-header .breadcrumb-main > .row > .col-auto,
+    .block-header .breadcrumb-main > .row > [class*='col-auto'],
+    .dms-page-actions {
+      margin-left: 0;
+      width: 100%;
+    }
+
+    .dms-page-title,
+    .page-title {
+      white-space: normal;
+    }
+  }
+
+  .dms-count-badge {
+    background: $dms-primary-soft;
+    border-radius: 999px;
+    color: $dms-primary;
+    display: inline-flex;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-left: 0.5rem;
+    padding: 0.2rem 0.65rem;
+    vertical-align: middle;
+  }
+
+  // Panels (new + legacy card)
+  .dms-panel,
+  .card {
+    background: #fff;
+    border: 1px solid $dms-border;
+    border-radius: $dms-radius;
+    box-shadow: $dms-card-shadow;
+    margin-bottom: 1rem;
+    overflow: hidden;
+    transition: box-shadow 0.25s ease;
+
+    &:hover {
+      box-shadow: 0 8px 28px rgba(44, 48, 59, 0.09);
+    }
+  }
+
+  .dms-panel__toolbar {
+    align-items: center;
+    background: linear-gradient(180deg, #fff 0%, $dms-bg 100%);
+    border-bottom: 1px solid $dms-border;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: space-between;
+    padding: 0.85rem 1.25rem;
+  }
+
+  .dms-panel__toolbar-title {
+    color: $dms-text;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .dms-panel__body,
+  .card > .body {
+    padding: 1.15rem 1.25rem;
+  }
+
+  // Filters
+  .dms-filters,
+  .row.margin-2 {
+    background: $dms-bg;
+    border: 1px solid $dms-border;
+    border-radius: $dms-radius-sm;
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    margin-bottom: 1rem !important;
+    padding: 0.85rem;
+
+    > [class*='col-'] {
+      max-width: 100%;
+      padding: 0;
+      width: 100%;
+    }
+  }
+
+  .dms-search-bar {
+    align-items: stretch;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+
+    .form-control {
+      flex: 1;
+      min-width: 220px;
+    }
+  }
+
+  .dms-filters--labeled {
+    .form-control,
+    .ng-select {
+      width: 100%;
+    }
+  }
+
+  // Forms
+  .form-label,
+  label.form-label {
+    color: $dms-text;
+    font-size: 0.82rem;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+  }
+
+  .form-control {
+    background: #fff;
+    border: 1px solid $dms-border;
+    border-radius: $dms-radius-sm;
+    color: $dms-text;
+    font-size: 0.875rem;
+    min-height: 40px;
+    padding: 0.5rem 0.85rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+    &:focus {
+      border-color: $dms-primary;
+      box-shadow: 0 0 0 3px rgba(103, 119, 239, 0.15);
+      outline: none;
+    }
+
+    &::placeholder {
+      color: #9aa3b2;
+    }
+  }
+
+  .ng-select {
+    .ng-select-container {
+      border: 1px solid $dms-border !important;
+      border-radius: $dms-radius-sm !important;
+      min-height: 40px !important;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    &.ng-select-focused .ng-select-container {
+      border-color: $dms-primary !important;
+      box-shadow: 0 0 0 3px rgba(103, 119, 239, 0.15) !important;
+    }
+  }
+
+  .dms-form-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  }
+
+  .dms-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .dms-form-actions {
+    border-top: 1px solid $dms-border;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+  }
+
+  // Buttons
+  .btn {
+    border-radius: $dms-radius-sm;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    padding: 0.45rem 0.9rem;
+    transition: all 0.2s ease;
+  }
+
+  .btn-success,
+  .btn-primary,
+  .dms-btn-primary {
+    background: $dms-primary !important;
+    border-color: $dms-primary !important;
+    color: #fff !important;
+
+    &:hover:not(:disabled) {
+      background: darken($dms-primary, 6%) !important;
+      border-color: darken($dms-primary, 6%) !important;
+      box-shadow: 0 4px 14px rgba(103, 119, 239, 0.35);
+    }
+  }
+
+  .btn-outline-primary,
+  .dms-btn-outline {
+    background: #fff !important;
+    border: 1px solid $dms-primary-border !important;
+    color: $dms-primary !important;
+
+    &:hover:not(:disabled) {
+      background: $dms-primary-soft !important;
+    }
+  }
+
+  .btn-danger,
+  .dms-btn-danger {
+    background: #dc3545 !important;
+    border-color: #dc3545 !important;
+    color: #fff !important;
+
+    &:hover:not(:disabled) {
+      box-shadow: 0 4px 14px rgba(220, 53, 69, 0.3);
+    }
+  }
+
+  .dms-btn-icon {
+    align-items: center;
+    display: inline-flex;
+    gap: 0.35rem;
+    justify-content: center;
+  }
+
+  // Page footers — same look as dms-form-dialog action buttons
+  .dms-page-footer-actions {
+    align-items: center;
+    background: #fff;
+    border-top: 1px solid $dms-border;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+    justify-content: flex-end;
+    padding: 1.35rem 1.75rem 2rem;
+  }
+
+  .dms-action-btn {
+    align-items: center;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 0.875rem;
+    font-weight: 600;
+    gap: 0.4rem;
+    justify-content: center;
+    min-height: 2.6rem;
+    padding: 0.55rem 1.15rem;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+
+    i-feather {
+      height: 1rem !important;
+      width: 1rem !important;
+    }
+
+    &:active {
+      transform: scale(0.98);
+    }
+  }
+
+  .dms-action-btn--cancel {
+    background: #fff;
+    border-color: #cbd5e1;
+    color: #475569;
+
+    &:hover {
+      background: #f8fafc;
+      border-color: #94a3b8;
+      color: #334155;
+    }
+  }
+
+  .dms-action-btn--save {
+    background: $dms-primary;
+    border-color: $dms-primary;
+    box-shadow: 0 8px 18px rgba(103, 119, 239, 0.28);
+    color: #fff;
+
+    &:hover {
+      box-shadow: 0 10px 22px rgba(103, 119, 239, 0.34);
+      filter: brightness(1.03);
+    }
+  }
+
+  // Tables
+  .dms-table-wrap,
+  .table-responsive {
+    border: 1px solid $dms-border;
+    border-radius: $dms-radius-sm;
+    overflow: hidden;
+  }
+
+  .grid-height-small,
+  .grid-height-large,
+  .grid-height-auto {
+    max-height: calc(100vh - 320px);
+    overflow: auto;
+  }
+
+  table.mat-mdc-table {
+    background: #fff;
+    width: 100%;
+
+    .mat-mdc-header-row {
+      background: $dms-bg;
+    }
+
+    .mat-mdc-header-cell {
+      border-bottom: 1px solid $dms-border;
+      color: $dms-muted;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .mat-mdc-row {
+      transition: background 0.15s ease;
+
+      &:hover {
+        background: #fafbff;
+      }
+    }
+
+    .mat-mdc-cell {
+      border-bottom: 1px solid #f0f2f7;
+      color: $dms-text;
+      font-size: 0.875rem;
+    }
+
+    .mat-mdc-footer-row {
+      background: $dms-bg;
+      border-top: 1px solid $dms-border;
+    }
+  }
+
+  .doc-link {
+    color: $dms-primary;
+    cursor: pointer;
+    font-weight: 500;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  .dms-empty,
+  tr.mat-mdc-no-data-row td > div {
+    align-items: center;
+    color: $dms-muted;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    justify-content: center;
+    padding: 2.5rem 1rem;
+    text-align: center;
+  }
+
+  // Material icon buttons in tables
+  .mat-mdc-icon-button {
+    border-radius: 8px !important;
+    color: $dms-primary;
+
+    &:hover {
+      background: $dms-primary-soft !important;
+    }
+  }
+
+  // Paginator — see assets/scss/dms-paginator.scss (global)
+
+  // Mat form fields in module
+  .mat-mdc-form-field {
+    width: 100%;
+  }
+
+  // Status pills in lists
+  .dms-status-pill {
+    background: color-mix(in srgb, var(--status-color, #{$dms-primary}) 14%, #fff);
+    border: 1px solid color-mix(in srgb, var(--status-color, #{$dms-primary}) 28%, transparent);
+    border-radius: 999px;
+    color: var(--status-color, #{$dms-primary});
+    display: inline-flex;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+    padding: 0.28rem 0.7rem;
+    white-space: nowrap;
+  }
+
+  // Section content area
+  &.content {
+    .content-block {
+      padding: 0.25rem 0.5rem 1.5rem;
+    }
+  }
+}
+
+// Global action menus (rendered in CDK overlay)
+.mat-mdc-menu-panel.dms-action-menu,
+.mat-mdc-menu-panel {
+  border: 1px solid $dms-border !important;
+  border-radius: 14px !important;
+  box-shadow: 0 12px 40px rgba(44, 48, 59, 0.14) !important;
+  min-width: 220px !important;
+  overflow: hidden;
+  padding: 6px !important;
+}
+
+.mat-mdc-menu-content {
+  padding: 4px !important;
+}
+
+.mat-mdc-menu-item {
+  border-radius: 10px !important;
+  margin: 2px 0 !important;
+  min-height: 40px !important;
+  transition: background 0.18s ease, transform 0.15s ease !important;
+
+  .mat-icon {
+    color: $dms-primary !important;
+    margin-right: 10px !important;
+    opacity: 0.9;
+  }
+
+  &:hover {
+    background: $dms-primary-soft !important;
+    transform: translateX(2px);
+  }
+}
+
+// Enhanced list tables globally inside dms-module
+.dms-module table.mat-mdc-table {
+  border-collapse: separate;
+  border-spacing: 0;
+
+  .mat-mdc-header-cell {
+    background: linear-gradient(180deg, #fff 0%, $dms-bg 100%);
+    padding: 14px 16px !important;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+
+  .mat-mdc-cell {
+    padding: 13px 16px !important;
+    vertical-align: middle;
+  }
+
+  .mat-mdc-row {
+    &:nth-child(even) {
+      background: #fbfcff;
+    }
+
+    &:hover {
+      background: #f3f5ff !important;
+      box-shadow: inset 3px 0 0 $dms-primary;
+    }
+
+    &:last-child .mat-mdc-cell {
+      border-bottom: none;
+    }
+  }
+
+  .table-column-fix-100,
+  .table-column-fix-30 {
+    .d-flex {
+      gap: 0.15rem;
+    }
+  }
+
+  // Keep multiple action buttons on one row (Edit / Delete / View, etc.)
+  td.mat-mdc-cell:has(> .btn + .btn),
+  td.mat-mdc-cell:has(.dms-table-actions) {
+    white-space: nowrap;
+  }
+
+  .table-column-fix-270 {
+    min-width: 340px !important;
+    width: 340px !important;
+  }
+
+  th.table-column-fix-200,
+  td.table-column-fix-200 {
+    min-width: 300px !important;
+    width: 300px !important;
+  }
+
+  .table-column-fix-188 {
+    min-width: 240px !important;
+    width: 240px !important;
+  }
+}
+
+// Reusable wrapper for table action button groups
+.dms-table-actions {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+
+  .btn,
+  .input-group-append,
+  button[mat-icon-button] {
+    flex: 0 0 auto;
+    margin-right: 0 !important;
+    margin-bottom: 0 !important;
+  }
+}

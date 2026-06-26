@@ -9,6 +9,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { TranslationService } from '@core/services/translation.service';
 import { Page } from '@core/domain-classes/page';
+import { Action } from '@core/domain-classes/action';
 
 @Component({
   selector: 'app-manage-role',
@@ -33,18 +34,24 @@ export class ManageRoleComponent extends BaseComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.role = this.emptyRole();
     this.sub$.sink = this.activeRoute.data.subscribe((data: { role: Role }) => {
-      this.role = data.role ? this.normalizeRole(data.role) : this.emptyRole();
+      if (data.role) {
+        this.role = this.normalizeRole(data.role);
+      }
     });
     const getActionRequest = this.actionService.getAll();
     const getPageRequest = this.pageService.getAll();
     this.sub$.sink = forkJoin({ getActionRequest, getPageRequest }).subscribe({
       next: (response) => {
         const actions = response.getActionRequest ?? [];
-        this.pages = (response.getPageRequest ?? []).map((p: Page) => ({
-          ...p,
-          pageActions: actions.filter((c) => c.pageId == p.id),
-        }));
+        const pages = response.getPageRequest ?? [];
+        this.pages = pages.map((page) => {
+          const pageActions = actions.filter(
+            (action) => String(action.pageId ?? (action as Action & { page_id?: string }).page_id) === String(page.id)
+          );
+          return { ...page, pageActions };
+        });
         this.loading = false;
       },
       error: () => {

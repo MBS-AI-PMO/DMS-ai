@@ -1,4 +1,4 @@
-<section class="content">
+<section class="content dms-module">
   <div class="content-block">
     <div class="row align-items-center">
       <div class="col mb-2">
@@ -35,19 +35,19 @@
                           {{ "ACTION" | translate }}
                         </th>
                         <td class="table-column-fix-200" mat-cell *matCellDef="let fileRequestInfo">
-                          <div class="d-flex align-items-center">
-                            <button class="me-3" mat-icon-button (click)="toggleRow(fileRequestInfo)">
+                          <div class="dms-table-actions">
+                            <button mat-icon-button (click)="toggleRow(fileRequestInfo)">
                               <mat-icon *ngIf="fileRequestInfo != expandedElement">chevron_right</mat-icon>
                               <mat-icon *ngIf="fileRequestInfo == expandedElement">expand_more</mat-icon>
                             </button>
                             <button *hasClaim="'FILE_REQUEST_UPDATE_FILE_REQUEST'"
                               [routerLink]="['/file-request/manage', fileRequestInfo.id]"
-                              class="btn btn-success btn-sm me-2">
+                              class="btn btn-success btn-sm">
                               <i-feather name="edit" class="small-icon"></i-feather>
                               <span class="d-none d-sm-inline"></span>
                             </button>
                             <button *hasClaim="'FILE_REQUEST_DELETE_FILE_REQUEST'"
-                              (click)="deleteFileRequest(fileRequestInfo)" class="btn btn-danger btn-sm me-2"
+                              (click)="deleteFileRequest(fileRequestInfo)" class="btn btn-danger btn-sm"
                               type="button">
                               <i-feather name="trash" class="small-icon"></i-feather>
                               <span class="d-none d-sm-inline"></span>

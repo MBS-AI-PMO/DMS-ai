@@ -6,16 +6,17 @@
         (click)="isNavbarCollapsed = !isNavbarCollapsed" aria-expanded="false"></a>
       <!-- mobile menu bars -->
       <a onClick="return false;" class="bars" (click)="mobileMenuSidebarOpen($event,'overlay-open')"></a>
-      <a class="navbar-brand" routerLink="/" *ngIf="!isOpenSidebar">
-        <img *ngIf="logoImage" [src]="logoImage" alt="Logo" class="logo-img" />
-        <img *ngIf="!logoImage" src="assets/images/logo.png" alt="logo" class="logo-lg">
+      <a class="navbar-brand sidebar-brand" routerLink="/" *ngIf="!isOpenSidebar">
+        <span class="sidebar-brand__frame">
+          <img *ngIf="logoImage" [src]="logoImage" alt="Logo" class="logo-img" />
+          <img *ngIf="!logoImage" src="assets/images/logo.png" alt="logo" class="logo-img">
+        </span>
       </a>
-      <a class="navbar-brand" [ngStyle]="{
-        'margin-left': !isOpenSidebar ? '15px' : '0px'
-      }" routerLink="/" *ngIf="isOpenSidebar">
-        <img *ngIf="smallLogoImage" [src]="smallLogoImage" style="max-height: 40px;" alt="Logo" class="logo-img" />
-        <img *ngIf="!smallLogoImage" src="assets/images/logo-small.png" style="max-height: 40px;" alt="Logo"
-          class="logo-img" />
+      <a class="navbar-brand sidebar-brand sidebar-brand--compact" routerLink="/" *ngIf="isOpenSidebar">
+        <span class="sidebar-brand__frame sidebar-brand__frame--compact">
+          <img *ngIf="smallLogoImage" [src]="smallLogoImage" alt="Logo" class="logo-img" />
+          <img *ngIf="!smallLogoImage" src="assets/images/logo-small.png" alt="Logo" class="logo-img" />
+        </span>
       </a>
     </div>
     <div class="navbar-header d-flex d-md-none">

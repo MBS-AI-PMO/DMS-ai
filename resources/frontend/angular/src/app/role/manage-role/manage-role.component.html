@@ -2,7 +2,7 @@
   <mat-spinner diameter="40"></mat-spinner>
 </div>
 <app-manage-role-presentation
-  *ngIf="!loading && role && pages"
+  *ngIf="!loading && role"
   [pages]="pages"
   [role]="role"
   (onManageRoleAction)="manageRole($event)">

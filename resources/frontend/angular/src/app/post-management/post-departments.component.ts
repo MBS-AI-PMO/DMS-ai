@@ -4,25 +4,24 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
+import { DMS_FORM_DIALOG_LARGE_CONFIG } from '@core/common-dialog/form-dialog.config';
+import { FeatherIconsModule } from '@shared/feather-icons.module';
 import { BaseComponent } from '../base.component';
-import { PostBoardData, ProposalCategory, ProposalDepartment, QuestionLevel } from './post-management.types';
 import {
-  clampPageIndex,
-  filterBySearch,
-  getDefaultQuestions,
-  parseQuestions,
-  serializeQuestions,
-  slicePage,
-} from './post-management.utils';
+  ManageDepartmentDialogComponent,
+  ManageDepartmentDialogData,
+} from './manage-department-dialog.component';
+import { PostBoardData, ProposalCategory, ProposalDepartment } from './post-management.types';
+import { clampPageIndex, filterBySearch, slicePage } from './post-management.utils';
 
 @Component({
   selector: 'app-post-departments',
@@ -34,12 +33,13 @@ import {
     TranslateModule,
     MatButtonModule,
     MatCardModule,
+    MatDialogModule,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
-    MatSelectModule,
     MatTooltipModule,
     MatPaginatorModule,
+    FeatherIconsModule,
   ],
   templateUrl: './post-departments.component.html',
   styleUrl: './post-departments.component.scss',
@@ -47,23 +47,15 @@ import {
 export class PostDepartmentsComponent extends BaseComponent implements OnInit {
   private readonly httpClient = inject(HttpClient);
   private readonly toastrService = inject(ToastrService);
+  private readonly dialog = inject(MatDialog);
 
   categories: ProposalCategory[] = [];
   departments: ProposalDepartment[] = [];
-
-  showDepartmentForm = false;
-  editingDepartmentId = '';
-  departmentCategoryId = '';
-  departmentName = '';
-  deptBasicQuestions: string[] = [];
-  deptIntermediateQuestions: string[] = [];
-  deptExpertQuestions: string[] = [];
 
   departmentSearch = '';
   departmentPageIndex = 0;
   departmentPageSize = 10;
   readonly pageSizeOptions = [5, 10, 25, 50];
-  readonly questionLevels: QuestionLevel[] = ['basic', 'intermediate', 'expert'];
 
   ngOnInit(): void {
     this.loadData();
@@ -101,41 +93,23 @@ export class PostDepartmentsComponent extends BaseComponent implements OnInit {
     this.clampDepartmentPage();
   }
 
-  openAddDepartment(): void {
-    this.resetDepartmentForm();
-    this.departmentCategoryId = this.categories[0]?.id || '';
-    this.showDepartmentForm = true;
-  }
-
-  saveDepartment(): void {
-    if (!this.departmentName.trim() || !this.departmentCategoryId) {
-      return;
-    }
-    const body = {
-      categoryId: this.departmentCategoryId,
-      name: this.departmentName.trim(),
-      basicQuestions: serializeQuestions(this.deptBasicQuestions),
-      intermediateQuestions: serializeQuestions(this.deptIntermediateQuestions),
-      expertQuestions: serializeQuestions(this.deptExpertQuestions),
+  openDepartmentDialog(department?: ProposalDepartment): void {
+    const data: ManageDepartmentDialogData = {
+      department,
+      categories: this.categories,
     };
-    const req = this.editingDepartmentId
-      ? this.httpClient.put(`proposal-management/departments/${this.editingDepartmentId}`, body)
-      : this.httpClient.post('proposal-management/departments', body);
-    this.sub$.sink = req.subscribe(() => {
-      this.toastrService.success(this.editingDepartmentId ? 'Department updated' : 'Department created');
-      this.resetDepartmentForm();
-      this.loadData();
-    });
+    this.sub$.sink = this.dialog
+      .open(ManageDepartmentDialogComponent, { ...DMS_FORM_DIALOG_LARGE_CONFIG, data })
+      .afterClosed()
+      .subscribe((saved) => {
+        if (saved) {
+          this.loadData();
+        }
+      });
   }
 
   editDepartment(dept: ProposalDepartment): void {
-    this.editingDepartmentId = dept.id;
-    this.departmentCategoryId = dept.categoryId;
-    this.departmentName = dept.name;
-    this.deptBasicQuestions = parseQuestions(dept.basicQuestions, 'basic');
-    this.deptIntermediateQuestions = parseQuestions(dept.intermediateQuestions, 'intermediate');
-    this.deptExpertQuestions = parseQuestions(dept.expertQuestions, 'expert');
-    this.showDepartmentForm = true;
+    this.openDepartmentDialog(dept);
   }
 
   deleteDepartment(dept: ProposalDepartment): void {
@@ -149,43 +123,6 @@ export class PostDepartmentsComponent extends BaseComponent implements OnInit {
       },
       error: (err) => this.toastrService.error(err?.error?.message || 'Could not delete department'),
     });
-  }
-
-  resetDepartmentForm(): void {
-    this.showDepartmentForm = false;
-    this.editingDepartmentId = '';
-    this.departmentCategoryId = this.categories[0]?.id || '';
-    this.departmentName = '';
-    this.deptBasicQuestions = getDefaultQuestions('basic');
-    this.deptIntermediateQuestions = getDefaultQuestions('intermediate');
-    this.deptExpertQuestions = getDefaultQuestions('expert');
-  }
-
-  addDeptQuestion(level: QuestionLevel): void {
-    this.getDeptQuestions(level).push('');
-  }
-
-  removeDeptQuestion(level: QuestionLevel, index: number): void {
-    const questions = this.getDeptQuestions(level);
-    if (questions.length === 1) {
-      questions[0] = '';
-      return;
-    }
-    questions.splice(index, 1);
-  }
-
-  trackByIndex(index: number): number {
-    return index;
-  }
-
-  private getDeptQuestions(level: QuestionLevel): string[] {
-    if (level === 'basic') {
-      return this.deptBasicQuestions;
-    }
-    if (level === 'intermediate') {
-      return this.deptIntermediateQuestions;
-    }
-    return this.deptExpertQuestions;
   }
 
   private clampDepartmentPage(): void {
