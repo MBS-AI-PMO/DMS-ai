@@ -1,0 +1,147 @@
+<section class="content dms-module cp-page">
+  <div class="container-fluid">
+  <div class="content-block">
+    <div class="cp-hero">
+      <h2>{{ 'MY_PROFILE' | translate }}</h2>
+      <p>{{ 'MY_PROFILE_SUBTITLE' | translate }}</p>
+    </div>
+
+    <div *ngIf="loading" class="cp-loading">
+      <mat-spinner diameter="32"></mat-spinner>
+      <span>{{ 'LOADING' | translate }}</span>
+    </div>
+
+    <div class="cp-card" *ngIf="!loading && profile">
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="cp-form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>{{ 'NAME' | translate }}</mat-label>
+            <input matInput formControlName="candidateName" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>{{ 'CNIC' | translate }}</mat-label>
+            <input matInput [value]="profile.candidateCode" disabled />
+            <mat-hint>{{ 'CNIC_CANNOT_BE_CHANGED' | translate }}</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>{{ 'EMAIL' | translate }}</mat-label>
+            <input matInput type="email" formControlName="email" />
+            <mat-hint>{{ 'EMAIL_USED_FOR_LOGIN' | translate }}</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>{{ 'USERNAME' | translate }}</mat-label>
+            <input matInput [value]="profile.userName" disabled />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>{{ 'PHONE' | translate }}</mat-label>
+            <input matInput formControlName="phone" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>{{ 'EXPERIENCE_YEARS' | translate }}</mat-label>
+            <input matInput type="number" min="0" max="60" formControlName="experienceYears" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>{{ 'WORK_MODE' | translate }}</mat-label>
+            <mat-select formControlName="workMode">
+              <mat-option value="">{{ 'NONE' | translate }}</mat-option>
+              <mat-option value="remote">{{ 'REMOTE' | translate }}</mat-option>
+              <mat-option value="physical">{{ 'PHYSICAL' | translate }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>{{ 'PREFERRED_CATEGORY' | translate }}</mat-label>
+            <input matInput formControlName="preferredCategory" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="cp-full">
+            <mat-label>{{ 'ADDRESS' | translate }}</mat-label>
+            <textarea matInput rows="3" formControlName="address"></textarea>
+          </mat-form-field>
+        </div>
+
+        <div class="cp-actions">
+          <button mat-flat-button class="cp-btn-primary" type="submit" [disabled]="saving">
+            {{ saving ? ('SAVING' | translate) : ('SAVE' | translate) }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="cp-card cp-cv-card" *ngIf="!loading">
+      <div class="cp-cv-header">
+        <div>
+          <h3>{{ 'MY_CVS' | translate }}</h3>
+          <p>{{ 'MY_CVS_SUBTITLE' | translate : { max: maxCvs, days: cvRetentionDays } }}</p>
+        </div>
+      </div>
+
+      <div *ngIf="cvLoading" class="cp-loading cp-loading--compact">
+        <mat-spinner diameter="28"></mat-spinner>
+      </div>
+
+      <div class="cp-cv-list" *ngIf="!cvLoading && cvs.length">
+        <div class="cp-cv-item" *ngFor="let cv of cvs">
+          <div class="cp-cv-item__info">
+            <mat-icon>description</mat-icon>
+            <div>
+              <strong>{{ cv.cvOriginalName || 'CV' }}</strong>
+              <span>{{ formatPortalDate(cv.createdDate) }}</span>
+            </div>
+          </div>
+          <div class="cp-cv-item__actions">
+            <button mat-stroked-button type="button" (click)="downloadCv(cv)">
+              <mat-icon>download</mat-icon>
+              {{ 'DOWNLOAD' | translate }}
+            </button>
+            <button
+              mat-flat-button
+              class="cp-btn-primary"
+              type="button"
+              [disabled]="applyingCvId === cv.id"
+              (click)="applyCvToApplications(cv)">
+              {{ applyingCvId === cv.id ? ('SAVING' | translate) : ('USE_FOR_APPLICATIONS' | translate) }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cp-empty" *ngIf="!cvLoading && !cvs.length">
+        {{ 'NO_CVS_UPLOADED' | translate }}
+      </div>
+
+      <div class="cp-cv-upload" *ngIf="!cvLoading && cvs.length < maxCvs">
+        <label class="cp-file-drop">
+          <input
+            type="file"
+            accept=".pdf,.doc,.docx"
+            (change)="onCvFileSelected($any($event.target).files?.[0] || null)" />
+          <mat-icon>cloud_upload</mat-icon>
+          <span>{{ 'UPLOAD_NEW_CV' | translate }}</span>
+        </label>
+        <p class="cp-file-selected" *ngIf="selectedCvFile">
+          {{ 'SELECTED_FILE' | translate }}: <strong>{{ selectedCvFile.name }}</strong>
+        </p>
+        <button
+          mat-flat-button
+          class="cp-btn-primary"
+          type="button"
+          [disabled]="!selectedCvFile || cvUploading"
+          (click)="uploadCv()">
+          {{ cvUploading ? ('UPLOADING' | translate) : ('UPLOAD_CV' | translate) }}
+        </button>
+      </div>
+
+      <p class="cp-cv-hint" *ngIf="!cvLoading && cvs.length >= maxCvs">
+        {{ 'CV_LIMIT_REACHED' | translate : { max: maxCvs } }}
+      </p>
+    </div>
+  </div>
+  </div>
+</section>

@@ -211,6 +211,7 @@ export class SecurityService {
   private static readonly ROLE_NAME_TO_ID: Record<string, string> = {
     'super admin': 'f8b6ace9-a625-4397-bdf8-f34060dbd8e4',
     employee: 'ff635a8f-4bb3-4d70-a3ed-c7749030696c',
+    candidate: 'c1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b58',
   };
 
   hasRole(roleNames: string | string[]): boolean {

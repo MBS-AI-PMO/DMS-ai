@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { LayoutComponent } from './layout/app-layout/main-layout/main-layout.component';
 import { AuthGuard } from '@core/security/auth.guard';
+import { DefaultRedirectGuard } from '@core/security/default-redirect.guard';
 import { MyProfileComponent } from './user/my-profile/my-profile.component';
 import { AppComponent } from './app.component';
 import { CompanyProfileResolver } from './company-profile/company-profile.resolver';
@@ -64,8 +65,12 @@ const routes: Routes = [
         children: [
           {
             path: '',
-            redirectTo: 'assigned-documents',
             pathMatch: 'full',
+            canActivate: [DefaultRedirectGuard],
+            loadComponent: () =>
+              import('./core/security/default-redirect.component').then(
+                (m) => m.DefaultRedirectComponent
+              ),
           },
           {
             path: 'add',
@@ -230,11 +235,29 @@ const routes: Routes = [
           },
           {
             path: 'proposal-management',
-            data: { claimType: 'FILE_REQUEST_VIEW_FILE_REQUEST' },
+            data: { claimType: 'PROPOSAL_MANAGEMENT_VIEW' },
             canActivate: [AuthGuard],
             loadComponent: () =>
               import('./proposal-management/proposal-management.component').then(
                 (m) => m.ProposalManagementComponent
+              ),
+          },
+          {
+            path: 'all-jobs',
+            data: { claimType: 'POST_MANAGEMENT_VIEW' },
+            canActivate: [AuthGuard],
+            loadComponent: () =>
+              import('./post-management/all-jobs.component').then(
+                (m) => m.AllJobsComponent
+              ),
+          },
+          {
+            path: 'all-jobs/:id',
+            data: { claimType: 'POST_MANAGEMENT_VIEW' },
+            canActivate: [AuthGuard],
+            loadComponent: () =>
+              import('./post-management/job-view.component').then(
+                (m) => m.JobViewComponent
               ),
           },
           {
@@ -316,6 +339,51 @@ const routes: Routes = [
             loadComponent: () =>
               import('./interviews/assigned-interview-history.component').then(
                 (m) => m.AssignedInterviewHistoryComponent
+              ),
+          },
+          {
+            path: 'candidate-portal/dashboard',
+            data: { claimType: 'CANDIDATE_PORTAL_VIEW' },
+            canActivate: [AuthGuard],
+            loadComponent: () =>
+              import('./candidate-portal/candidate-portal-dashboard.component').then(
+                (m) => m.CandidatePortalDashboardComponent
+              ),
+          },
+          {
+            path: 'candidate-portal/applications',
+            data: { claimType: 'CANDIDATE_PORTAL_VIEW' },
+            canActivate: [AuthGuard],
+            loadComponent: () =>
+              import('./candidate-portal/candidate-portal-applications.component').then(
+                (m) => m.CandidatePortalApplicationsComponent
+              ),
+          },
+          {
+            path: 'candidate-portal/profile',
+            data: { claimType: 'CANDIDATE_PORTAL_EDIT_PROFILE' },
+            canActivate: [AuthGuard],
+            loadComponent: () =>
+              import('./candidate-portal/candidate-portal-profile.component').then(
+                (m) => m.CandidatePortalProfileComponent
+              ),
+          },
+          {
+            path: 'candidate-portal/jobs',
+            data: { claimType: 'CANDIDATE_PORTAL_BROWSE_JOBS' },
+            canActivate: [AuthGuard],
+            loadComponent: () =>
+              import('./candidate-portal/candidate-portal-jobs.component').then(
+                (m) => m.CandidatePortalJobsComponent
+              ),
+          },
+          {
+            path: 'candidate-portal/history',
+            data: { claimType: 'CANDIDATE_PORTAL_VIEW' },
+            canActivate: [AuthGuard],
+            loadComponent: () =>
+              import('./candidate-portal/candidate-portal-history.component').then(
+                (m) => m.CandidatePortalHistoryComponent
               ),
           },
           {

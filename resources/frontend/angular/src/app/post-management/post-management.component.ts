@@ -16,6 +16,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
 import { DMS_FORM_DIALOG_LARGE_CONFIG } from '@core/common-dialog/form-dialog.config';
 import { FeatherIconsModule } from '@shared/feather-icons.module';
+import { SharedModule } from '@shared/shared.module';
 import { BaseComponent } from '../base.component';
 import {
   ManagePostDialogComponent,
@@ -47,6 +48,7 @@ import {
     MatTooltipModule,
     MatPaginatorModule,
     FeatherIconsModule,
+    SharedModule,
   ],
   templateUrl: './post-management.component.html',
   styleUrl: './post-management.component.scss',

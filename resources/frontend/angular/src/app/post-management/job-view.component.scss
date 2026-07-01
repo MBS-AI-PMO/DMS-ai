@@ -1,0 +1,327 @@
+$jv-primary: #6777ef;
+$jv-primary-dark: #4f5fd6;
+$jv-primary-soft: #eef0fd;
+$jv-text: #0f172a;
+$jv-muted: #64748b;
+$jv-border: #e8ecf4;
+$jv-radius: 18px;
+
+.pm-job-view-page {
+  .content-block {
+    max-width: 920px;
+  }
+}
+
+.pm-job-view-topbar {
+  margin-bottom: 18px;
+}
+
+.pm-job-view-back {
+  align-items: center;
+  background: #fff;
+  border: 1px solid $jv-border;
+  border-radius: 12px;
+  color: $jv-muted;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.875rem;
+  font-weight: 600;
+  gap: 6px;
+  padding: 10px 14px;
+  text-decoration: none;
+  transition: border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+
+  mat-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+  }
+
+  &:hover {
+    border-color: rgba(103, 119, 239, 0.35);
+    box-shadow: 0 8px 20px rgba(103, 119, 239, 0.1);
+    color: $jv-primary-dark;
+  }
+}
+
+.pm-job-view-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.pm-job-view-hero {
+  background: #fff;
+  border: 1px solid $jv-border;
+  border-radius: $jv-radius;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+  overflow: hidden;
+  position: relative;
+}
+
+.pm-job-view-hero__glow {
+  background:
+    radial-gradient(circle at top right, rgba(103, 119, 239, 0.16), transparent 42%),
+    linear-gradient(180deg, rgba(103, 119, 239, 0.06) 0%, transparent 100%);
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+.pm-job-view-hero__main {
+  display: flex;
+  gap: 20px;
+  padding: 26px 24px 24px;
+  position: relative;
+}
+
+.pm-job-view-hero__icon {
+  align-items: center;
+  background: linear-gradient(135deg, $jv-primary, #8b9bff);
+  border-radius: 16px;
+  box-shadow: 0 14px 28px rgba(103, 119, 239, 0.28);
+  color: #fff;
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 68px;
+  justify-content: center;
+  width: 68px;
+
+  mat-icon {
+    font-size: 34px;
+    height: 34px;
+    width: 34px;
+  }
+}
+
+.pm-job-view-hero__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.pm-job-view-badge {
+  background: rgba(103, 119, 239, 0.1);
+  border-radius: 999px;
+  color: $jv-primary-dark;
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  margin-bottom: 12px;
+  padding: 6px 12px;
+  text-transform: uppercase;
+}
+
+.pm-job-view-title {
+  color: $jv-text;
+  font-size: clamp(1.4rem, 2.8vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  margin: 0 0 16px;
+}
+
+.pm-job-view-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.pm-job-chip {
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid $jv-border;
+  border-radius: 999px;
+  color: #334155;
+  display: inline-flex;
+  font-size: 0.8rem;
+  font-weight: 600;
+  gap: 5px;
+  padding: 7px 12px;
+
+  mat-icon {
+    color: $jv-primary;
+    font-size: 15px;
+    height: 15px;
+    width: 15px;
+  }
+
+  &--mode.is-remote {
+    background: rgba(14, 165, 233, 0.08);
+    border-color: rgba(14, 165, 233, 0.2);
+
+    mat-icon {
+      color: #0284c7;
+    }
+  }
+
+  &--count {
+    background: $jv-primary-soft;
+    border-color: rgba(103, 119, 239, 0.18);
+    color: $jv-primary-dark;
+  }
+}
+
+.pm-job-view-meta-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pm-job-view-meta {
+  align-items: center;
+  color: $jv-muted;
+  display: flex;
+  font-size: 0.86rem;
+  gap: 6px;
+  margin: 0;
+
+  mat-icon {
+    color: $jv-primary;
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
+  }
+}
+
+.pm-job-view-actions {
+  background: #fff;
+  border: 1px solid $jv-border;
+  border-radius: $jv-radius;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+  padding: 18px 20px;
+}
+
+.pm-job-view-actions__label {
+  align-items: center;
+  color: $jv-text;
+  display: flex;
+  font-size: 0.82rem;
+  font-weight: 700;
+  gap: 8px;
+  letter-spacing: 0.02em;
+  margin-bottom: 14px;
+  text-transform: uppercase;
+
+  mat-icon {
+    color: $jv-primary;
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+  }
+}
+
+.pm-job-view-actions__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pm-job-btn {
+  align-items: center;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  gap: 8px;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 18px;
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+
+  mat-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+
+  &--primary {
+    background: linear-gradient(135deg, $jv-primary, #7d8df5);
+    box-shadow: 0 10px 22px rgba(103, 119, 239, 0.28);
+    color: #fff;
+
+    &:hover {
+      box-shadow: 0 14px 28px rgba(103, 119, 239, 0.34);
+    }
+  }
+
+  &--secondary {
+    background: $jv-primary-soft;
+    border: 1px solid rgba(103, 119, 239, 0.22);
+    color: $jv-primary-dark;
+
+    &:hover {
+      background: #e4e8fd;
+    }
+  }
+
+  &--ghost {
+    background: #fff;
+    border: 1px solid $jv-border;
+    color: $jv-muted;
+
+    &:hover {
+      border-color: rgba(103, 119, 239, 0.3);
+      color: $jv-primary-dark;
+    }
+  }
+}
+
+.pm-job-view-panel {
+  background: #fff;
+  border: 1px solid $jv-border;
+  border-radius: $jv-radius;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+  overflow: hidden;
+}
+
+.pm-job-view-panel__head {
+  align-items: center;
+  background: linear-gradient(180deg, #fafbfe 0%, #fff 100%);
+  border-bottom: 1px solid $jv-border;
+  color: $jv-text;
+  display: flex;
+  gap: 10px;
+  padding: 16px 20px;
+
+  mat-icon {
+    color: $jv-primary;
+    font-size: 22px;
+    height: 22px;
+    width: 22px;
+  }
+
+  h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0;
+  }
+}
+
+.pm-job-view-description {
+  padding: 20px 22px 24px;
+}
+
+@media (max-width: 767px) {
+  .pm-job-view-hero__main {
+    flex-direction: column;
+    padding: 20px 18px;
+  }
+
+  .pm-job-view-actions__buttons {
+    flex-direction: column;
+
+    .pm-job-btn {
+      width: 100%;
+    }
+  }
+}

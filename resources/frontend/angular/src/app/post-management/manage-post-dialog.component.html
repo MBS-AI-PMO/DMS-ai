@@ -96,10 +96,17 @@
           <input id="postAddress" class="form-control" [(ngModel)]="newPostAddress" placeholder="Office location">
         </div>
 
-        <div class="dms-form-dialog__field dms-form-dialog__field--full">
-          <label class="form-label" for="postDesc">Description</label>
-          <textarea id="postDesc" class="form-control" rows="3" [(ngModel)]="newPostDescription"
-            placeholder="Job summary and requirements"></textarea>
+        <div class="dms-form-dialog__field dms-form-dialog__field--full pm-description-field">
+          <label class="form-label">Description</label>
+          <div class="pm-description-editor">
+            <ckeditor
+              [editor]="editor"
+              [config]="editorConfig"
+              (ready)="onEditorReady($event)"
+              [(ngModel)]="newPostDescription">
+            </ckeditor>
+          </div>
+          <p class="pm-description-hint">Use bold, lists, and images to format the job description.</p>
         </div>
       </div>
 

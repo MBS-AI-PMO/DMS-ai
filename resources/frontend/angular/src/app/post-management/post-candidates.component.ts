@@ -11,10 +11,12 @@ import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
+import { SharedModule } from '@shared/shared.module';
 import { BaseComponent } from '../base.component';
 import { PostCandidateEmailDialogComponent } from './post-candidate-email-dialog.component';
 import { PostCandidateRejectDialogComponent } from './post-candidate-reject-dialog.component';
 import { PostCandidateScheduleDialogComponent } from './post-candidate-schedule-dialog.component';
+import { PostDescriptionHtmlPipe } from './post-description-html.pipe';
 
 type CandidateStage = 'cv_received' | 'shortlisted' | 'interview_scheduled' | 'approved' | 'rejected' | 'selected';
 type InterviewLevel = 'basic' | 'intermediate' | 'advanced';
@@ -86,6 +88,8 @@ interface PostManagementData {
     MatIconModule,
     MatInputModule,
     MatTooltipModule,
+    SharedModule,
+    PostDescriptionHtmlPipe,
   ],
   templateUrl: './post-candidates.component.html',
   styleUrl: './post-candidates.component.scss',
@@ -177,7 +181,7 @@ export class PostCandidatesComponent extends BaseComponent implements OnInit {
 
   updateCandidate(
     candidate: ProposalCandidate,
-    changes: Partial<ProposalCandidate> & { rejectionReason?: string | null },
+    changes: Partial<ProposalCandidate> & { rejectionReason?: string | null; isReschedule?: boolean },
   ): void {
     const stage = changes.stage ?? candidate.stage;
     const payload: Record<string, unknown> = {
@@ -192,6 +196,9 @@ export class PostCandidatesComponent extends BaseComponent implements OnInit {
     }
     if (changes.rejectionReason !== undefined) {
       payload['rejectionReason'] = changes.rejectionReason;
+    }
+    if (changes.isReschedule) {
+      payload['isReschedule'] = true;
     }
     this.sub$.sink = this.httpClient.put(`proposal-management/candidates/${candidate.id}`, payload).subscribe({
       next: () => {
@@ -232,6 +239,7 @@ export class PostCandidatesComponent extends BaseComponent implements OnInit {
         interviewDate: result.interviewIso,
         interviewerUserId: result.interviewerUserId,
         analysisNotes: candidate.analysisNotes,
+        isReschedule,
       });
     });
   }
@@ -276,6 +284,13 @@ export class PostCandidatesComponent extends BaseComponent implements OnInit {
             this.toastrService.error(err?.error?.message || 'Failed to send email');
           },
         });
+    });
+  }
+
+  shortlistCandidate(candidate: ProposalCandidate): void {
+    this.updateCandidate(candidate, {
+      stage: 'shortlisted',
+      analysisNotes: candidate.analysisNotes,
     });
   }
 
@@ -325,9 +340,13 @@ export class PostCandidatesComponent extends BaseComponent implements OnInit {
       });
   }
 
-  /** Approve / schedule only while CV is under review (not yet scheduled or decided). */
+  /** Schedule interview only after the candidate has been shortlisted. */
   canApproveCandidate(candidate: ProposalCandidate): boolean {
-    return candidate.stage === 'cv_received' || candidate.stage === 'shortlisted';
+    return candidate.stage === 'shortlisted';
+  }
+
+  canShortlistCandidate(candidate: ProposalCandidate): boolean {
+    return candidate.stage === 'cv_received';
   }
 
   canRejectCandidate(candidate: ProposalCandidate): boolean {

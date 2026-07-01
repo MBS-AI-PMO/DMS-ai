@@ -41,6 +41,7 @@ use App\Http\Controllers\EmailLogController;
 use App\Http\Controllers\ExpireDocumentController;
 use App\Http\Controllers\FileRequestDocumentController;
 use App\Http\Controllers\ProposalManagementController;
+use App\Http\Controllers\CandidatePortalController;
 use App\Http\Controllers\AIController;
 use App\Http\Controllers\AISummaryController;
 use App\Http\Controllers\DocumentWatermarkController;
@@ -70,6 +71,7 @@ Route::get('document/{id}/officeviewer', [DocumentController::class, 'officeview
 Route::get('/companyprofile', [CompanyProfileController::class, 'getCompanyProfile']);
 Route::post('/companyprofile/activate_license', [CompanyProfileController::class, 'updateLicense']);
 Route::get('/proposal-management/posts/{postId}/apply', [ProposalManagementController::class, 'getPublicPost']);
+Route::get('/proposal-management/post-description-images/{filename}', [ProposalManagementController::class, 'openPostDescriptionImage']);
 Route::get('/proposal-management/posts/{postId}/apply/lookup', [ProposalManagementController::class, 'lookupPublicCandidate']);
 Route::get('/proposal-management/posts/{postId}/apply/cv-vault/{cvId}', [ProposalManagementController::class, 'openPublicVaultCv']);
 Route::get('/proposal-management/posts/{postId}/apply/cv', [ProposalManagementController::class, 'openPublicApplicationCv']);
@@ -223,7 +225,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/document', [DocumentController::class, 'saveDocument']);
     });
 
-    Route::get('/document/assignedDocuments', [DocumentController::class, 'assignedDocuments']);
+    Route::middleware('hasToken:ASSIGNED_DOCUMENTS_VIEW_DOCUMENTS')->group(function () {
+        Route::get('/document/assignedDocuments', [DocumentController::class, 'assignedDocuments']);
+    });
 
     Route::get('/document/{id}', [DocumentController::class, 'getDocumentbyId']);
 
@@ -394,26 +398,45 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/file-request', [FileRequestController::class, 'getFileRequests']);
     });
 
-    Route::group(['middleware' => ['hasToken:FILE_REQUEST_VIEW_FILE_REQUEST']], function () {
-        Route::get('/proposal-management', [ProposalManagementController::class, 'index']);
+    Route::middleware('hasToken:PROPOSAL_MANAGEMENT_VIEW')->group(function () {
         Route::get('/proposal-management/dashboard', [ProposalManagementController::class, 'dashboard']);
+        Route::get('/proposal-management/files/{id}/open', [ProposalManagementController::class, 'openFile']);
+    });
+
+    Route::middleware('hasToken:PROPOSAL_MANAGEMENT_CREATE')->group(function () {
         Route::post('/proposal-management/folders', [ProposalManagementController::class, 'createFolder']);
         Route::post('/proposal-management/files', [ProposalManagementController::class, 'uploadFile']);
-        Route::get('/proposal-management/files/{id}/open', [ProposalManagementController::class, 'openFile']);
         Route::post('/proposal-management/file-requests', [ProposalManagementController::class, 'createFileRequest']);
+    });
+
+    Route::middleware('hasToken:POST_MANAGEMENT_VIEW')->group(function () {
+        Route::get('/proposal-management', [ProposalManagementController::class, 'index']);
         Route::get('/proposal-management/post-board', [ProposalManagementController::class, 'postBoard']);
+    });
+
+    Route::middleware('hasToken:POST_MANAGEMENT_CREATE,POST_MANAGEMENT_EDIT')->group(function () {
+        Route::post('/proposal-management/post-description-images', [ProposalManagementController::class, 'uploadPostDescriptionImage']);
+    });
+
+    Route::middleware('hasToken:POST_MANAGEMENT_CREATE')->group(function () {
         Route::post('/proposal-management/categories', [ProposalManagementController::class, 'createCategory']);
-        Route::put('/proposal-management/categories/{id}', [ProposalManagementController::class, 'updateCategory']);
-        Route::delete('/proposal-management/categories/{id}', [ProposalManagementController::class, 'deleteCategory']);
         Route::post('/proposal-management/departments', [ProposalManagementController::class, 'createDepartment']);
-        Route::put('/proposal-management/departments/{id}', [ProposalManagementController::class, 'updateDepartment']);
-        Route::delete('/proposal-management/departments/{id}', [ProposalManagementController::class, 'deleteDepartment']);
         Route::post('/proposal-management/posts', [ProposalManagementController::class, 'createPost']);
-        Route::put('/proposal-management/posts/{id}', [ProposalManagementController::class, 'updatePost']);
-        Route::delete('/proposal-management/posts/{id}', [ProposalManagementController::class, 'deletePost']);
         Route::post('/proposal-management/posts/{postId}/candidates', [ProposalManagementController::class, 'createCandidate']);
-        Route::put('/proposal-management/candidates/{id}', [ProposalManagementController::class, 'updateCandidate']);
         Route::post('/proposal-management/candidates/{id}/email', [ProposalManagementController::class, 'sendCandidateEmail']);
+    });
+
+    Route::middleware('hasToken:POST_MANAGEMENT_EDIT')->group(function () {
+        Route::put('/proposal-management/categories/{id}', [ProposalManagementController::class, 'updateCategory']);
+        Route::put('/proposal-management/departments/{id}', [ProposalManagementController::class, 'updateDepartment']);
+        Route::put('/proposal-management/posts/{id}', [ProposalManagementController::class, 'updatePost']);
+        Route::put('/proposal-management/candidates/{id}', [ProposalManagementController::class, 'updateCandidate']);
+    });
+
+    Route::middleware('hasToken:POST_MANAGEMENT_DELETE')->group(function () {
+        Route::delete('/proposal-management/categories/{id}', [ProposalManagementController::class, 'deleteCategory']);
+        Route::delete('/proposal-management/departments/{id}', [ProposalManagementController::class, 'deleteDepartment']);
+        Route::delete('/proposal-management/posts/{id}', [ProposalManagementController::class, 'deletePost']);
     });
 
     Route::middleware('hasToken:ALL_CANDIDATES_VIEW')->group(function () {
@@ -422,7 +445,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/proposal-management/all-candidates/{candidateId}/history', [ProposalManagementController::class, 'allCandidateHistory']);
     });
 
-    Route::middleware('hasToken:FILE_REQUEST_VIEW_FILE_REQUEST,ALL_CANDIDATES_VIEW')->group(function () {
+    Route::middleware('hasToken:POST_MANAGEMENT_VIEW,ALL_CANDIDATES_VIEW')->group(function () {
         Route::get('/proposal-management/candidates/{id}/cv', [ProposalManagementController::class, 'openCandidateCv']);
     });
 
@@ -430,6 +453,26 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/proposal-management/assigned-interviews', [ProposalManagementController::class, 'assignedInterviews']);
     Route::get('/proposal-management/assigned-interviews/{id}/history', [ProposalManagementController::class, 'assignedInterviewHistory']);
     Route::put('/proposal-management/assigned-interviews/{id}', [ProposalManagementController::class, 'updateAssignedInterview']);
+
+    Route::middleware('hasToken:CANDIDATE_PORTAL_VIEW')->group(function () {
+        Route::get('/candidate-portal/dashboard', [CandidatePortalController::class, 'dashboard']);
+        Route::get('/candidate-portal/applications', [CandidatePortalController::class, 'applications']);
+        Route::get('/candidate-portal/applications/{id}', [CandidatePortalController::class, 'application']);
+        Route::get('/candidate-portal/history', [CandidatePortalController::class, 'history']);
+        Route::get('/candidate-portal/profile', [CandidatePortalController::class, 'profile']);
+        Route::get('/candidate-portal/cvs', [CandidatePortalController::class, 'cvs']);
+        Route::get('/candidate-portal/cvs/{id}/download', [CandidatePortalController::class, 'downloadCv']);
+    });
+
+    Route::middleware('hasToken:CANDIDATE_PORTAL_EDIT_PROFILE')->group(function () {
+        Route::put('/candidate-portal/profile', [CandidatePortalController::class, 'updateProfile']);
+        Route::post('/candidate-portal/cvs', [CandidatePortalController::class, 'uploadCv']);
+        Route::post('/candidate-portal/cvs/apply', [CandidatePortalController::class, 'applyCvToApplications']);
+    });
+
+    Route::middleware('hasToken:CANDIDATE_PORTAL_BROWSE_JOBS')->group(function () {
+        Route::get('/candidate-portal/recommended-jobs', [CandidatePortalController::class, 'recommendedJobs']);
+    });
 
     Route::group(['middleware' => ['hasToken:FILE_REQUEST_UPDATE_FILE_REQUEST,FILE_REQUEST_VIEW_FILE_REQUEST']], function () {
         Route::get('/file-request/{id}', [FileRequestController::class, 'get']);

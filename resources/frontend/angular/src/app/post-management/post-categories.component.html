@@ -14,7 +14,7 @@
             <i-feather name="briefcase"></i-feather>
             Manage Departments
           </button>
-          <button type="button" class="dms-action-btn dms-action-btn--save" (click)="openCategoryDialog()">
+          <button type="button" class="dms-action-btn dms-action-btn--save" *hasClaim="'POST_MANAGEMENT_CREATE'" (click)="openCategoryDialog()">
             <i-feather name="plus"></i-feather>
             Add Category
           </button>
@@ -52,10 +52,10 @@
                 <td class="pm-dept-cell">{{ getDepartmentLabels(cat.id) }}</td>
                 <td class="text-end">
                   <div class="dms-table-actions">
-                    <button class="btn btn-success btn-sm" type="button" matTooltip="Edit" (click)="editCategory(cat)">
+                    <button class="btn btn-success btn-sm" type="button" matTooltip="Edit" *hasClaim="'POST_MANAGEMENT_EDIT'" (click)="editCategory(cat)">
                       <i-feather name="edit" class="small-icon"></i-feather>
                     </button>
-                    <button class="btn btn-danger btn-sm" type="button" matTooltip="Delete" (click)="deleteCategory(cat)">
+                    <button class="btn btn-danger btn-sm" type="button" matTooltip="Delete" *hasClaim="'POST_MANAGEMENT_DELETE'" (click)="deleteCategory(cat)">
                       <i-feather name="trash-2" class="small-icon"></i-feather>
                     </button>
                   </div>
@@ -80,7 +80,7 @@
         <div class="pm-empty" *ngIf="!categories.length">
           <mat-icon>folder_open</mat-icon>
           <p>No categories yet.</p>
-          <button type="button" class="dms-action-btn dms-action-btn--save mt-2" (click)="openCategoryDialog()">
+          <button type="button" class="dms-action-btn dms-action-btn--save mt-2" *hasClaim="'POST_MANAGEMENT_CREATE'" (click)="openCategoryDialog()">
             <i-feather name="plus"></i-feather>
             Add Category
           </button>

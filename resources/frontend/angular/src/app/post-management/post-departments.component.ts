@@ -15,6 +15,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
 import { DMS_FORM_DIALOG_LARGE_CONFIG } from '@core/common-dialog/form-dialog.config';
 import { FeatherIconsModule } from '@shared/feather-icons.module';
+import { SharedModule } from '@shared/shared.module';
 import { BaseComponent } from '../base.component';
 import {
   ManageDepartmentDialogComponent,
@@ -40,6 +41,7 @@ import { clampPageIndex, filterBySearch, slicePage } from './post-management.uti
     MatTooltipModule,
     MatPaginatorModule,
     FeatherIconsModule,
+    SharedModule,
   ],
   templateUrl: './post-departments.component.html',
   styleUrl: './post-departments.component.scss',

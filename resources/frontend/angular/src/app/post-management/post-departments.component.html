@@ -14,7 +14,7 @@
             <i-feather name="layers"></i-feather>
             Manage Categories
           </button>
-          <button type="button" class="dms-action-btn dms-action-btn--save" (click)="openDepartmentDialog()" [disabled]="!categories.length">
+          <button type="button" class="dms-action-btn dms-action-btn--save" *hasClaim="'POST_MANAGEMENT_CREATE'" (click)="openDepartmentDialog()" [disabled]="!categories.length">
             <i-feather name="plus"></i-feather>
             Add Department
           </button>
@@ -56,10 +56,10 @@
                 <td><span class="pm-tag">{{ dept.categoryName || '—' }}</span></td>
                 <td class="text-end">
                   <div class="dms-table-actions">
-                    <button class="btn btn-success btn-sm" type="button" matTooltip="Edit" (click)="editDepartment(dept)">
+                    <button class="btn btn-success btn-sm" type="button" matTooltip="Edit" *hasClaim="'POST_MANAGEMENT_EDIT'" (click)="editDepartment(dept)">
                       <i-feather name="edit" class="small-icon"></i-feather>
                     </button>
-                    <button class="btn btn-danger btn-sm" type="button" matTooltip="Delete" (click)="deleteDepartment(dept)">
+                    <button class="btn btn-danger btn-sm" type="button" matTooltip="Delete" *hasClaim="'POST_MANAGEMENT_DELETE'" (click)="deleteDepartment(dept)">
                       <i-feather name="trash-2" class="small-icon"></i-feather>
                     </button>
                   </div>
@@ -84,7 +84,7 @@
         <div class="pm-empty" *ngIf="!departments.length">
           <mat-icon>apartment</mat-icon>
           <p>No departments yet.</p>
-          <button type="button" class="dms-action-btn dms-action-btn--save mt-2" (click)="openDepartmentDialog()" [disabled]="!categories.length">
+          <button type="button" class="dms-action-btn dms-action-btn--save mt-2" *hasClaim="'POST_MANAGEMENT_CREATE'" (click)="openDepartmentDialog()" [disabled]="!categories.length">
             <i-feather name="plus"></i-feather>
             Add Department
           </button>

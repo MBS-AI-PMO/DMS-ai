@@ -1,0 +1,106 @@
+<section class="content dms-module pm-module pm-job-view-page">
+  <div class="container-fluid">
+    <div class="content-block">
+      <div class="pm-job-view-topbar">
+        <button type="button" class="pm-job-view-back" routerLink="/all-jobs">
+          <mat-icon>arrow_back</mat-icon>
+          <span>{{ 'ALL_JOBS' | translate }}</span>
+        </button>
+      </div>
+
+      <div class="pm-empty" *ngIf="loading">
+        <mat-icon>hourglass_top</mat-icon>
+        <p>Loading job details…</p>
+      </div>
+
+      <ng-container *ngIf="!loading && post">
+        <div class="pm-job-view-shell">
+          <div class="pm-job-view-hero">
+            <div class="pm-job-view-hero__glow" aria-hidden="true"></div>
+            <div class="pm-job-view-hero__main">
+              <div class="pm-job-view-hero__icon">
+                <mat-icon>work_outline</mat-icon>
+              </div>
+              <div class="pm-job-view-hero__content">
+                <span class="pm-job-view-badge">{{ 'JOB_DETAILS' | translate }}</span>
+                <h1 class="pm-job-view-title">{{ post.title }}</h1>
+                <div class="pm-job-view-chips">
+                  <span class="pm-job-chip" *ngIf="post.category">
+                    <mat-icon>layers</mat-icon>{{ post.category }}
+                  </span>
+                  <span class="pm-job-chip" *ngIf="post.department">
+                    <mat-icon>business</mat-icon>{{ post.department }}
+                  </span>
+                  <span class="pm-job-chip" *ngIf="post.experienceYears !== null && post.experienceYears !== undefined">
+                    <mat-icon>schedule</mat-icon>{{ post.experienceYears }} yrs
+                  </span>
+                  <span class="pm-job-chip pm-job-chip--mode" [class.is-remote]="post.workMode === 'remote'">
+                    <mat-icon>{{ post.workMode === 'remote' ? 'home_work' : 'location_on' }}</mat-icon>
+                    {{ post.workMode === 'remote' ? 'Remote' : 'Physical' }}
+                  </span>
+                  <span class="pm-job-chip pm-job-chip--count">
+                    <mat-icon>people</mat-icon>{{ post.candidates.length }} applicants
+                  </span>
+                </div>
+                <div class="pm-job-view-meta-row">
+                  <p class="pm-job-view-meta" *ngIf="post.workMode === 'physical' && post.address">
+                    <mat-icon>place</mat-icon>{{ post.address }}
+                  </p>
+                  <p class="pm-job-view-meta">
+                    <mat-icon>event</mat-icon>Posted {{ formatDisplayDate(post.createdDate) }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pm-job-view-actions">
+            <div class="pm-job-view-actions__label">
+              <mat-icon>bolt</mat-icon>
+              <span>Quick actions</span>
+            </div>
+            <div class="pm-job-view-actions__buttons">
+              <button
+                type="button"
+                class="pm-job-btn pm-job-btn--primary"
+                *ngIf="canManageCandidates"
+                (click)="openCandidates(post)">
+                <mat-icon>people</mat-icon>
+                View candidates
+              </button>
+              <a
+                class="pm-job-btn pm-job-btn--secondary"
+                [href]="getApplyLink(post)"
+                target="_blank"
+                rel="noopener">
+                <mat-icon>open_in_new</mat-icon>
+                Open apply page
+              </a>
+              <button type="button" class="pm-job-btn pm-job-btn--ghost" (click)="copyApplyLink(post)">
+                <mat-icon>link</mat-icon>
+                Copy apply link
+              </button>
+            </div>
+          </div>
+
+          <div class="pm-job-view-panel" *ngIf="post.description">
+            <div class="pm-job-view-panel__head">
+              <mat-icon>article</mat-icon>
+              <h2>About this role</h2>
+            </div>
+            <div class="pm-job-view-description pm-rich-text" [innerHTML]="post.description | postDescriptionHtml"></div>
+          </div>
+        </div>
+      </ng-container>
+
+      <div class="pm-empty" *ngIf="!loading && !post">
+        <mat-icon>work_off</mat-icon>
+        <p>Job post not found.</p>
+        <button type="button" class="pm-job-btn pm-job-btn--secondary mt-2" routerLink="/all-jobs">
+          <mat-icon>arrow_back</mat-icon>
+          Back to all jobs
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

@@ -18,6 +18,7 @@ class ProposalCandidate extends BaseModel
     protected $fillable = [
         'id',
         'postId',
+        'candidateUserId',
         'candidateName',
         'candidateCode',
         'phone',

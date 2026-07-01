@@ -94,7 +94,9 @@ export class LoginComponent extends BaseComponent implements OnInit {
           if (c.isAuthenticated) {
             this.getAllAllowFileExtension();
             this.toastr.success(this.translationService.getValue('USER_LOGIN_SUCCESSFULLY'));
-            if (this.securityService.hasClaim('dashboard_view_dashboard')) {
+            if (this.securityService.hasClaim('candidate_portal_view')) {
+              this.router.navigate(['/candidate-portal/dashboard']);
+            } else if (this.securityService.hasClaim('dashboard_view_dashboard')) {
               this.router.navigate(['/dashboard']);
             } else {
               this.router.navigate(['/']);

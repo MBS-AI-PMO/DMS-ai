@@ -36,7 +36,9 @@ class Users extends Authenticatable implements JWTSubject
         'isDeleted',
         'phoneNumber',
         'resetPasswordCode',
-        'isSystemUser'
+        'isSystemUser',
+        'normalizedUserName',
+        'normalizedEmail',
     ];
 
     protected $hidden = [
@@ -85,7 +87,9 @@ class Users extends Authenticatable implements JWTSubject
         parent::boot();
 
         static::creating(function (Model $model) {
-            $model->setAttribute($model->getKeyName(), Uuid::uuid4());
+            if (empty($model->getAttribute($model->getKeyName()))) {
+                $model->setAttribute($model->getKeyName(), Uuid::uuid4()->toString());
+            }
         });
 
         static::addGlobalScope('isDeleted', function (Builder $builder) {

@@ -1,0 +1,238 @@
+$cp-primary: #6777ef;
+$cp-primary-dark: #4f5fd6;
+$cp-primary-soft: #eef0fd;
+$cp-text: #0f172a;
+$cp-muted: #64748b;
+$cp-border: #e8ecf4;
+$cp-radius: 16px;
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+// Match Job Portal / DMS main content offset (sidebar + header)
+:host section.content.cp-page {
+  box-sizing: border-box;
+  margin: 70px 15px 0 276px;
+  min-height: calc(100vh - 76px);
+  transition: margin 0.5s;
+  width: auto;
+
+  .container-fluid {
+    margin: 0;
+    max-width: 100%;
+    padding-left: 0;
+    padding-right: 0;
+    width: 100%;
+  }
+
+  .content-block {
+    box-sizing: border-box;
+    margin: 0;
+    max-width: 100%;
+    padding: 0 0 1.5rem;
+    width: 100%;
+  }
+}
+
+:host-context(body.ls-closed) section.content.cp-page {
+  margin-left: 15px;
+}
+
+:host-context(body.side-closed.submenu-closed) section.content.cp-page {
+  margin-left: 75px;
+}
+
+:host-context(body.side-closed.side-closed-hover) section.content.cp-page {
+  margin-left: 276px;
+}
+
+@media (min-width: 768px) and (max-width: 1169px) {
+  :host section.content.cp-page {
+    margin: 65px 15px 0 276px;
+  }
+}
+
+@media (max-width: 767px) {
+  :host section.content.cp-page {
+    margin: 65px 10px 0 10px;
+  }
+}
+
+.cp-hero {
+  background: #fff;
+  border: 1px solid $cp-border;
+  border-radius: $cp-radius;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+  margin-bottom: 20px;
+  overflow: hidden;
+  padding: 24px;
+  position: relative;
+  width: 100%;
+
+  &::before {
+    background:
+      radial-gradient(circle at top right, rgba(103, 119, 239, 0.14), transparent 45%),
+      linear-gradient(180deg, rgba(103, 119, 239, 0.05) 0%, transparent 100%);
+    content: '';
+    inset: 0;
+    pointer-events: none;
+    position: absolute;
+  }
+
+  h2,
+  p {
+    position: relative;
+  }
+
+  h2 {
+    color: $cp-text;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 0 6px;
+  }
+
+  p {
+    color: $cp-muted;
+    margin: 0;
+  }
+}
+
+.cp-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 20px;
+  width: 100%;
+
+  @media (max-width: 991px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (max-width: 575px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cp-stat-card {
+  background: #fff;
+  border: 1px solid $cp-border;
+  border-radius: 14px;
+  padding: 16px;
+
+  strong {
+    color: $cp-primary-dark;
+    display: block;
+    font-size: 1.5rem;
+    line-height: 1.2;
+  }
+
+  span {
+    color: $cp-muted;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+}
+
+.cp-card {
+  background: #fff;
+  border: 1px solid $cp-border;
+  border-radius: $cp-radius;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.04);
+  padding: 20px;
+  width: 100%;
+}
+
+.cp-table {
+  width: 100%;
+
+  th {
+    color: $cp-muted;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 10px 12px;
+    text-align: left;
+    text-transform: uppercase;
+  }
+
+  td {
+    border-top: 1px solid $cp-border;
+    color: $cp-text;
+    font-size: 0.9rem;
+    padding: 14px 12px;
+    vertical-align: middle;
+  }
+}
+
+.cp-badge {
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 10px;
+
+  &--muted {
+    background: #f1f5f9;
+    color: #475569;
+  }
+
+  &--info {
+    background: #e0f2fe;
+    color: #0369a1;
+  }
+
+  &--primary {
+    background: $cp-primary-soft;
+    color: $cp-primary-dark;
+  }
+
+  &--success {
+    background: #dcfce7;
+    color: #15803d;
+  }
+
+  &--danger {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+}
+
+.cp-empty {
+  color: $cp-muted;
+  padding: 28px 12px;
+  text-align: center;
+}
+
+.cp-loading {
+  align-items: center;
+  color: $cp-muted;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  padding: 40px 12px;
+}
+
+.cp-form-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  width: 100%;
+}
+
+.cp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.cp-btn-primary {
+  background: linear-gradient(135deg, $cp-primary, #8b9bff) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 24px rgba(103, 119, 239, 0.28);
+  color: #fff !important;
+  font-weight: 600 !important;
+}

@@ -25,7 +25,7 @@
             </span>
             <span class="pm-count-pill">{{ post.candidates.length }} candidates</span>
           </div>
-          <p class="pm-hero-meta mb-0" *ngIf="post.description">{{ post.description }}</p>
+          <div class="pm-hero-meta mb-0 pm-rich-text" *ngIf="post.description" [innerHTML]="post.description | postDescriptionHtml"></div>
           <p class="pm-hero-meta mb-0" *ngIf="post.workMode === 'physical' && post.address">
             <mat-icon class="align-middle" style="font-size:14px;width:14px;height:14px">place</mat-icon>
             {{ post.address }}
@@ -105,42 +105,53 @@
                     <button mat-icon-button class="pm-icon-btn" type="button" matTooltip="Notes" (click)="viewCandidate(candidate)">
                       <mat-icon>sticky_note_2</mat-icon>
                     </button>
-                    <button
-                      mat-icon-button
-                      class="pm-icon-btn pm-icon-btn-primary"
-                      type="button"
-                      matTooltip="Approve & schedule"
-                      *ngIf="canApproveCandidate(candidate)"
-                      (click)="openApproveScheduleDialog(candidate)">
-                      <mat-icon>event_available</mat-icon>
-                    </button>
-                    <button
-                      mat-icon-button
-                      class="pm-icon-btn pm-icon-btn-primary"
-                      type="button"
-                      matTooltip="Reschedule"
-                      *ngIf="canRescheduleInterview(candidate)"
-                      (click)="openApproveScheduleDialog(candidate)">
-                      <mat-icon>event_repeat</mat-icon>
-                    </button>
-                    <button
-                      mat-icon-button
-                      class="pm-icon-btn"
-                      type="button"
-                      matTooltip="Email candidate"
-                      *ngIf="canEmailCandidate(candidate)"
-                      (click)="openCandidateEmailDialog(candidate)">
-                      <mat-icon>mail</mat-icon>
-                    </button>
-                    <button
-                      mat-icon-button
-                      class="pm-icon-btn pm-icon-btn-danger"
-                      type="button"
-                      matTooltip="Reject"
-                      *ngIf="canRejectCandidate(candidate)"
-                      (click)="openRejectDialog(candidate)">
-                      <mat-icon>person_off</mat-icon>
-                    </button>
+                    <ng-container *hasClaim="'POST_MANAGEMENT_EDIT'">
+                      <button
+                        mat-icon-button
+                        class="pm-icon-btn pm-icon-btn-primary"
+                        type="button"
+                        matTooltip="Shortlist"
+                        *ngIf="canShortlistCandidate(candidate)"
+                        (click)="shortlistCandidate(candidate)">
+                        <mat-icon>playlist_add_check</mat-icon>
+                      </button>
+                      <button
+                        mat-icon-button
+                        class="pm-icon-btn pm-icon-btn-primary"
+                        type="button"
+                        matTooltip="Approve & schedule"
+                        *ngIf="canApproveCandidate(candidate)"
+                        (click)="openApproveScheduleDialog(candidate)">
+                        <mat-icon>event_available</mat-icon>
+                      </button>
+                      <button
+                        mat-icon-button
+                        class="pm-icon-btn pm-icon-btn-primary"
+                        type="button"
+                        matTooltip="Reschedule"
+                        *ngIf="canRescheduleInterview(candidate)"
+                        (click)="openApproveScheduleDialog(candidate)">
+                        <mat-icon>event_repeat</mat-icon>
+                      </button>
+                      <button
+                        mat-icon-button
+                        class="pm-icon-btn"
+                        type="button"
+                        matTooltip="Email candidate"
+                        *ngIf="canEmailCandidate(candidate)"
+                        (click)="openCandidateEmailDialog(candidate)">
+                        <mat-icon>mail</mat-icon>
+                      </button>
+                      <button
+                        mat-icon-button
+                        class="pm-icon-btn pm-icon-btn-danger"
+                        type="button"
+                        matTooltip="Reject"
+                        *ngIf="canRejectCandidate(candidate)"
+                        (click)="openRejectDialog(candidate)">
+                        <mat-icon>person_off</mat-icon>
+                      </button>
+                    </ng-container>
                     <button
                       mat-icon-button
                       class="pm-icon-btn"
@@ -237,8 +248,8 @@
             </ol>
           </div>
 
-          <div class="pm-btn-toolbar pt-2 border-top">
-            <button mat-stroked-button color="primary" type="button" (click)="updateCandidate(candidate, { stage: 'shortlisted', analysisNotes: candidate.analysisNotes })">
+          <div class="pm-btn-toolbar pt-2 border-top" *hasClaim="'POST_MANAGEMENT_EDIT'">
+            <button mat-stroked-button color="primary" type="button" *ngIf="canShortlistCandidate(candidate)" (click)="shortlistCandidate(candidate)">
               Shortlist
             </button>
             <button mat-stroked-button color="primary" type="button" *ngIf="canApproveCandidate(candidate)" (click)="openApproveScheduleDialog(candidate)">

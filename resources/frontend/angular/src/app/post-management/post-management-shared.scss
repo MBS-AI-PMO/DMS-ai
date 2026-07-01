@@ -413,3 +413,67 @@ $pm-card-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0
   margin-top: 20px;
   padding: 20px;
 }
+
+.pm-rich-text {
+  color: $pm-text;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  word-break: break-word;
+
+  p {
+    margin-bottom: 0.75rem;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  ul,
+  ol {
+    margin: 0.5rem 0 0.75rem;
+    padding-left: 1.5rem;
+
+    li {
+      display: list-item;
+      list-style-type: inherit;
+    }
+  }
+
+  ul {
+    list-style-type: disc;
+  }
+
+  ol {
+    list-style-type: decimal;
+  }
+
+  img {
+    border-radius: 8px;
+    display: block;
+    height: auto;
+    margin: 0.75rem 0;
+    max-width: 100%;
+  }
+
+  strong,
+  b {
+    font-weight: 600;
+  }
+
+  em,
+  i {
+    font-style: italic;
+  }
+
+  blockquote {
+    border-left: 3px solid $pm-primary;
+    color: $pm-muted;
+    margin: 0.75rem 0;
+    padding-left: 0.85rem;
+  }
+
+  a {
+    color: $pm-primary;
+    text-decoration: underline;
+  }
+}

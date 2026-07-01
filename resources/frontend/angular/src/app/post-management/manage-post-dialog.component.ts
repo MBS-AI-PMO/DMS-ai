@@ -9,7 +9,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { ToastrService } from 'ngx-toastr';
-import { forkJoin, of, switchMap } from 'rxjs';
+import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+import { firstValueFrom, forkJoin, of, switchMap } from 'rxjs';
 import { FeatherIconsModule } from '@shared/feather-icons.module';
 import { BaseComponent } from '../base.component';
 import {
@@ -44,6 +46,7 @@ interface PostInlineDeptRow {
     MatInputModule,
     MatSelectModule,
     FeatherIconsModule,
+    CKEditorModule,
   ],
   templateUrl: './manage-post-dialog.component.html',
   styleUrl: './manage-post-dialog.component.scss',
@@ -75,6 +78,40 @@ export class ManagePostDialogComponent extends BaseComponent {
   newPostWorkMode: WorkMode = 'physical';
   newPostAddress = '';
   newPostDescription = '';
+
+  readonly editor = ClassicEditor;
+  onEditorReady(editor: ClassicEditor): void {
+    editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
+      return new PostDescriptionImageUploadAdapter(loader, this.httpClient, this.toastrService);
+    };
+  }
+
+  readonly editorConfig = {
+    toolbar: {
+      items: [
+        'heading',
+        '|',
+        'bold',
+        'italic',
+        '|',
+        'bulletedList',
+        'numberedList',
+        '|',
+        'link',
+        'uploadImage',
+        'blockQuote',
+        '|',
+        'undo',
+        'redo',
+      ],
+    },
+    image: {
+      toolbar: ['imageTextAlternative', 'imageStyle:inline', 'imageStyle:block', 'imageStyle:side'],
+    },
+    removePlugins: ['CKBox', 'CKFinder', 'EasyImage'],
+    language: 'en',
+    placeholder: 'Job summary and requirements',
+  };
 
   constructor() {
     super();
@@ -259,7 +296,7 @@ export class ManagePostDialogComponent extends BaseComponent {
       experienceYears: this.newPostExperienceYears,
       workMode: this.newPostWorkMode,
       address: this.newPostWorkMode === 'physical' ? this.newPostAddress.trim() : '',
-      description: this.newPostDescription.trim(),
+      description: this.newPostDescription || '',
     };
 
     const req = this.editingPostId
@@ -289,5 +326,34 @@ export class ManagePostDialogComponent extends BaseComponent {
     this.newPostWorkMode = post.workMode || 'physical';
     this.newPostAddress = post.address || '';
     this.newPostDescription = post.description || '';
+  }
+}
+
+class PostDescriptionImageUploadAdapter {
+  constructor(
+    private loader: { file: Promise<File> },
+    private http: HttpClient,
+    private toastrService: ToastrService
+  ) {}
+
+  upload(): Promise<{ default: string }> {
+    return this.loader.file.then((file) => {
+      const formData = new FormData();
+      formData.append('image', file);
+      return firstValueFrom(
+        this.http.post<{ url: string }>('proposal-management/post-description-images', formData)
+      )
+        .then((response) => ({
+          default: response?.url || '',
+        }))
+        .catch(() => {
+          this.toastrService.error('Failed to upload image');
+          return Promise.reject();
+        });
+    });
+  }
+
+  abort(): void {
+    // No-op: uploads are single-shot.
   }
 }

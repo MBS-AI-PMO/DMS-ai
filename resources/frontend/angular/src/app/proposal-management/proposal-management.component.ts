@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { ChangeDetectorRef, Component, OnInit, ViewEncapsulation, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { SharedModule } from '@shared/shared.module';
 import { ToastrService } from 'ngx-toastr';
 import { BaseComponent } from '../base.component';
 import { TranslationService } from '@core/services/translation.service';
@@ -46,6 +47,8 @@ interface ProposalFileRequest {
 
 interface ProposalDashboardData {
   rootFolderId: string;
+  userRootFolderId?: string;
+  systemRootFolderIds?: string[];
   folders: ProposalFolder[];
   files: ProposalFile[];
   fileRequests?: ProposalFileRequest[];
@@ -62,6 +65,7 @@ type UploadPanel = 'upload' | 'request';
     CommonModule,
     FormsModule,
     TranslateModule,
+    SharedModule,
   ],
   templateUrl: './proposal-management.component.html',
   styleUrl: './proposal-management.component.scss',
@@ -75,6 +79,8 @@ export class ProposalManagementComponent extends BaseComponent implements OnInit
   private readonly fileRequestBaseUrl = `${window.location.protocol}//${window.location.host}/file-requests/preview/`;
 
   rootFolderId = '';
+  userRootFolderId = '';
+  systemRootFolderIds: string[] = [];
   folders: ProposalFolder[] = [];
   files: ProposalFile[] = [];
   fileRequests: ProposalFileRequest[] = [];
@@ -137,12 +143,19 @@ export class ProposalManagementComponent extends BaseComponent implements OnInit
         .subscribe({
           next: (response) => {
             this.rootFolderId = response.rootFolderId;
+            this.userRootFolderId = response.userRootFolderId || response.rootFolderId;
+            this.systemRootFolderIds = response.systemRootFolderIds?.length
+              ? response.systemRootFolderIds
+              : [this.userRootFolderId];
             this.folders = response.folders || [];
             this.files = response.files || [];
             this.fileRequests = response.fileRequests || response.filerequests || [];
             this.currentFolderId = this.currentFolderId || response.rootFolderId;
 
-            if (!this.folders.find((folder) => folder.id === this.currentFolderId)) {
+            if (
+              this.currentFolderId !== response.rootFolderId &&
+              !this.folders.find((folder) => folder.id === this.currentFolderId)
+            ) {
               this.currentFolderId = response.rootFolderId;
             }
 
@@ -202,7 +215,7 @@ export class ProposalManagementComponent extends BaseComponent implements OnInit
       return;
     }
 
-    if (!this.rootFolderId) {
+    if (!this.userRootFolderId) {
       this.toastrService.error('Proposal root folder is missing. Please refresh the page.');
       return;
     }
@@ -216,7 +229,7 @@ export class ProposalManagementComponent extends BaseComponent implements OnInit
       this.httpClient
         .post('proposal-management/folders', {
           name: proposalName,
-          parentFolderId: this.rootFolderId,
+          parentFolderId: this.userRootFolderId,
         })
         .subscribe({
           next: () => {
@@ -387,8 +400,9 @@ export class ProposalManagementComponent extends BaseComponent implements OnInit
   }
 
   get proposalFolders(): ProposalFolder[] {
+    const rootIds = new Set(this.systemRootFolderIds);
     return this.folders
-      .filter((folder) => folder.parentFolderId === this.rootFolderId)
+      .filter((folder) => folder.parentFolderId && rootIds.has(folder.parentFolderId))
       .sort((a, b) => a.name.localeCompare(b.name));
   }
 
@@ -414,7 +428,7 @@ export class ProposalManagementComponent extends BaseComponent implements OnInit
 
     while (folder && folder.id !== this.rootFolderId) {
       breadcrumb.unshift(folder);
-      if (!folder.parentFolderId || folder.parentFolderId === this.rootFolderId) {
+      if (!folder.parentFolderId || this.systemRootFolderIds.includes(folder.parentFolderId)) {
         break;
       }
       folder = this.folders.find((item) => item.id === folder?.parentFolderId) || null;
@@ -445,11 +459,24 @@ export class ProposalManagementComponent extends BaseComponent implements OnInit
   }
 
   openParentFolder(): void {
-    if (!this.currentFolder?.parentFolderId) {
+    if (!this.currentFolder) {
       return;
     }
 
-    this.currentFolderId = this.currentFolder.parentFolderId;
+    const parentId = this.currentFolder.parentFolderId;
+    if (!parentId) {
+      return;
+    }
+
+    if (this.systemRootFolderIds.includes(parentId)) {
+      this.currentFolderId = this.rootFolderId;
+      this.activeAction = null;
+      this.uploadPanel = 'upload';
+      this.uploadRows = [null];
+      return;
+    }
+
+    this.currentFolderId = parentId;
     this.activeAction = null;
     this.uploadPanel = 'upload';
     this.uploadRows = [null];
@@ -500,7 +527,11 @@ export class ProposalManagementComponent extends BaseComponent implements OnInit
   }
 
   private getActiveFolderId(): string {
-    return this.currentFolderId || this.rootFolderId;
+    if (this.isRootView) {
+      return '';
+    }
+
+    return this.currentFolderId;
   }
 
   private handleApiError(

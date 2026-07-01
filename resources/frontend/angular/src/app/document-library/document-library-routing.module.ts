@@ -8,6 +8,8 @@ const routes: Routes = [
   {
     path: '',
     component: DocumentLibraryListComponent,
+    data: { claimType: 'ASSIGNED_DOCUMENTS_VIEW_DOCUMENTS' },
+    canActivate: [AuthGuard],
   },
   {
     path: 'add',

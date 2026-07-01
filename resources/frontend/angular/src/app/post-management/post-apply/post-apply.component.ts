@@ -8,20 +8,24 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatRadioModule } from '@angular/material/radio';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { BaseComponent } from '../../base.component';
+import { PostDescriptionHtmlPipe } from '../post-description-html.pipe';
 import { formatDisplayDate } from '../post-management.utils';
 
 interface PublicPost {
   id: string;
   title: string;
   department?: string;
+  category?: string;
   experienceYears?: number;
   workMode?: string;
   address?: string;
   description?: string;
 }
+
+type ApplyStep = 'details' | 'form';
 
 interface VaultCv {
   id: string;
@@ -53,6 +57,8 @@ interface CandidateProfile {
 
 interface LookupResponse {
   appliedOnThisPost: boolean;
+  portalAccountCreated?: boolean;
+  portalCredentialsEmailed?: boolean;
   application?: ExistingApplication;
   profile?: CandidateProfile | null;
   cvs: VaultCv[];
@@ -74,6 +80,8 @@ type CvMode = 'existing' | 'new';
     MatIconModule,
     MatInputModule,
     MatRadioModule,
+    RouterLink,
+    PostDescriptionHtmlPipe,
   ],
   templateUrl: './post-apply.component.html',
   styleUrl: './post-apply.component.scss',
@@ -85,6 +93,7 @@ export class PostApplyComponent extends BaseComponent implements OnInit {
 
   post: PublicPost | null = null;
   postId = '';
+  applyStep: ApplyStep = 'details';
   candidateName = '';
   candidateCode = '';
   phone = '';
@@ -101,6 +110,9 @@ export class PostApplyComponent extends BaseComponent implements OnInit {
   existingApplicationHasCv = false;
   submittedAsUpdate = false;
   submittedKeptExistingCv = false;
+  portalAccountCreated = false;
+  portalCredentialsEmailed = false;
+  portalAccountRepaired = false;
   availableCvs: VaultCv[] = [];
   maxCvs = 5;
   cvRetentionDays = 365;
@@ -215,6 +227,16 @@ export class PostApplyComponent extends BaseComponent implements OnInit {
           this.cvRetentionDays = response.cvRetentionDays || 365;
 
           if (response.appliedOnThisPost && response.application) {
+            this.portalAccountRepaired = !!response.portalAccountCreated;
+            this.portalAccountCreated = !!response.portalAccountCreated;
+            this.portalCredentialsEmailed = !!response.portalCredentialsEmailed;
+            if (this.portalAccountRepaired) {
+              this.toastrService.success(
+                response.portalCredentialsEmailed
+                  ? 'Portal account created. Check your email for login details.'
+                  : 'Portal account created. You can log in with your email.'
+              );
+            }
             this.applyExistingApplication(response.application);
             return;
           }
@@ -391,13 +413,24 @@ export class PostApplyComponent extends BaseComponent implements OnInit {
     }
 
     this.sub$.sink = this.httpClient
-      .post(`proposal-management/posts/${this.postId}/apply`, formData)
+      .post<{
+        portalAccountCreated?: boolean;
+        portalCredentialsEmailed?: boolean;
+        applicationRepaired?: boolean;
+      }>(`proposal-management/posts/${this.postId}/apply`, formData)
       .subscribe({
-        next: () => {
+        next: (response) => {
           this.submitted = true;
           this.submittedAsUpdate = false;
           this.submittedKeptExistingCv = false;
-          this.toastrService.success('Application submitted successfully');
+          this.portalAccountCreated = !!response?.portalAccountCreated;
+          this.portalCredentialsEmailed = !!response?.portalCredentialsEmailed;
+          this.portalAccountRepaired = !!response?.applicationRepaired;
+          this.toastrService.success(
+            response?.applicationRepaired
+              ? 'Portal account created for your existing application.'
+              : 'Application submitted successfully'
+          );
         },
         error: (err: { error?: { errors?: Record<string, string[]>; message?: string } }) => {
           const cnicErrors = err?.error?.errors?.['candidateCode'];
@@ -411,4 +444,12 @@ export class PostApplyComponent extends BaseComponent implements OnInit {
   }
 
   formatDisplayDate = formatDisplayDate;
+
+  goToApplicationForm(): void {
+    this.applyStep = 'form';
+  }
+
+  backToJobDetails(): void {
+    this.applyStep = 'details';
+  }
 }

@@ -1,0 +1,15 @@
+@import './candidate-portal-shared.scss';
+
+.cp-card__header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+
+  h3 {
+    color: #0f172a;
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin: 0;
+  }
+}

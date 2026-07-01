@@ -1,0 +1,38 @@
+<section class="content dms-module cp-page">
+  <div class="container-fluid">
+  <div class="content-block">
+    <div class="cp-hero">
+      <h2>{{ 'RECOMMENDED_JOBS' | translate }}</h2>
+      <p>{{ 'RECOMMENDED_JOBS_SUBTITLE' | translate }}</p>
+    </div>
+
+    <div *ngIf="loading" class="cp-loading">
+      <mat-spinner diameter="32"></mat-spinner>
+      <span>{{ 'LOADING' | translate }}</span>
+    </div>
+
+    <div class="cp-jobs-grid" *ngIf="!loading">
+      <mat-card class="cp-job-card" *ngFor="let job of jobs">
+        <h3>{{ job.title }}</h3>
+        <p class="cp-job-meta">
+          <span *ngIf="job.department">{{ job.department }}</span>
+          <span *ngIf="job.category"> · {{ job.category }}</span>
+        </p>
+        <p class="cp-job-details">
+          <span *ngIf="job.workMode">{{ job.workMode }}</span>
+          <span *ngIf="job.experienceYears != null"> · {{ job.experienceYears }} yrs</span>
+        </p>
+        <p class="cp-job-date">{{ 'POSTED' | translate }}: {{ formatPortalDate(job.createdDate) }}</p>
+        <button mat-flat-button class="cp-btn-primary" type="button" (click)="openApply(job)">
+          <mat-icon>open_in_new</mat-icon>
+          {{ 'APPLY_NOW' | translate }}
+        </button>
+      </mat-card>
+
+      <div class="cp-empty cp-full" *ngIf="!jobs.length">
+        {{ 'NO_RECOMMENDED_JOBS' | translate }}
+      </div>
+    </div>
+  </div>
+  </div>
+</section>

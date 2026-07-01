@@ -3,11 +3,11 @@
     <div class="content-block">
       <div class="proposal-page-header">
         <div>
-          <span class="page-title">Proposal Management</span>
+          <span class="page-title">{{ 'PROPOSAL_MANAGEMENT' | translate }}</span>
           <p class="proposal-page-subtitle">Organize proposals, upload files, and manage file requests</p>
         </div>
         <div class="proposal-page-actions" *ngIf="isRootView">
-          <button class="proposal-btn proposal-btn--primary" type="button" (click)="showAction('proposal')">
+          <button class="proposal-btn proposal-btn--primary" type="button" *hasClaim="'PROPOSAL_MANAGEMENT_CREATE'" (click)="showAction('proposal')">
             <span class="proposal-btn__label">Add New Proposal</span>
           </button>
         </div>
@@ -58,7 +58,7 @@
             <div class="proposal-empty__icon">📂</div>
             <h3>No proposals yet</h3>
             <p>Create your first proposal folder to get started.</p>
-            <button class="proposal-btn proposal-btn--primary" type="button" (click)="showAction('proposal')">
+            <button class="proposal-btn proposal-btn--primary" type="button" *hasClaim="'PROPOSAL_MANAGEMENT_CREATE'" (click)="showAction('proposal')">
               <span class="proposal-btn__label">Add New Proposal</span>
             </button>
           </div>
@@ -82,7 +82,7 @@
                 </ng-container>
               </nav>
             </div>
-            <div class="proposal-toolbar__actions">
+            <div class="proposal-toolbar__actions" *hasClaim="'PROPOSAL_MANAGEMENT_CREATE'">
               <button
                 class="proposal-btn"
                 [class.proposal-btn--outline]="activeAction !== 'subfolder'"
@@ -126,7 +126,7 @@
                   </div>
                 </div>
 
-                <div class="proposal-segmented">
+                <div class="proposal-segmented" *hasClaim="'PROPOSAL_MANAGEMENT_CREATE'">
                   <button
                     type="button"
                     class="proposal-segmented__btn"

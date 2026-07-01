@@ -1,0 +1,61 @@
+<section class="content dms-module cp-page">
+  <div class="container-fluid">
+  <div class="content-block">
+    <div class="cp-hero">
+      <h2>{{ 'MY_APPLICATIONS' | translate }}</h2>
+      <p>{{ 'MY_APPLICATIONS_SUBTITLE' | translate }}</p>
+    </div>
+
+    <div class="cp-card cp-toolbar">
+      <mat-form-field appearance="outline" class="cp-search">
+        <mat-label>{{ 'SEARCH' | translate }}</mat-label>
+        <input matInput [(ngModel)]="search" (ngModelChange)="onSearchChange()" />
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+    </div>
+
+    <div *ngIf="loading" class="cp-loading">
+      <mat-spinner diameter="32"></mat-spinner>
+      <span>{{ 'LOADING' | translate }}</span>
+    </div>
+
+    <div class="cp-card" *ngIf="!loading">
+      <table class="cp-table" *ngIf="filtered.length; else emptyApps">
+        <thead>
+          <tr>
+            <th>{{ 'JOB_TITLE' | translate }}</th>
+            <th>{{ 'DEPARTMENT' | translate }}</th>
+            <th>{{ 'STAGE' | translate }}</th>
+            <th>{{ 'APPLIED_ON' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let app of paginated">
+            <td>{{ app.postTitle }}</td>
+            <td>{{ app.department || '—' }}</td>
+            <td>
+              <span class="cp-badge" [ngClass]="stageBadgeClass(app.stage)">
+                {{ app.stageLabel }}
+              </span>
+            </td>
+            <td>{{ formatPortalDate(app.createdDate) }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <mat-paginator
+        *ngIf="filtered.length > pageSize"
+        [length]="filtered.length"
+        [pageIndex]="pageIndex"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="pageSizeOptions"
+        (page)="onPage($event)">
+      </mat-paginator>
+
+      <ng-template #emptyApps>
+        <div class="cp-empty">{{ 'NO_APPLICATIONS_YET' | translate }}</div>
+      </ng-template>
+    </div>
+  </div>
+  </div>
+</section>

@@ -1,5 +1,66 @@
 import { RouteInfo } from './sidebar.metadata';
 
+function sectionHeader(title: string, claims: string[]): RouteInfo {
+  return {
+    path: '',
+    title,
+    icon: '',
+    class: '',
+    groupTitle: true,
+    claims,
+    submenu: [],
+  };
+}
+
+const DMS_CLAIMS = [
+  'ASSIGNED_DOCUMENTS_VIEW_DOCUMENTS',
+  'ALL_DOCUMENTS_VIEW_DOCUMENTS',
+  'DEEP_SEARCH_DEEP_SEARCH',
+  'GENERATE_AI_DOCUMENTS',
+  'MANAGE_AI_PROMPT_TEMPLATES',
+  'VIEW_AI_GENERATED_DOCUMENTS',
+  'BULK_DOCUMENT_UPLOAD',
+  'DOCUMENT_AUDIT_TRAIL_VIEW_DOCUMENT_AUDIT_TRAIL',
+  'FILE_REQUEST_VIEW_FILE_REQUEST',
+  'WORKFLOW_VIEW_MY_WORKFLOWS',
+  'WORKFLOW_VIEW_WORKFLOW_SETTINGS',
+  'WORKFLOW_VIEW_ALL_WORKFLOWS',
+  'WORKFLOW_VIEW_WORKFLOW_LOGS',
+  'DOCUMENT_CATEGORY_MANAGE_DOCUMENT_CATEGORY',
+  'MANAGE_DOCUMENT_STATUS',
+  'CLIENTS_MANAGE_CLIENTS',
+  'ARCHIVE_DOCUMENT_VIEW_DOCUMENTS',
+  'EXPIRED_DOCUMENTS_VIEW_DOCUMENT',
+  'REMINDER_VIEW_REMINDERS',
+];
+
+const JOB_PORTAL_CLAIMS = [
+  'POST_MANAGEMENT_VIEW',
+  'ALL_CANDIDATES_VIEW',
+  'INTERVIEWS_VIEW_ASSIGNED',
+];
+
+const CANDIDATE_PORTAL_CLAIMS = [
+  'CANDIDATE_PORTAL_VIEW',
+  'CANDIDATE_PORTAL_EDIT_PROFILE',
+  'CANDIDATE_PORTAL_BROWSE_JOBS',
+];
+
+const ADMIN_CLAIMS = [
+  'ROLE_VIEW_ROLES',
+  'USER_VIEW_USERS',
+  'USER_ASSIGN_USER_ROLE',
+  'LOGIN_AUDIT_VIEW_LOGIN_AUDIT_LOGS',
+  'LOGS_VIEW_CRON_JOBS_LOGS',
+  'LOGS_VIEW_EMAIL_LOGS',
+  'EMAIL_MANAGE_SMTP_SETTINGS',
+  'SETTING_MANAGE_PROFILE',
+  'SETTING_MANAGE_LANGUAGE',
+  'SETTINGS_STORAGE_SETTINGS',
+  'PAGE_HELPER_MANAGE_PAGE_HELPER',
+  'SETTINGS_MANAGE_ALLOW_FILE_EXTENSIONS',
+];
+
 export const ROUTES: RouteInfo[] = [
   {
     path: 'dashboard',
@@ -10,13 +71,62 @@ export const ROUTES: RouteInfo[] = [
     claims: ['DASHBOARD_VIEW_DASHBOARD'],
     submenu: [],
   },
+
+  sectionHeader('CANDIDATE_PORTAL', CANDIDATE_PORTAL_CLAIMS),
+  {
+    path: 'candidate-portal/dashboard',
+    title: 'DASHBOARD',
+    icon: 'home',
+    class: '',
+    groupTitle: false,
+    claims: ['CANDIDATE_PORTAL_VIEW'],
+    submenu: [],
+  },
+  {
+    path: 'candidate-portal/applications',
+    title: 'MY_APPLICATIONS',
+    icon: 'file-text',
+    class: '',
+    groupTitle: false,
+    claims: ['CANDIDATE_PORTAL_VIEW'],
+    submenu: [],
+  },
+  {
+    path: 'candidate-portal/jobs',
+    title: 'RECOMMENDED_JOBS',
+    icon: 'briefcase',
+    class: '',
+    groupTitle: false,
+    claims: ['CANDIDATE_PORTAL_BROWSE_JOBS'],
+    submenu: [],
+  },
+  {
+    path: 'candidate-portal/profile',
+    title: 'MY_PROFILE',
+    icon: 'user',
+    class: '',
+    groupTitle: false,
+    claims: ['CANDIDATE_PORTAL_EDIT_PROFILE'],
+    submenu: [],
+  },
+  {
+    path: 'candidate-portal/history',
+    title: 'APPLICATION_HISTORY',
+    icon: 'clock',
+    class: '',
+    groupTitle: false,
+    claims: ['CANDIDATE_PORTAL_VIEW'],
+    submenu: [],
+  },
+
+  sectionHeader('DMS', DMS_CLAIMS),
   {
     path: 'assigned-documents',
     title: 'ASSIGNED_DOCUMENTS',
     icon: 'list',
     class: '',
     groupTitle: false,
-    claims: [],
+    claims: ['ASSIGNED_DOCUMENTS_VIEW_DOCUMENTS'],
     submenu: [],
   },
   {
@@ -62,7 +172,8 @@ export const ROUTES: RouteInfo[] = [
         groupTitle: false,
         claims: ['VIEW_AI_GENERATED_DOCUMENTS'],
         submenu: [],
-      }, {
+      },
+      {
         path: 'ai-template',
         title: 'AI_PROMPT_TEMPLATES',
         icon: 'email',
@@ -70,7 +181,7 @@ export const ROUTES: RouteInfo[] = [
         groupTitle: false,
         claims: ['MANAGE_AI_PROMPT_TEMPLATES'],
         submenu: [],
-      }
+      },
     ],
   },
   {
@@ -98,42 +209,6 @@ export const ROUTES: RouteInfo[] = [
     class: '',
     groupTitle: false,
     claims: ['FILE_REQUEST_VIEW_FILE_REQUEST'],
-    submenu: [],
-  },
-  {
-    path: 'proposal-management',
-    title: 'PROPOSAL_MANAGEMENT',
-    icon: 'folder',
-    class: '',
-    groupTitle: false,
-    claims: ['FILE_REQUEST_VIEW_FILE_REQUEST'],
-    submenu: [],
-  },
-  {
-    path: 'post-management',
-    title: 'POST_MANAGEMENT',
-    icon: 'briefcase',
-    class: '',
-    groupTitle: false,
-    claims: ['POST_MANAGEMENT_VIEW'],
-    submenu: [],
-  },
-  {
-    path: 'all-candidates',
-    title: 'ALL_CANDIDATES',
-    icon: 'users',
-    class: '',
-    groupTitle: false,
-    claims: ['ALL_CANDIDATES_VIEW'],
-    submenu: [],
-  },
-  {
-    path: 'assigned-interviews',
-    title: 'ASSIGNED_INTERVIEWS',
-    icon: 'calendar',
-    class: '',
-    groupTitle: false,
-    claims: ['INTERVIEWS_VIEW_ASSIGNED'],
     submenu: [],
   },
   {
@@ -198,7 +273,7 @@ export const ROUTES: RouteInfo[] = [
     class: '',
     groupTitle: false,
     submenu: [],
-    claims: ['MANAGE_DOCUMENT_STATUS']
+    claims: ['MANAGE_DOCUMENT_STATUS'],
   },
   {
     path: 'client',
@@ -228,6 +303,66 @@ export const ROUTES: RouteInfo[] = [
     submenu: [],
   },
   {
+    path: 'reminders',
+    title: 'REMINDER',
+    icon: 'bell',
+    class: '',
+    groupTitle: false,
+    claims: ['REMINDER_VIEW_REMINDERS'],
+    submenu: [],
+  },
+
+  sectionHeader('PROPOSAL_MANAGEMENT', ['PROPOSAL_MANAGEMENT_VIEW']),
+  {
+    path: 'proposal-management',
+    title: 'PROPOSAL_MANAGEMENT',
+    icon: 'folder',
+    class: '',
+    groupTitle: false,
+    claims: ['PROPOSAL_MANAGEMENT_VIEW'],
+    submenu: [],
+  },
+
+  sectionHeader('JOB_PORTAL', JOB_PORTAL_CLAIMS),
+  {
+    path: 'all-jobs',
+    title: 'ALL_JOBS',
+    icon: 'grid',
+    class: '',
+    groupTitle: false,
+    claims: ['POST_MANAGEMENT_VIEW'],
+    submenu: [],
+  },
+  {
+    path: 'post-management',
+    title: 'JOB_POSTS',
+    icon: 'briefcase',
+    class: '',
+    groupTitle: false,
+    claims: ['POST_MANAGEMENT_VIEW'],
+    submenu: [],
+  },
+  {
+    path: 'all-candidates',
+    title: 'ALL_CANDIDATES',
+    icon: 'users',
+    class: '',
+    groupTitle: false,
+    claims: ['ALL_CANDIDATES_VIEW'],
+    submenu: [],
+  },
+  {
+    path: 'assigned-interviews',
+    title: 'ASSIGNED_INTERVIEWS',
+    icon: 'calendar',
+    class: '',
+    groupTitle: false,
+    claims: ['INTERVIEWS_VIEW_ASSIGNED'],
+    submenu: [],
+  },
+
+  sectionHeader('ADMINISTRATION', ADMIN_CLAIMS),
+  {
     path: 'roles',
     title: 'ROLES',
     icon: 'users',
@@ -255,15 +390,6 @@ export const ROUTES: RouteInfo[] = [
     submenu: [],
   },
   {
-    path: 'reminders',
-    title: 'REMINDER',
-    icon: 'bell',
-    class: '',
-    groupTitle: false,
-    claims: ['REMINDER_VIEW_REMINDERS'],
-    submenu: [],
-  },
-  {
     path: '',
     title: 'LOGS',
     icon: 'log-in',
@@ -279,7 +405,8 @@ export const ROUTES: RouteInfo[] = [
         groupTitle: false,
         claims: ['LOGIN_AUDIT_VIEW_LOGIN_AUDIT_LOGS'],
         submenu: [],
-      }, {
+      },
+      {
         path: 'cron-job-logs',
         title: 'CRON_JOB_LOGS',
         icon: 'target',
@@ -296,7 +423,7 @@ export const ROUTES: RouteInfo[] = [
         groupTitle: false,
         submenu: [],
         claims: ['LOGS_VIEW_EMAIL_LOGS'],
-      }
+      },
     ],
   },
   {
@@ -311,7 +438,7 @@ export const ROUTES: RouteInfo[] = [
       'SETTING_MANAGE_LANGUAGE',
       'SETTINGS_STORAGE_SETTINGS',
       'PAGE_HELPER_MANAGE_PAGE_HELPER',
-      'SETTINGS_MANAGE_ALLOW_FILE_EXTENSIONS'
+      'SETTINGS_MANAGE_ALLOW_FILE_EXTENSIONS',
     ],
     submenu: [
       {
@@ -358,7 +485,7 @@ export const ROUTES: RouteInfo[] = [
         groupTitle: false,
         submenu: [],
         claims: ['PAGE_HELPER_MANAGE_PAGE_HELPER'],
-      }
+      },
     ],
   },
 ];

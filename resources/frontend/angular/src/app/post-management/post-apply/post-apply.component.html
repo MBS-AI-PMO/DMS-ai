@@ -1,189 +1,274 @@
 <section class="apply-page">
-  <mat-card class="apply-card mat-elevation-z4">
-    <mat-card-content>
-      <div *ngIf="loading" class="apply-loading text-center py-5">
-        <mat-icon class="apply-icon">hourglass_top</mat-icon>
-        <p class="mb-0 text-muted">Loading application form…</p>
+  <mat-card class="apply-card mat-elevation-z0">
+    <mat-card-content class="apply-card-content">
+      <div *ngIf="loading" class="apply-state apply-state--loading">
+        <mat-icon class="apply-state-icon">hourglass_top</mat-icon>
+        <p>Loading application form…</p>
       </div>
 
-      <div *ngIf="!loading && loadError" class="apply-error text-center py-5">
-        <mat-icon class="text-danger">error_outline</mat-icon>
-        <h4 class="mt-2">Unable to open form</h4>
-        <p class="text-muted mb-0">{{ loadError }}</p>
+      <div *ngIf="!loading && loadError" class="apply-state apply-state--error">
+        <mat-icon class="apply-state-icon text-danger">error_outline</mat-icon>
+        <h4>Unable to open form</h4>
+        <p>{{ loadError }}</p>
       </div>
 
       <div *ngIf="!loading && !loadError && !submitted; else submittedMessage">
-        <div class="text-center mb-4">
-          <mat-icon class="apply-icon">assignment_ind</mat-icon>
-          <h3 class="mb-1">{{ post?.title || 'Apply for Post' }}</h3>
-          <div class="text-muted" *ngIf="post?.department">{{ post?.department }}</div>
-          <div class="job-details mt-3" *ngIf="post">
-            <span *ngIf="post.experienceYears !== null && post.experienceYears !== undefined">
-              {{ post.experienceYears }} years experience
+        <div class="apply-progress" aria-hidden="true">
+          <div class="apply-progress-track">
+            <div class="apply-progress-fill" [style.width.%]="applyStep === 'details' ? 50 : 100"></div>
+          </div>
+          <div class="apply-progress-labels">
+            <span [class.is-active]="applyStep === 'details'">Job details</span>
+            <span [class.is-active]="applyStep === 'form'">Application</span>
+          </div>
+        </div>
+
+        <!-- Step 1: Job details -->
+        <div *ngIf="applyStep === 'details' && post" class="apply-step apply-step--details">
+          <div class="apply-hero">
+            <span class="apply-step-badge">Step 1 of 2</span>
+            <div class="apply-hero-icon-wrap">
+              <mat-icon>work_outline</mat-icon>
+            </div>
+            <h1 class="apply-job-title">{{ post.title }}</h1>
+            <p class="apply-hero-subtitle">Review the role before you apply.</p>
+          </div>
+
+          <div class="apply-chip-row">
+            <span class="apply-chip" *ngIf="post.category">
+              <mat-icon>layers</mat-icon>{{ post.category }}
             </span>
-            <span>{{ post.workMode === 'remote' ? 'Remote' : 'Physical' }}</span>
+            <span class="apply-chip" *ngIf="post.department">
+              <mat-icon>business</mat-icon>{{ post.department }}
+            </span>
+            <span class="apply-chip" *ngIf="post.experienceYears !== null && post.experienceYears !== undefined">
+              <mat-icon>schedule</mat-icon>{{ post.experienceYears }} yrs experience
+            </span>
+            <span class="apply-chip" [class.apply-chip--accent]="post.workMode === 'remote'">
+              <mat-icon>{{ post.workMode === 'remote' ? 'home_work' : 'location_on' }}</mat-icon>
+              {{ post.workMode === 'remote' ? 'Remote' : 'Physical' }}
+            </span>
+            <span class="apply-chip apply-chip--wide" *ngIf="post.workMode === 'physical' && post.address">
+              <mat-icon>place</mat-icon>{{ post.address }}
+            </span>
           </div>
-          <div class="text-muted small mt-2" *ngIf="post?.workMode === 'physical' && post?.address">
-            Address: {{ post?.address }}
-          </div>
-          <p class="mt-3 mb-0" *ngIf="post?.description">{{ post?.description }}</p>
-        </div>
 
-        <div class="cnic-primary-block mb-3" [class.already-applied-readonly]="alreadyApplied">
-          <div class="cnic-primary-label">
-            <mat-icon>badge</mat-icon>
-            CNIC (required for verification)
+          <div class="apply-description-panel" *ngIf="post.description">
+            <h2 class="apply-section-title">About this role</h2>
+            <div class="pm-rich-text apply-description-body" [innerHTML]="post.description | postDescriptionHtml"></div>
           </div>
-          <mat-form-field appearance="outline" class="w-100 cnic-field" [class.mat-form-field-invalid]="cnicErrorMessage">
-            <mat-label>CNIC number</mat-label>
-            <input
-              matInput
-              [(ngModel)]="candidateCode"
-              (ngModelChange)="onCnicInput()"
-              (blur)="onCnicBlur()"
-              placeholder="35201-1234567-1"
-              maxlength="15"
-              inputmode="numeric"
-              autocomplete="off"
-              [readonly]="alreadyApplied"
-              required />
-            <mat-hint>13 digits — format: 35201-1234567-1</mat-hint>
-            <mat-error *ngIf="cnicErrorMessage">{{ cnicErrorMessage }}</mat-error>
-          </mat-form-field>
-          <div class="lookup-status text-muted small" *ngIf="lookupLoading">
-            <mat-icon class="align-middle">sync</mat-icon> Checking your records…
-          </div>
-        </div>
 
-        <div class="already-applied-banner mb-3" *ngIf="alreadyApplied">
-          <mat-icon>info</mat-icon>
-          <div>
-            <strong>You have already applied for this job.</strong>
-            <p class="mb-0">Your application details are shown below in read-only mode. No further changes can be made for this job.</p>
-          </div>
-        </div>
-
-        <div class="row" [class.already-applied-readonly]="alreadyApplied">
-          <div class="col-md-6">
-            <mat-form-field appearance="outline" class="w-100 mb-2">
-              <mat-label>Full name</mat-label>
-              <input matInput [(ngModel)]="candidateName" [readonly]="alreadyApplied" required>
-            </mat-form-field>
-          </div>
-          <div class="col-md-6">
-            <mat-form-field appearance="outline" class="w-100 mb-2">
-              <mat-label>Phone</mat-label>
-              <input matInput [(ngModel)]="phone" [readonly]="alreadyApplied" required>
-            </mat-form-field>
-          </div>
-          <div class="col-md-6">
-            <mat-form-field appearance="outline" class="w-100 mb-2">
-              <mat-label>Email</mat-label>
-              <input matInput type="email" [(ngModel)]="email" (blur)="onEmailBlur()" [readonly]="alreadyApplied" required>
-              <mat-hint *ngIf="!alreadyApplied">Used with CNIC to find your previous applications</mat-hint>
-            </mat-form-field>
-          </div>
-          <div class="col-md-6">
-            <mat-form-field appearance="outline" class="w-100 mb-2">
-              <mat-label>Experience (Years)</mat-label>
-              <input matInput type="number" min="0" [(ngModel)]="experienceYears" [readonly]="alreadyApplied" required>
-            </mat-form-field>
-          </div>
-        </div>
-
-        <div class="existing-cv-block mb-3" *ngIf="alreadyApplied">
-          <div class="existing-cv-label">
-            <mat-icon>description</mat-icon>
-            Submitted CV
-          </div>
-          <div class="existing-cv-row" *ngIf="existingApplicationHasCv; else noCvSubmitted">
-            <span class="existing-cv-name">{{ existingApplicationCvName || 'Uploaded CV' }}</span>
-            <button mat-button color="primary" type="button" (click)="viewApplicationCv()">
-              <mat-icon>visibility</mat-icon> View
+          <div class="apply-step-actions">
+            <button mat-flat-button color="primary" type="button" class="apply-primary-btn" (click)="goToApplicationForm()">
+              Continue to application
+              <mat-icon>arrow_forward</mat-icon>
             </button>
           </div>
-          <ng-template #noCvSubmitted>
-            <span class="text-muted">No CV on file for this application.</span>
-          </ng-template>
         </div>
 
-        <div class="cv-vault-block mb-3" *ngIf="!alreadyApplied && (availableCvs.length > 0 || maxCvs)">
-          <div class="cv-vault-label">
-            <mat-icon>folder_open</mat-icon>
-            Your saved CVs ({{ availableCvs.length }}/{{ maxCvs }})
+        <!-- Step 2: Application form (no duplicate job header) -->
+        <div *ngIf="applyStep === 'form'" class="apply-step apply-step--form">
+          <div class="apply-form-header">
+            <button mat-button type="button" class="apply-back-btn" (click)="backToJobDetails()">
+              <mat-icon>arrow_back</mat-icon>
+              Back to job details
+            </button>
+            <span class="apply-step-badge">Step 2 of 2</span>
           </div>
-          <p class="cv-vault-hint mb-2" *ngIf="availableCvs.length > 0">
-            Select any of your latest {{ maxCvs }} saved CVs. CVs older than {{ cvRetentionDays }} days are removed automatically — your most recent one is always kept.
-          </p>
 
-          <mat-radio-group
-            class="cv-radio-group"
-            [ngModel]="cvMode === 'existing' ? selectedCvId : 'new'"
-            (ngModelChange)="onCvChoiceChange($event)">
-            <div class="cv-radio-item" *ngFor="let cv of availableCvs">
-              <mat-radio-button [value]="cv.id">
-                <span class="cv-radio-name">{{ cv.cvOriginalName || 'Uploaded CV' }}</span>
-                <span class="cv-radio-date">Uploaded {{ formatDisplayDate(cv.createdDate) }}</span>
-              </mat-radio-button>
-              <button mat-button color="primary" type="button" class="cv-view-btn" (click)="viewVaultCv(cv); $event.stopPropagation()">
+          <h2 class="apply-form-title">Your application</h2>
+          <p class="apply-form-lead">Enter your details below. We use CNIC to match your previous applications.</p>
+
+          <div class="apply-form-section apply-form-section--highlight" [class.already-applied-readonly]="alreadyApplied">
+            <div class="apply-form-section-title">
+              <mat-icon>badge</mat-icon>
+              <span>CNIC verification</span>
+            </div>
+            <mat-form-field appearance="outline" class="w-100 apply-field" [class.mat-form-field-invalid]="cnicErrorMessage">
+              <mat-label>CNIC number</mat-label>
+              <input
+                matInput
+                [(ngModel)]="candidateCode"
+                (ngModelChange)="onCnicInput()"
+                (blur)="onCnicBlur()"
+                placeholder="35201-1234567-1"
+                maxlength="15"
+                inputmode="numeric"
+                autocomplete="off"
+                [readonly]="alreadyApplied"
+                required />
+              <mat-hint>13 digits — format: 35201-1234567-1</mat-hint>
+              <mat-error *ngIf="cnicErrorMessage">{{ cnicErrorMessage }}</mat-error>
+            </mat-form-field>
+            <div class="lookup-status" *ngIf="lookupLoading">
+              <mat-icon>sync</mat-icon>
+              <span>Checking your records…</span>
+            </div>
+          </div>
+
+          <div class="already-applied-banner" *ngIf="alreadyApplied">
+            <mat-icon>info</mat-icon>
+            <div>
+              <strong>You have already applied for this job.</strong>
+              <p *ngIf="!portalAccountRepaired">Your application is shown below in read-only mode.</p>
+              <p *ngIf="portalAccountRepaired">
+                Your Candidate Portal account has been set up.
+                <span *ngIf="portalCredentialsEmailed"> Check your email for login details.</span>
+                <a class="apply-portal-login" routerLink="/login">Go to login</a>
+              </p>
+            </div>
+          </div>
+
+          <div class="apply-form-section" [class.already-applied-readonly]="alreadyApplied">
+            <div class="apply-form-section-title">
+              <mat-icon>person</mat-icon>
+              <span>Personal information</span>
+            </div>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <mat-form-field appearance="outline" class="w-100 apply-field">
+                  <mat-label>Full name</mat-label>
+                  <input matInput [(ngModel)]="candidateName" [readonly]="alreadyApplied" required>
+                </mat-form-field>
+              </div>
+              <div class="col-md-6">
+                <mat-form-field appearance="outline" class="w-100 apply-field">
+                  <mat-label>Phone</mat-label>
+                  <input matInput [(ngModel)]="phone" [readonly]="alreadyApplied" required>
+                </mat-form-field>
+              </div>
+              <div class="col-md-6">
+                <mat-form-field appearance="outline" class="w-100 apply-field">
+                  <mat-label>Email</mat-label>
+                  <input matInput type="email" [(ngModel)]="email" (blur)="onEmailBlur()" [readonly]="alreadyApplied" required>
+                  <mat-hint *ngIf="!alreadyApplied">Used with CNIC to find previous applications</mat-hint>
+                </mat-form-field>
+              </div>
+              <div class="col-md-6">
+                <mat-form-field appearance="outline" class="w-100 apply-field">
+                  <mat-label>Experience (years)</mat-label>
+                  <input matInput type="number" min="0" [(ngModel)]="experienceYears" [readonly]="alreadyApplied" required>
+                </mat-form-field>
+              </div>
+            </div>
+          </div>
+
+          <div class="apply-form-section apply-form-section--cv" *ngIf="alreadyApplied">
+            <div class="apply-form-section-title">
+              <mat-icon>description</mat-icon>
+              <span>Submitted CV</span>
+            </div>
+            <div class="existing-cv-row" *ngIf="existingApplicationHasCv; else noCvSubmitted">
+              <span class="existing-cv-name">{{ existingApplicationCvName || 'Uploaded CV' }}</span>
+              <button mat-stroked-button color="primary" type="button" (click)="viewApplicationCv()">
                 <mat-icon>visibility</mat-icon> View
               </button>
             </div>
-            <div class="cv-radio-item cv-upload-option">
-              <mat-radio-button value="new">Upload new CV</mat-radio-button>
+            <ng-template #noCvSubmitted>
+              <span class="text-muted">No CV on file for this application.</span>
+            </ng-template>
+          </div>
+
+          <div class="apply-form-section apply-form-section--cv" *ngIf="!alreadyApplied && (availableCvs.length > 0 || maxCvs)">
+            <div class="apply-form-section-title">
+              <mat-icon>folder_open</mat-icon>
+              <span>Your CV ({{ availableCvs.length }}/{{ maxCvs }} saved)</span>
             </div>
-          </mat-radio-group>
-        </div>
+            <p class="apply-form-hint" *ngIf="availableCvs.length > 0">
+              Pick a saved CV or upload a new one. Older files are removed after {{ cvRetentionDays }} days.
+            </p>
 
-        <div class="mb-3" *ngIf="!alreadyApplied && availableCvs.length === 0">
-          <label class="form-label fw-semibold">Upload CV</label>
-          <input
-            type="file"
-            class="form-control file-input-custom"
-            accept=".pdf,.doc,.docx"
-            (change)="onCvSelected(($any($event.target).files && $any($event.target).files.length) ? $any($event.target).files[0] : null)" />
-          <div class="form-text" *ngIf="cv">
-            Selected: <strong>{{ cv.name }}</strong>
+            <mat-radio-group
+              class="cv-radio-group"
+              [ngModel]="cvMode === 'existing' ? selectedCvId : 'new'"
+              (ngModelChange)="onCvChoiceChange($event)">
+              <div class="cv-radio-item" *ngFor="let cv of availableCvs">
+                <mat-radio-button [value]="cv.id">
+                  <span class="cv-radio-name">{{ cv.cvOriginalName || 'Uploaded CV' }}</span>
+                  <span class="cv-radio-date">{{ formatDisplayDate(cv.createdDate) }}</span>
+                </mat-radio-button>
+                <button mat-button color="primary" type="button" class="cv-view-btn" (click)="viewVaultCv(cv); $event.stopPropagation()">
+                  <mat-icon>visibility</mat-icon>
+                </button>
+              </div>
+              <div class="cv-radio-item cv-upload-option">
+                <mat-radio-button value="new">Upload new CV</mat-radio-button>
+              </div>
+            </mat-radio-group>
           </div>
-        </div>
 
-        <div class="mb-3" *ngIf="!alreadyApplied && availableCvs.length > 0 && cvMode === 'new'">
-          <input
-            type="file"
-            class="form-control file-input-custom"
-            accept=".pdf,.doc,.docx"
-            (change)="onCvSelected(($any($event.target).files && $any($event.target).files.length) ? $any($event.target).files[0] : null)" />
-          <div class="form-text" *ngIf="cv">
-            Selected: <strong>{{ cv.name }}</strong>
+          <div class="apply-form-section apply-form-section--cv" *ngIf="!alreadyApplied && availableCvs.length === 0">
+            <div class="apply-form-section-title">
+              <mat-icon>upload_file</mat-icon>
+              <span>Upload CV</span>
+            </div>
+            <label class="apply-file-drop">
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx"
+                (change)="onCvSelected(($any($event.target).files && $any($event.target).files.length) ? $any($event.target).files[0] : null)" />
+              <mat-icon>cloud_upload</mat-icon>
+              <span>Choose PDF or Word file</span>
+            </label>
+            <p class="apply-file-selected" *ngIf="cv">Selected: <strong>{{ cv.name }}</strong></p>
           </div>
-        </div>
 
-        <div class="form-text mb-3" *ngIf="!alreadyApplied && availableCvs.length > 0 && cvMode === 'existing' && selectedCvId">
-          Using selected CV from your saved list.
-        </div>
+          <div class="apply-form-section apply-form-section--cv" *ngIf="!alreadyApplied && availableCvs.length > 0 && cvMode === 'new'">
+            <label class="apply-file-drop">
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx"
+                (change)="onCvSelected(($any($event.target).files && $any($event.target).files.length) ? $any($event.target).files[0] : null)" />
+              <mat-icon>cloud_upload</mat-icon>
+              <span>Choose PDF or Word file</span>
+            </label>
+            <p class="apply-file-selected" *ngIf="cv">Selected: <strong>{{ cv.name }}</strong></p>
+          </div>
 
-        <div class="text-end" *ngIf="!alreadyApplied">
-          <button
-            mat-raised-button
-            color="primary"
-            type="button"
-            [disabled]="isApplicationInvalid()"
-            (click)="submitApplication()">
-            <mat-icon>send</mat-icon>
-            Submit Application
-          </button>
+          <p class="apply-form-hint mb-0" *ngIf="!alreadyApplied && availableCvs.length > 0 && cvMode === 'existing' && selectedCvId">
+            Using your selected saved CV.
+          </p>
+
+          <div class="apply-step-actions apply-step-actions--form" *ngIf="!alreadyApplied">
+            <button mat-stroked-button type="button" class="apply-secondary-btn" (click)="backToJobDetails()">
+              <mat-icon>arrow_back</mat-icon>
+              Back
+            </button>
+            <button
+              mat-flat-button
+              color="primary"
+              type="button"
+              class="apply-primary-btn"
+              [disabled]="isApplicationInvalid()"
+              (click)="submitApplication()">
+              <mat-icon>send</mat-icon>
+              Submit application
+            </button>
+          </div>
         </div>
       </div>
 
       <ng-template #submittedMessage>
-        <div *ngIf="!loading && !loadError" class="submitted-state">
-          <mat-icon>check_circle</mat-icon>
-          <h4 *ngIf="submittedAsUpdate">CV Updated</h4>
-          <h4 *ngIf="submittedKeptExistingCv">Application Confirmed</h4>
-          <h4 *ngIf="!submittedAsUpdate && !submittedKeptExistingCv">Application Submitted</h4>
+        <div *ngIf="!loading && !loadError" class="apply-state apply-state--success">
+          <div class="apply-success-icon-wrap">
+            <mat-icon>check_circle</mat-icon>
+          </div>
+          <h4 *ngIf="submittedAsUpdate">CV updated</h4>
+          <h4 *ngIf="submittedKeptExistingCv">Application confirmed</h4>
+          <h4 *ngIf="!submittedAsUpdate && !submittedKeptExistingCv">Application submitted</h4>
           <p *ngIf="submittedAsUpdate">Your CV has been updated successfully.</p>
           <p *ngIf="submittedKeptExistingCv">Your existing application and CV remain on file.</p>
-          <p *ngIf="!submittedAsUpdate && !submittedKeptExistingCv">Your application has been received successfully.</p>
+          <p *ngIf="!submittedAsUpdate && !submittedKeptExistingCv">Thank you — we have received your application.</p>
+          <div *ngIf="portalAccountCreated" class="apply-portal-notice">
+            <p><strong>Your Candidate Portal account has been created.</strong></p>
+            <p *ngIf="portalCredentialsEmailed">
+              Login credentials have been sent to your email. Use them to track applications and update your profile.
+            </p>
+            <p *ngIf="!portalCredentialsEmailed">
+              You can log in with your email address. If you did not receive credentials, use Forgot Password on the login page.
+            </p>
+            <a class="apply-portal-login" routerLink="/login">Go to login</a>
+          </div>
         </div>
       </ng-template>
     </mat-card-content>

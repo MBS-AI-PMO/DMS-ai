@@ -7,3 +7,73 @@
     display: none;
   }
 }
+
+.pm-description-field {
+  .pm-description-hint {
+    color: #6c757d;
+    font-size: 0.8rem;
+    margin: 8px 0 0;
+  }
+}
+
+.pm-description-editor {
+  :host ::ng-deep &,
+  ::ng-deep {
+    .ck.ck-editor {
+      width: 100%;
+    }
+
+    .ck-editor__editable {
+      min-height: 180px;
+      max-height: 320px;
+    }
+
+    .ck.ck-balloon-panel {
+      z-index: 1200 !important;
+    }
+
+    .ck.ck-dropdown__panel {
+      z-index: 1200 !important;
+    }
+  }
+}
+
+:host ::ng-deep .pm-description-editor {
+  .ck.ck-editor {
+    width: 100%;
+  }
+
+  .ck-editor__editable {
+    min-height: 180px;
+    max-height: 320px;
+  }
+
+  .ck.ck-balloon-panel,
+  .ck.ck-dropdown__panel {
+    z-index: 1200 !important;
+  }
+
+  .ck-content {
+    ul {
+      list-style-type: disc;
+      padding-left: 1.5rem;
+    }
+
+    ol {
+      list-style-type: decimal;
+      padding-left: 1.5rem;
+    }
+
+    ul li,
+    ol li {
+      display: list-item;
+      list-style-type: inherit;
+    }
+
+    img {
+      display: block;
+      height: auto;
+      max-width: 100%;
+    }
+  }
+}

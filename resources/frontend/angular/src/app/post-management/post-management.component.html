@@ -15,7 +15,7 @@
             <i-feather name="briefcase"></i-feather>
             Manage Departments
           </button>
-          <button type="button" class="dms-action-btn dms-action-btn--save" (click)="openManagePostDialog()">
+          <button type="button" class="dms-action-btn dms-action-btn--save" *hasClaim="'POST_MANAGEMENT_CREATE'" (click)="openManagePostDialog()">
             <i-feather name="plus"></i-feather>
             Add Post
           </button>
@@ -114,10 +114,10 @@
                     <button class="btn btn-primary btn-sm" type="button" matTooltip="Copy link" (click)="copyApplyLink(post)">
                       <i-feather name="link" class="small-icon"></i-feather>
                     </button>
-                    <button class="btn btn-success btn-sm" type="button" matTooltip="Edit" (click)="editPost(post)">
+                    <button class="btn btn-success btn-sm" type="button" matTooltip="Edit" *hasClaim="'POST_MANAGEMENT_EDIT'" (click)="editPost(post)">
                       <i-feather name="edit" class="small-icon"></i-feather>
                     </button>
-                    <button class="btn btn-danger btn-sm" type="button" matTooltip="Delete" (click)="deletePost(post)">
+                    <button class="btn btn-danger btn-sm" type="button" matTooltip="Delete" *hasClaim="'POST_MANAGEMENT_DELETE'" (click)="deletePost(post)">
                       <i-feather name="trash-2" class="small-icon"></i-feather>
                     </button>
                   </div>
@@ -142,7 +142,7 @@
         <div class="pm-empty" *ngIf="!posts.length">
           <mat-icon>post_add</mat-icon>
           <p>No job posts yet.</p>
-          <button type="button" class="dms-action-btn dms-action-btn--save mt-2" (click)="openManagePostDialog()">
+          <button type="button" class="dms-action-btn dms-action-btn--save mt-2" *hasClaim="'POST_MANAGEMENT_CREATE'" (click)="openManagePostDialog()">
             <i-feather name="plus"></i-feather>
             Add Post
           </button>

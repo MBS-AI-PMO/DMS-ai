@@ -1,0 +1,77 @@
+<section class="content dms-module cp-page">
+  <div class="container-fluid">
+  <div class="content-block">
+    <div class="cp-hero">
+      <h2>{{ 'CANDIDATE_PORTAL' | translate }}</h2>
+      <p>{{ 'CANDIDATE_PORTAL_DASHBOARD_SUBTITLE' | translate }}</p>
+    </div>
+
+    <div *ngIf="loading" class="cp-loading">
+      <mat-spinner diameter="32"></mat-spinner>
+      <span>{{ 'LOADING' | translate }}</span>
+    </div>
+
+    <ng-container *ngIf="!loading && data">
+      <div class="cp-grid">
+        <div class="cp-stat-card">
+          <strong>{{ data.summary.totalApplications }}</strong>
+          <span>{{ 'TOTAL_APPLICATIONS' | translate }}</span>
+        </div>
+        <div class="cp-stat-card">
+          <strong>{{ data.summary.shortlisted }}</strong>
+          <span>{{ 'SHORTLISTED' | translate }}</span>
+        </div>
+        <div class="cp-stat-card">
+          <strong>{{ data.summary.interviewScheduled }}</strong>
+          <span>{{ 'INTERVIEW_SCHEDULED' | translate }}</span>
+        </div>
+        <div class="cp-stat-card">
+          <strong>{{ data.summary.selected }}</strong>
+          <span>{{ 'SELECTED' | translate }}</span>
+        </div>
+      </div>
+
+      <div class="cp-card">
+        <div class="cp-card__header">
+          <h3>{{ 'RECENT_APPLICATIONS' | translate }}</h3>
+          <button mat-stroked-button type="button" (click)="goApplications()">
+            {{ 'VIEW_ALL' | translate }}
+          </button>
+        </div>
+
+        <table class="cp-table" *ngIf="data.recentApplications.length; else emptyRecent">
+          <thead>
+            <tr>
+              <th>{{ 'JOB_TITLE' | translate }}</th>
+              <th>{{ 'STAGE' | translate }}</th>
+              <th>{{ 'APPLIED_ON' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let app of data.recentApplications">
+              <td>{{ app.postTitle }}</td>
+              <td>
+                <span class="cp-badge" [ngClass]="stageBadgeClass(app.stage)">
+                  {{ app.stageLabel }}
+                </span>
+              </td>
+              <td>{{ formatPortalDate(app.createdDate) }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <ng-template #emptyRecent>
+          <div class="cp-empty">{{ 'NO_APPLICATIONS_YET' | translate }}</div>
+        </ng-template>
+      </div>
+
+      <div class="cp-actions">
+        <button mat-flat-button class="cp-btn-primary" type="button" (click)="goJobs()">
+          <mat-icon>work_outline</mat-icon>
+          {{ 'BROWSE_RECOMMENDED_JOBS' | translate }}
+        </button>
+      </div>
+    </ng-container>
+  </div>
+  </div>
+</section>

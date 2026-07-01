@@ -1,0 +1,124 @@
+<section class="content dms-module pm-module">
+  <div class="container-fluid">
+    <div class="content-block">
+      <div class="row align-items-center pm-page-header">
+        <div class="col mb-2">
+          <span class="page-title">{{ 'ALL_JOBS' | translate }}</span>
+          <p class="pm-page-subtitle">Browse all open job posts and view full details.</p>
+        </div>
+      </div>
+
+      <mat-card class="pm-card pm-data-card mat-elevation-z0">
+        <div class="pm-card-toolbar pm-card-toolbar-stacked">
+          <div class="pm-card-title">
+            <mat-icon>work_outline</mat-icon>
+            <span>{{ 'ALL_JOBS' | translate }}</span>
+            <span class="pm-badge-count">{{ filteredPosts.length }}</span>
+          </div>
+          <div class="pm-list-filters">
+            <mat-form-field appearance="outline" class="pm-filter-field" subscriptSizing="dynamic">
+              <mat-label>Category</mat-label>
+              <mat-select [(ngModel)]="postFilterCategoryId" (ngModelChange)="onPostFilterCategoryChange()">
+                <mat-option value="">All categories</mat-option>
+                <mat-option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="pm-filter-field" subscriptSizing="dynamic">
+              <mat-label>Department</mat-label>
+              <mat-select
+                [(ngModel)]="postFilterDepartmentId"
+                (ngModelChange)="onPostFilterDepartmentChange()"
+                [disabled]="!listFilterDepartments.length && !!postFilterCategoryId">
+                <mat-option value="">All departments</mat-option>
+                <mat-option *ngFor="let dept of listFilterDepartments" [value]="dept.id">
+                  {{ dept.name }}<span *ngIf="!postFilterCategoryId && dept.categoryName"> ({{ dept.categoryName }})</span>
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="pm-search-field" subscriptSizing="dynamic">
+              <mat-label>Search</mat-label>
+              <mat-icon matPrefix>search</mat-icon>
+              <input
+                matInput
+                [(ngModel)]="postSearch"
+                (ngModelChange)="onPostSearchChange()"
+                placeholder="Title, department, category" />
+            </mat-form-field>
+            <button
+              type="button"
+              class="dms-action-btn dms-action-btn--cancel pm-clear-filters-btn"
+              *ngIf="hasActivePostFilters"
+              (click)="clearPostFilters()">
+              Clear filters
+            </button>
+          </div>
+        </div>
+
+        <div class="pm-empty" *ngIf="loading">
+          <mat-icon>hourglass_top</mat-icon>
+          <p>Loading jobs…</p>
+        </div>
+
+        <div class="pm-jobs-grid" *ngIf="!loading && paginatedPosts.length">
+          <article class="pm-job-card" *ngFor="let post of paginatedPosts">
+            <div class="pm-job-card__top">
+              <div class="pm-job-card__icon">
+                <mat-icon>work_outline</mat-icon>
+              </div>
+              <div class="pm-job-card__meta">
+                <span class="pm-tag">{{ post.category || 'General' }}</span>
+                <span class="pm-date-cell">{{ formatDisplayDate(post.createdDate) }}</span>
+              </div>
+            </div>
+            <h3 class="pm-job-card__title">{{ post.title }}</h3>
+            <div class="pm-job-card__chips">
+              <span class="pm-chip">{{ post.department || '—' }}</span>
+              <span class="pm-chip" *ngIf="post.experienceYears !== null && post.experienceYears !== undefined">
+                {{ post.experienceYears }} yrs
+              </span>
+              <span class="pm-chip" [class.pm-chip-remote]="post.workMode === 'remote'" [class.pm-chip-physical]="post.workMode !== 'remote'">
+                {{ post.workMode === 'remote' ? 'Remote' : 'Physical' }}
+              </span>
+            </div>
+            <p class="pm-job-card__address" *ngIf="post.workMode === 'physical' && post.address">
+              <mat-icon>place</mat-icon>{{ post.address }}
+            </p>
+            <div class="pm-job-card__footer">
+              <span class="pm-count-pill">
+                <mat-icon>people</mat-icon>{{ post.candidates.length }} applicants
+              </span>
+              <button type="button" class="pm-job-card__view-btn" (click)="viewJob(post)">
+                View job
+                <mat-icon>arrow_forward</mat-icon>
+              </button>
+            </div>
+          </article>
+        </div>
+
+        <mat-paginator
+          *ngIf="!loading && filteredPosts.length"
+          class="pm-paginator"
+          [length]="filteredPosts.length"
+          [pageIndex]="postPageIndex"
+          [pageSize]="postPageSize"
+          [pageSizeOptions]="pageSizeOptions"
+          (page)="onPostPage($event)"
+          showFirstLastButtons
+          aria-label="All jobs pagination">
+        </mat-paginator>
+
+        <div class="pm-empty" *ngIf="!loading && !posts.length">
+          <mat-icon>work_off</mat-icon>
+          <p>No job posts available yet.</p>
+        </div>
+        <div class="pm-empty" *ngIf="!loading && posts.length && !filteredPosts.length">
+          <mat-icon>search_off</mat-icon>
+          <p>No jobs match your filters or search.</p>
+          <button type="button" class="dms-action-btn dms-action-btn--cancel mt-2" *ngIf="hasActivePostFilters" (click)="clearPostFilters()">
+            Clear filters
+          </button>
+        </div>
+      </mat-card>
+    </div>
+  </div>
+</section>

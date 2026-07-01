@@ -14,16 +14,20 @@ use App\Models\FileRequests;
 use App\Models\FileRequestStatusEnum;
 use App\Models\Users;
 use App\Services\AICandidateSearchService;
+use App\Services\CandidateAccountService;
 use App\Services\CandidateCvSearchService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Ramsey\Uuid\Uuid;
 
 class ProposalManagementController extends Controller
 {
+    private const COMPANY_PROPOSALS_ROOT_ID = '00000000-0000-0000-0000-000000000001';
+
     private const CANDIDATE_CV_DISPLAY_LIMIT = 5;
 
     private const CANDIDATE_CV_RETENTION_DAYS = 365;
@@ -45,7 +49,6 @@ class ProposalManagementController extends Controller
         $posts = ProposalPost::with(['candidates' => function ($query) {
             $query->orderByDesc('createdDate');
         }])
-            ->where('createdBy', $userId)
             ->orderByDesc('createdDate')
             ->get()
             ->map(function (ProposalPost $post) {
@@ -61,7 +64,7 @@ class ProposalManagementController extends Controller
                     'expertQuestions' => $post->expertQuestions,
                     'workMode' => $post->workMode,
                     'address' => $post->address,
-                    'description' => $post->description,
+                    'description' => $this->normalizePostDescription($post->description, request()),
                     'createdDate' => $this->formatApiDateTime($post->createdDate, $post->modifiedDate),
                     'candidates' => $post->candidates->map(function (ProposalCandidate $candidate) {
                         return $this->mapCandidate($candidate);
@@ -72,8 +75,8 @@ class ProposalManagementController extends Controller
 
         return response()->json(array_merge($dashboard, [
             'posts' => $posts,
-            'categories' => $this->listCategoriesData($userId),
-            'departments' => $this->listDepartmentsData($userId),
+            'categories' => $this->listCategoriesData(),
+            'departments' => $this->listDepartmentsData(),
         ]));
     }
 
@@ -84,21 +87,24 @@ class ProposalManagementController extends Controller
 
     private function buildFolderDashboardData(string $userId): array
     {
-        $rootFolder = $this->ensureRootFolder($userId);
+        $userRoot = $this->ensureRootFolder($userId);
 
-        $folders = ProposalFolder::where('createdBy', $userId)
-            ->orderBy('name')
-            ->get();
+        $folders = ProposalFolder::orderBy('name')->get();
 
         $folderMap = $folders->keyBy('id');
-        $rootId = $rootFolder->id;
+        $systemRootFolderIds = $folders
+            ->filter(fn (ProposalFolder $folder) => $folder->parentFolderId === null && $folder->name === 'proposals')
+            ->pluck('id')
+            ->values();
 
         $files = ProposalFile::with('folder')
-            ->where('createdBy', $userId)
             ->orderByDesc('createdDate')
             ->get()
-            ->map(function (ProposalFile $file) use ($folderMap, $rootId) {
-                $folderPath = $this->buildFolderPathWithoutRoot($file->folderId, $folderMap, $rootId);
+            ->map(function (ProposalFile $file) use ($folderMap, $systemRootFolderIds) {
+                $rootId = $this->resolveFolderRootId($file->folderId, $folderMap, $systemRootFolderIds);
+                $folderPath = $rootId
+                    ? $this->buildFolderPathWithoutRoot($file->folderId, $folderMap, $rootId)
+                    : '';
                 $fileName = $file->title ?: $file->originalName;
 
                 return [
@@ -113,8 +119,7 @@ class ProposalManagementController extends Controller
             })
             ->values();
 
-        $filerequests = ProposalFileRequest::where('createdBy', $userId)
-            ->with('linkedFileRequest')
+        $filerequests = ProposalFileRequest::with('linkedFileRequest')
             ->orderByDesc('createdDate')
             ->get()
             ->map(function (ProposalFileRequest $request) {
@@ -138,7 +143,9 @@ class ProposalManagementController extends Controller
             ->values();
 
         return [
-            'rootFolderId' => $rootFolder->id,
+            'rootFolderId' => self::COMPANY_PROPOSALS_ROOT_ID,
+            'userRootFolderId' => $userRoot->id,
+            'systemRootFolderIds' => $systemRootFolderIds,
             'folders' => $folders->map(function (ProposalFolder $folder) {
                 return [
                     'id' => $folder->id,
@@ -151,22 +158,37 @@ class ProposalManagementController extends Controller
         ];
     }
 
+    private function resolveFolderRootId(
+        ?string $folderId,
+        \Illuminate\Support\Collection $folderMap,
+        \Illuminate\Support\Collection $systemRootFolderIds
+    ): ?string {
+        $currentId = $folderId;
+
+        while ($currentId && $folderMap->has($currentId)) {
+            $folder = $folderMap->get($currentId);
+            if ($systemRootFolderIds->contains($folder->id)) {
+                return $folder->id;
+            }
+            $currentId = $folder->parentFolderId;
+        }
+
+        return null;
+    }
+
     public function postBoard()
     {
-        $userId = $this->getUserId();
-
         $posts = ProposalPost::with(['candidates' => function ($query) {
             $query->orderByDesc('createdDate');
         }])
-            ->where('createdBy', $userId)
             ->orderByDesc('createdDate')
             ->get()
             ->map(fn (ProposalPost $post) => $this->mapPost($post))
             ->values();
 
         return response()->json([
-            'categories' => $this->listCategoriesData($userId),
-            'departments' => $this->listDepartmentsData($userId),
+            'categories' => $this->listCategoriesData(),
+            'departments' => $this->listDepartmentsData(),
             'posts' => $posts,
         ]);
     }
@@ -302,9 +324,7 @@ class ProposalManagementController extends Controller
             'name' => 'required|string|max:255',
         ]);
 
-        $category = ProposalCategory::where('id', $id)
-            ->where('createdBy', $this->getUserId())
-            ->firstOrFail();
+        $category = ProposalCategory::where('id', $id)->firstOrFail();
 
         $category->name = trim($validated['name']);
         $category->modifiedDate = Carbon::now();
@@ -315,9 +335,7 @@ class ProposalManagementController extends Controller
 
     public function deleteCategory(string $id)
     {
-        $category = ProposalCategory::where('id', $id)
-            ->where('createdBy', $this->getUserId())
-            ->firstOrFail();
+        $category = ProposalCategory::where('id', $id)->firstOrFail();
 
         $hasDepartments = ProposalDepartment::where('categoryId', $category->id)->exists();
         if ($hasDepartments) {
@@ -371,9 +389,7 @@ class ProposalManagementController extends Controller
             'expertQuestions' => 'nullable|string',
         ]);
 
-        $department = ProposalDepartment::where('id', $id)
-            ->where('createdBy', $this->getUserId())
-            ->firstOrFail();
+        $department = ProposalDepartment::where('id', $id)->firstOrFail();
 
         $this->findOwnedCategory($validated['categoryId']);
 
@@ -391,9 +407,7 @@ class ProposalManagementController extends Controller
 
     public function deleteDepartment(string $id)
     {
-        $department = ProposalDepartment::where('id', $id)
-            ->where('createdBy', $this->getUserId())
-            ->firstOrFail();
+        $department = ProposalDepartment::where('id', $id)->firstOrFail();
 
         $inUse = ProposalPost::where('departmentId', $department->id)->exists();
         if ($inUse) {
@@ -428,7 +442,9 @@ class ProposalManagementController extends Controller
             'id' => Uuid::uuid4()->toString(),
             'title' => trim($validated['title']),
             'department' => $department->name,
-            'description' => !empty($validated['description']) ? trim($validated['description']) : null,
+            'description' => !empty($validated['description'])
+                ? $this->normalizePostDescription(trim($validated['description']), $request)
+                : null,
             'createdBy' => $this->getUserId(),
             'createdDate' => $now,
             'modifiedDate' => $now,
@@ -479,16 +495,16 @@ class ProposalManagementController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        $post = ProposalPost::where('id', $id)
-            ->where('createdBy', $this->getUserId())
-            ->firstOrFail();
+        $post = ProposalPost::where('id', $id)->firstOrFail();
 
         $department = $this->findOwnedDepartment($validated['departmentId']);
         $workMode = $validated['workMode'] ?? 'physical';
         $postColumns = Schema::getColumnListing('proposalposts');
         $post->title = trim($validated['title']);
         $post->department = $department->name;
-        $post->description = !empty($validated['description']) ? trim($validated['description']) : null;
+        $post->description = !empty($validated['description'])
+            ? $this->normalizePostDescription(trim($validated['description']), $request)
+            : null;
         if (in_array('departmentId', $postColumns, true)) {
             $post->departmentId = $department->id;
         }
@@ -524,9 +540,7 @@ class ProposalManagementController extends Controller
 
     public function deletePost(string $id)
     {
-        $post = ProposalPost::where('id', $id)
-            ->where('createdBy', $this->getUserId())
-            ->firstOrFail();
+        $post = ProposalPost::where('id', $id)->firstOrFail();
 
         $post->delete();
 
@@ -535,18 +549,15 @@ class ProposalManagementController extends Controller
 
     public function createCandidate(Request $request, string $postId)
     {
-        $userId = $this->getUserId();
-        $post = ProposalPost::where('id', $postId)
-            ->where('createdBy', $userId)
-            ->firstOrFail();
+        $post = ProposalPost::where('id', $postId)->firstOrFail();
 
-        return response()->json($this->storeCandidate($request, $post, $userId), 201);
+        return response()->json($this->storeCandidate($request, $post, $this->getUserId()), 201);
     }
 
     public function allCandidates(Request $request, CandidateCvSearchService $cvSearchService)
     {
         $searchQuery = trim((string) $request->input('searchQuery', ''));
-        $candidates = $this->buildGroupedCandidates($this->getUserId());
+        $candidates = $this->buildGroupedCandidates();
 
         if ($searchQuery !== '') {
             $candidates = $cvSearchService->enrichGroups($candidates);
@@ -573,7 +584,7 @@ class ProposalManagementController extends Controller
 
         $query = trim($validated['query']);
         $candidates = $cvSearchService->enrichGroups(
-            $this->buildGroupedCandidates($this->getUserId())
+            $this->buildGroupedCandidates()
         );
         $result = $aiCandidateSearchService->search($query, $candidates);
         $candidates = $cvSearchService->attachSearchMatches(
@@ -589,10 +600,9 @@ class ProposalManagementController extends Controller
         ]);
     }
 
-    private function buildGroupedCandidates(string $userId): array
+    private function buildGroupedCandidates(): array
     {
         $records = ProposalCandidate::with('post')
-            ->where('createdBy', $userId)
             ->orderByDesc('createdDate')
             ->get();
 
@@ -650,14 +660,9 @@ class ProposalManagementController extends Controller
 
     public function allCandidateHistory(string $candidateId)
     {
-        $userId = $this->getUserId();
-
-        $anchor = ProposalCandidate::where('id', $candidateId)
-            ->where('createdBy', $userId)
-            ->firstOrFail();
+        $anchor = ProposalCandidate::where('id', $candidateId)->firstOrFail();
 
         $historyQuery = ProposalCandidate::with('post')
-            ->where('createdBy', $userId)
             ->orderByDesc('createdDate');
 
         $this->applyCandidateHistoryMatch($historyQuery, $anchor);
@@ -731,7 +736,7 @@ class ProposalManagementController extends Controller
             'experienceYears' => $post->experienceYears,
             'workMode' => $post->workMode,
             'address' => $post->address,
-            'description' => $post->description,
+            'description' => $this->normalizePostDescription($post->description, request()),
         ]);
     }
 
@@ -764,10 +769,16 @@ class ProposalManagementController extends Controller
         $existingOnPost = $onPostQuery->first();
 
         if ($existingOnPost) {
+            $accountMeta = app(CandidateAccountService::class)->ensurePortalAccount($existingOnPost, $post);
+            $this->attachCandidateUserId($existingOnPost, $accountMeta);
+            $existingOnPost = $existingOnPost->fresh();
+
             $selectedCvId = $this->findVaultCvIdByPath($post->createdBy, $cnicDigits, $email, $existingOnPost->cvPath);
 
             return response()->json([
                 'appliedOnThisPost' => true,
+                'portalAccountCreated' => $accountMeta['created'] ?? false,
+                'portalCredentialsEmailed' => $accountMeta['credentialsEmailed'] ?? false,
                 'application' => [
                     'id' => $existingOnPost->id,
                     'candidateName' => $existingOnPost->candidateName,
@@ -904,6 +915,18 @@ class ProposalManagementController extends Controller
         );
 
         if ($existing) {
+            $accountMeta = app(CandidateAccountService::class)->ensurePortalAccount($existing, $post);
+            $this->attachCandidateUserId($existing, $accountMeta);
+
+            if (!empty($accountMeta['created'])) {
+                $mapped = $this->mapCandidate($existing->fresh());
+                $mapped['portalAccountCreated'] = true;
+                $mapped['portalCredentialsEmailed'] = $accountMeta['credentialsEmailed'] ?? false;
+                $mapped['applicationRepaired'] = true;
+
+                return $mapped;
+            }
+
             abort(422, 'You have already applied for this job. Your application cannot be changed.');
         }
 
@@ -946,9 +969,26 @@ class ProposalManagementController extends Controller
             $candidatePayload['address'] = !empty($validated['address']) ? trim($validated['address']) : null;
         }
 
-        $candidate = ProposalCandidate::create($candidatePayload);
+        return DB::transaction(function () use ($candidatePayload, $post) {
+            $candidate = ProposalCandidate::create($candidatePayload);
 
-        return $this->mapCandidate($candidate);
+            $accountMeta = app(CandidateAccountService::class)->ensurePortalAccount($candidate, $post);
+            $this->attachCandidateUserId($candidate, $accountMeta);
+
+            $mapped = $this->mapCandidate($candidate->fresh());
+            $mapped['portalAccountCreated'] = $accountMeta['created'] ?? false;
+            $mapped['portalCredentialsEmailed'] = $accountMeta['credentialsEmailed'] ?? false;
+
+            return $mapped;
+        });
+    }
+
+    private function attachCandidateUserId(ProposalCandidate $candidate, array $accountMeta): void
+    {
+        if (!empty($accountMeta['userId']) && Schema::hasColumn('proposalcandidates', 'candidateUserId')) {
+            $candidate->candidateUserId = $accountMeta['userId'];
+            $candidate->save();
+        }
     }
 
     private function findCandidateOnPost(string $postId, string $candidateCode, string $email): ?ProposalCandidate
@@ -1004,8 +1044,22 @@ class ProposalManagementController extends Controller
 
         $candidate = ProposalCandidate::with('post')
             ->where('id', $id)
-            ->where('createdBy', $this->getUserId())
             ->firstOrFail();
+
+        $previousStage = $candidate->stage;
+        $isReschedule = $request->boolean('isReschedule');
+
+        if ($validated['stage'] === 'shortlisted' && $previousStage !== 'cv_received') {
+            return response()->json(['message' => 'Only new applications can be shortlisted.'], 422);
+        }
+
+        if (
+            $validated['stage'] === 'interview_scheduled'
+            && !$isReschedule
+            && $previousStage !== 'shortlisted'
+        ) {
+            return response()->json(['message' => 'Shortlist the candidate before scheduling an interview.'], 422);
+        }
 
         $candidate->stage = $validated['stage'];
         $candidate->interviewLevel = $validated['interviewLevel'] ?? $candidate->interviewLevel;
@@ -1088,7 +1142,6 @@ class ProposalManagementController extends Controller
 
         $candidate = ProposalCandidate::with('post')
             ->where('id', $id)
-            ->where('createdBy', $this->getUserId())
             ->firstOrFail();
 
         if (empty($candidate->email)) {
@@ -1141,9 +1194,7 @@ class ProposalManagementController extends Controller
 
     public function openCandidateCv(string $id)
     {
-        $candidate = ProposalCandidate::where('id', $id)
-            ->where('createdBy', $this->getUserId())
-            ->firstOrFail();
+        $candidate = ProposalCandidate::where('id', $id)->firstOrFail();
 
         if (!$candidate->cvPath || !Storage::disk('local')->exists($candidate->cvPath)) {
             abort(404, 'CV not found.');
@@ -1168,12 +1219,16 @@ class ProposalManagementController extends Controller
 
         $userId = $this->getUserId();
         $rootFolder = $this->ensureRootFolder($userId);
+        $parentFolderId = $request->parentFolderId ?: $rootFolder->id;
+        if ($parentFolderId === self::COMPANY_PROPOSALS_ROOT_ID) {
+            $parentFolderId = $rootFolder->id;
+        }
         $now = Carbon::now();
 
         $folder = ProposalFolder::create([
             'id' => Uuid::uuid4()->toString(),
             'name' => trim($request->name),
-            'parentFolderId' => $request->parentFolderId ?: $rootFolder->id,
+            'parentFolderId' => $parentFolderId,
             'createdBy' => $userId,
             'createdDate' => $now,
             'modifiedDate' => $now,
@@ -1211,6 +1266,41 @@ class ProposalManagementController extends Controller
         ]);
 
         return response()->json($file, 201);
+    }
+
+    public function uploadPostDescriptionImage(Request $request)
+    {
+        $validated = $request->validate([
+            'image' => 'required|image|mimes:jpeg,jpg,png,gif,webp|max:5120',
+        ]);
+
+        $uploadedFile = $validated['image'];
+        $filename = Uuid::uuid4()->toString() . '.' . strtolower($uploadedFile->getClientOriginalExtension());
+        $uploadedFile->storeAs('post-description-images', $filename, 'public');
+
+        return response()->json([
+            'url' => $this->postDescriptionImageUrl($request, $filename),
+        ]);
+    }
+
+    public function openPostDescriptionImage(string $filename)
+    {
+        if (!preg_match('/^[0-9a-f-]{36}\.(jpe?g|png|gif|webp)$/i', $filename)) {
+            abort(404);
+        }
+
+        $path = 'post-description-images/' . $filename;
+        if (!Storage::disk('public')->exists($path)) {
+            abort(404);
+        }
+
+        $absolutePath = Storage::disk('public')->path($path);
+        $mimeType = Storage::disk('public')->mimeType($path) ?: 'application/octet-stream';
+
+        return response()->file($absolutePath, [
+            'Content-Type' => $mimeType,
+            'Cache-Control' => 'public, max-age=31536000',
+        ]);
     }
 
     public function createFileRequest(Request $request)
@@ -1334,10 +1424,7 @@ class ProposalManagementController extends Controller
 
     public function openFile(string $id)
     {
-        $userId = $this->getUserId();
-        $file = ProposalFile::where('id', $id)
-            ->where('createdBy', $userId)
-            ->firstOrFail();
+        $file = ProposalFile::where('id', $id)->firstOrFail();
 
         if (!Storage::disk('local')->exists($file->url)) {
             abort(404, 'File not found.');
@@ -1582,27 +1669,25 @@ class ProposalManagementController extends Controller
         }
     }
 
-    private function listCategoriesData(string $userId): \Illuminate\Support\Collection
+    private function listCategoriesData(): \Illuminate\Support\Collection
     {
         if (!Schema::hasTable('proposalcategories')) {
             return collect();
         }
 
-        return ProposalCategory::where('createdBy', $userId)
-            ->orderBy('name')
+        return ProposalCategory::orderBy('name')
             ->get()
             ->map(fn (ProposalCategory $c) => $this->mapCategory($c))
             ->values();
     }
 
-    private function listDepartmentsData(string $userId): \Illuminate\Support\Collection
+    private function listDepartmentsData(): \Illuminate\Support\Collection
     {
         if (!Schema::hasTable('proposaldepartments')) {
             return collect();
         }
 
         return ProposalDepartment::with('category')
-            ->where('createdBy', $userId)
             ->orderBy('name')
             ->get()
             ->map(fn (ProposalDepartment $d) => $this->mapDepartment($d))
@@ -1647,7 +1732,7 @@ class ProposalManagementController extends Controller
             'expertQuestions' => $post->expertQuestions,
             'workMode' => $post->workMode,
             'address' => $post->address,
-            'description' => $post->description,
+            'description' => $this->normalizePostDescription($post->description, request()),
             'createdDate' => $this->formatApiDateTime($post->createdDate, $post->modifiedDate),
             'candidates' => $post->candidates->map(fn (ProposalCandidate $c) => $this->mapCandidate($c))->values(),
         ];
@@ -1655,16 +1740,13 @@ class ProposalManagementController extends Controller
 
     private function findOwnedCategory(string $categoryId): ProposalCategory
     {
-        return ProposalCategory::where('id', $categoryId)
-            ->where('createdBy', $this->getUserId())
-            ->firstOrFail();
+        return ProposalCategory::where('id', $categoryId)->firstOrFail();
     }
 
     private function findOwnedDepartment(string $departmentId): ProposalDepartment
     {
         return ProposalDepartment::with('category')
             ->where('id', $departmentId)
-            ->where('createdBy', $this->getUserId())
             ->firstOrFail();
     }
 
@@ -1955,5 +2037,43 @@ class ProposalManagementController extends Controller
         }
 
         abort(422, 'Please select an existing CV or upload a new one.');
+    }
+
+    private function postDescriptionImageUrl(?Request $request, string $filename): string
+    {
+        $base = $request
+            ? rtrim($request->getSchemeAndHttpHost() . $request->getBaseUrl(), '/')
+            : rtrim((string) config('app.url'), '/');
+
+        return $base . '/api/proposal-management/post-description-images/' . $filename;
+    }
+
+    private function normalizePostDescription(?string $description, ?Request $request = null): ?string
+    {
+        if ($description === null || $description === '') {
+            return $description;
+        }
+
+        return preg_replace_callback(
+            '/\bsrc=(["\'])([^"\']+)\1/i',
+            function (array $matches) use ($request) {
+                $filename = $this->extractPostDescriptionImageFilename($matches[2]);
+                if (!$filename) {
+                    return $matches[0];
+                }
+
+                return 'src=' . $matches[1] . $this->postDescriptionImageUrl($request, $filename) . $matches[1];
+            },
+            $description
+        );
+    }
+
+    private function extractPostDescriptionImageFilename(string $src): ?string
+    {
+        if (preg_match('/post-description-images\/([0-9a-f-]{36}\.(?:jpe?g|png|gif|webp))(?:\?.*)?$/i', $src, $matches)) {
+            return $matches[1];
+        }
+
+        return null;
     }
 }
